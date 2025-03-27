@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Library</string>
+    <string name="itemiconincards">itemIconInCards</string>
+    <string name="helloLibraryMessage">Библиотека</string>
+    <string name="recyclerMainDescription">Лист с предметами хранящимися в библиотеке</string>
+</resources>
