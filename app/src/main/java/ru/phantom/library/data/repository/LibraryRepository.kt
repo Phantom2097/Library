@@ -9,11 +9,12 @@ import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RED
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 
 object LibraryRepository {
     private val _booksList by lazy { mutableListOf<BookImpl>() }
     private val _disksList by lazy { mutableListOf<DiskImpl>() }
-    private val _newspapersList by lazy { mutableListOf<NewspaperImpl>() }
+    private val _newspapersList by lazy { mutableListOf<Newspaper>() }
 
     // Оцифрованные предметы
     private val _digitizeSet by lazy { LibraryDigitizeMutableSet<DigitizationOffice.DigitalItem>() }
@@ -28,8 +29,8 @@ object LibraryRepository {
     }
 
     // Newspaper
-    fun addItemNewspaper(newspaper: NewspaperImpl) { _newspapersList.add(newspaper) }
-    fun getNewspapersInLibrary(): List<NewspaperImpl> = _newspapersList.ifEmpty {
+    fun addItemNewspaper(newspaper: Newspaper) { _newspapersList.add(newspaper) }
+    fun getNewspapersInLibrary(): List<Newspaper> = _newspapersList.ifEmpty {
         println(ANSI_RED + "На данный момент в библиотеке нет ни одной газеты 🤷‍♂️\n" + ANSI_RESET)
         emptyList()
     }

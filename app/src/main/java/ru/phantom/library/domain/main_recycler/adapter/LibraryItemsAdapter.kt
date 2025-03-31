@@ -14,7 +14,9 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.data.entites.library.items.Itemable
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.ViewTypedLibraryWrapper
 import ru.phantom.library.domain.main_recycler.utils.DiffCallback
@@ -22,7 +24,7 @@ import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 
 class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
 
-    var data: MutableList<ViewTypedLibraryWrapper> = mutableListOf()
+    var data: List<ViewTypedLibraryWrapper> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
@@ -65,7 +67,7 @@ class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
             when (item) {
                 is BookImpl -> ViewTypedLibraryWrapper.Book(item)
                 is DiskImpl -> ViewTypedLibraryWrapper.Disk(item)
-                is NewspaperImpl -> ViewTypedLibraryWrapper.Newspaper(item)
+                is Newspaper -> ViewTypedLibraryWrapper.Newspaper(item)
                 else -> throw IllegalArgumentException("Так не должно быть")
             }
         }
@@ -85,25 +87,39 @@ class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
     private fun changeAvailabilityClick(context: Context, position: Int) {
         if (position !in data.indices) return
 
-        val newItem = data[position].getItemable().apply { setAvailability() }
+        val oldItem = data[position].getItemable()
+        val newItem = when (oldItem) {
+            is BookImpl -> {
+                val itemForBook = oldItem.item.copy().apply { availability = !availability }
+                ViewTypedLibraryWrapper.Book(oldItem.copy(item = itemForBook))
+            }
+            is DiskImpl -> ViewTypedLibraryWrapper.Disk(oldItem.copy())
+            is NewspaperImpl -> ViewTypedLibraryWrapper.Newspaper(oldItem.copy())
+            is NewspaperWithMonthImpl -> ViewTypedLibraryWrapper.Newspaper(oldItem.copy())
+            else -> throw IllegalArgumentException("Неверный тип элемента")
+        }
+
+        val newList = data.toMutableList()
+        newList[position] = newItem //.apply { getItemable().setAvailability() }
 
         // проблема сразу видна
         Log.d(
             "Availability",
-            "prev availability = ${data[position].getItemable().getAvailability()}"
+            "prev availability = ${oldItem.getAvailability()}"
         )
-        Log.d("Availability", "new availability = ${newItem.getAvailability()}")
+        Log.d("Availability", "new availability = ${newItem.getItemable().getAvailability()}")
 
         /*
         Принудительное обновление, потому что классы не data, иначе не могу использовать наследование
         Пробовал поменять наследование Newspaper на композицию и делегирование,
         Но тогда надо менять всю логику старого кода
         */
-        notifyItemChanged(position, DiffCallback.ItemAvailabilityChange(newItem.getAvailability()))
+        updateList(data, newList)
+//        notifyItemChanged(position, DiffCallback.ItemAvailabilityChange(newItem.getItemable().getAvailability()))
 
         makeText(
             context,
-            "Предмет c id: ${newItem.getId()} ${if (newItem.getAvailability()) "да" else "нет"}",
+            "Предмет c id: ${newItem.getItemable().getId()} ${if (newItem.getItemable().getAvailability()) "да" else "нет"}",
             LENGTH_SHORT
         ).show()
     }
@@ -115,8 +131,7 @@ class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
         val diffUtil = DiffCallback(oldList, newList)
         val diffResult = DiffUtil.calculateDiff(diffUtil)
 
-        data.clear()
-        data.addAll(newList)
+        data = newList
 
         diffResult.dispatchUpdatesTo(this)
     }

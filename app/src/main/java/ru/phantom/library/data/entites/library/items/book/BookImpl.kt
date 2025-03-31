@@ -1,28 +1,20 @@
 package ru.phantom.library.data.entites.library.items.book
 
-import ru.phantom.library.domain.library_service.LibraryService
-import ru.phantom.library.data.Position
-import ru.phantom.library.data.entites.library.Readable
-import ru.phantom.library.data.entites.library.Showable
-import ru.phantom.library.data.entites.library.items.LibraryItem
 import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
-import ru.phantom.library.data.entites.library.items.Itemable
+import ru.phantom.library.data.Position
+import ru.phantom.library.data.entites.library.items.LibraryItem
+import ru.phantom.library.domain.library_service.LibraryService
 
-// Тоже для PR
-class BookImpl(
-    private val item: LibraryItem,
-    private val libraryService: LibraryService
+data class BookImpl(
+    override val item: LibraryItem,
+    override val libraryService: LibraryService
 ) :
-    Itemable,
-    Book,
-    Readable,
-    Showable {
+    Book(item, libraryService) {
 
     override var author: String = " "
     override var numberOfPages: Int? = null
 
-    override fun getItem(): LibraryItem = item
     override fun getName(): String = item.name
     override fun getId(): Int = item.id
     override fun getAvailability(): Boolean = item.availability

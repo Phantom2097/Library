@@ -1,11 +1,6 @@
 package ru.phantom.library.presentation.main
 
 import ru.phantom.library.data.Position
-import ru.phantom.library.data.repository.LibraryRepository.addItemBook
-import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
-import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
-import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
-import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
@@ -14,7 +9,12 @@ import ru.phantom.library.data.entites.library.items.disk.Type.DVD
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
 import ru.phantom.library.data.entites.library.items.newspaper_with_month.Month.JANUARY
 import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
-import ru.phantom.library.presentation.start_console.showConsoleStartLibraryUI
+import ru.phantom.library.data.repository.LibraryRepository.addItemBook
+import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
+import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
+import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
+import ru.phantom.library.data.repository.LibraryRepository.getNewspapersInLibrary
+import ru.phantom.library.domain.library_service.LibraryService
 
 fun main() {
     val libraryService = LibraryService()
@@ -22,7 +22,11 @@ fun main() {
     createNewspapers(libraryService)
     createDisks(libraryService)
 
-    showConsoleStartLibraryUI()
+    val news = getNewspapersInLibrary()
+    news.forEach {
+        println(it.fullInformation())
+    }
+//    showConsoleStartLibraryUI()
 }
 
 private fun createBook(
@@ -150,7 +154,6 @@ fun createNewspapers(service: LibraryService) {
                 availability = true,
             ),
             service
-
         ).apply {
             issueNumber = 795
             issueMonth = JANUARY

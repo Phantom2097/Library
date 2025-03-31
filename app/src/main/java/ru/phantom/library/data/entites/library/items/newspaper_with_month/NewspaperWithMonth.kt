@@ -1,7 +1,16 @@
 package ru.phantom.library.data.entites.library.items.newspaper_with_month
 
-interface NewspaperWithMonth {
-    var issueMonth: Month
+import ru.phantom.library.data.entites.library.items.LibraryItem
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.domain.library_service.LibraryService
+
+abstract class NewspaperWithMonth(
+    item: LibraryItem,
+    libraryService: LibraryService
+) :
+    Newspaper(item, libraryService)
+{
+    abstract var issueMonth: Month
 }
 
 enum class Month(private val month: String) {

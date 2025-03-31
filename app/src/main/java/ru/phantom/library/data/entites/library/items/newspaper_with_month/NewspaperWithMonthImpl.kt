@@ -3,19 +3,19 @@ package ru.phantom.library.data.entites.library.items.newspaper_with_month
 import presentation.colors.Colors.ANSI_BLUE
 import presentation.colors.Colors.ANSI_RESET
 import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
 import ru.phantom.library.data.entites.library.items.newspaper_with_month.Month.UNKNOWN
 import ru.phantom.library.domain.library_service.LibraryService
 
-class NewspaperWithMonthImpl (
-    private val item: LibraryItem,
-    libraryService: LibraryService
-) : NewspaperImpl(item, libraryService),
-    NewspaperWithMonth
+data class NewspaperWithMonthImpl (
+    override val item: LibraryItem,
+    override val libraryService: LibraryService
+) : NewspaperWithMonth(item, libraryService)
 {
-    override var issueMonth: Month = UNKNOWN
 
-    override fun fullInformation(): String = this.toString()
+    override var issueMonth: Month = UNKNOWN
+    override var issueNumber: Int? = null
+
+//    override fun fullInformation(): String = this.toString()
 
     override fun toString(): String {
         val tempAvailability = if (item.availability) "Да" else "Нет"

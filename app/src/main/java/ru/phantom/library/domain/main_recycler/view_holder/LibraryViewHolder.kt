@@ -5,7 +5,7 @@ import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.Itemable
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 
 class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) :
@@ -38,7 +38,7 @@ class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) 
         val icon = when (item) {
             is BookImpl -> R.drawable.twotone_menu_book_24
             is DiskImpl -> R.drawable.twotone_album_24
-            is NewspaperImpl -> R.drawable.twotone_newspaper_24
+            is Newspaper -> R.drawable.twotone_newspaper_24
             else -> R.drawable.baseline_question_mark_24
         }
 

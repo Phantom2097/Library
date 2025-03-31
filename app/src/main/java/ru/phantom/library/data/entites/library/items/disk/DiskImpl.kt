@@ -11,8 +11,8 @@ import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
 import ru.phantom.library.data.entites.library.items.Itemable
 
-class DiskImpl(
-    private val item: LibraryItem,
+data class DiskImpl(
+    val item: LibraryItem,
     private val libraryService: LibraryService
 ) :
     Itemable,
@@ -24,7 +24,7 @@ class DiskImpl(
 
     private val name = item.name
 
-    override fun getItem(): LibraryItem = item
+//    override fun getItem(): LibraryItem = item
     override fun getName(): String = item.name
     override fun getId(): Int = item.id
     override fun getAvailability(): Boolean = item.availability
