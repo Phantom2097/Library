@@ -9,6 +9,7 @@ import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
 import ru.phantom.library.data.entites.library.items.Itemable
 
+// Тоже для PR
 class BookImpl(
     private val item: LibraryItem,
     private val libraryService: LibraryService
