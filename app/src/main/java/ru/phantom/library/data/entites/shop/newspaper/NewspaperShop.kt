@@ -1,15 +1,15 @@
-package data.entites.shop.newspaper
+package ru.phantom.library.data.entites.shop.newspaper
 
+import ru.phantom.library.data.entites.shop.Shop
+import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.END_ISSUE_NUMBER
+import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.NEWSPAPER_SHOP_ID
+import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.START_COUNTER_INDEX
+import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.START_ISSUE_NUMBER
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
 import ru.phantom.library.data.entites.library.items.newspaper_with_month.Month
 import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
-import data.entites.shop.Shop
-import data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.END_ISSUE_NUMBER
-import data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.NEWSPAPER_SHOP_ID
-import data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.START_COUNTER_INDEX
-import data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.START_ISSUE_NUMBER
-import ru.phantom.library.domain.LibraryService
+import ru.phantom.library.domain.library_service.LibraryService
 
 private typealias NewspaperShopType = Shop<NewspaperImpl>
 

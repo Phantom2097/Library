@@ -1,4 +1,4 @@
-package data
+package ru.phantom.library.data
 
 enum class Position {
     LIBRARY,

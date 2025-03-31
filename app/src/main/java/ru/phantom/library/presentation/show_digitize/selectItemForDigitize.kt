@@ -1,7 +1,7 @@
 package presentation.show_digitize
 
 import ru.phantom.library.data.entites.library.Showable
-import data.repository.LibraryRepository.getItem
+import ru.phantom.library.data.repository.LibraryRepository.getItem
 import presentation.show_items.getItemNumber
 import presentation.show_items.showItems
 

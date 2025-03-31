@@ -1,7 +1,7 @@
 package ru.phantom.library.data.entites.library.items.book
 
-import ru.phantom.library.domain.LibraryService
-import data.Position
+import ru.phantom.library.domain.library_service.LibraryService
+import ru.phantom.library.data.Position
 import ru.phantom.library.data.entites.library.Readable
 import ru.phantom.library.data.entites.library.Showable
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -21,6 +21,7 @@ class BookImpl(
     override var author: String = " "
     override var numberOfPages: Int? = null
 
+    override fun getItem(): LibraryItem = item
     override fun getName(): String = item.name
     override fun getId(): Int = item.id
     override fun getAvailability(): Boolean = item.availability
@@ -85,7 +86,10 @@ class BookImpl(
 
     override fun toString(): String {
         val tempAvailability = if (item.availability) "Да" else "Нет"
-        val tempNumberOfPages = if ((numberOfPages ?: -1) != -1) numberOfPages.toString() else "*неизвестно*"
+        val tempNumberOfPages = numberOfPages?.let {
+            numberOfPages.toString()
+        } ?: "*неизвестно*"
+
         val tempAuthor = author.ifBlank { "*неизвестно*" }
         return "Книга: ${item.name} ($tempNumberOfPages стр.) автор: $tempAuthor с id: ${item.id} доступна: $tempAvailability\n"
     }

@@ -1,10 +1,10 @@
-package data.repository
+package ru.phantom.library.data.repository
 
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import data.repository.LibraryRepository.LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
-import domain.item_mappers.digitize.DigitizationOffice
+import ru.phantom.library.data.repository.LibraryRepository.LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
 import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RED
 import presentation.colors.Colors.ANSI_RESET

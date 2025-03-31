@@ -7,13 +7,12 @@
     android:layout_height="wrap_content"
     app:cardCornerRadius="8dp"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp">
-<!--    app:cardPreventCornerOverlap="true"-->
-<!--    app:strokeWidth="2dp"-->
-<!--    app:strokeColor="@color/black">-->
+    android:layout_marginVertical="8dp"
+    android:outlineAmbientShadowColor="@color/black"
+    >
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/itemLibraryCard"
+        android:id="@+id/libraryItemsCardsLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="8dp">
@@ -35,7 +34,8 @@
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             tools:text="id Элемента"
-            android:textSize="12sp"
+            android:textSize="14sp"
+            android:textStyle="bold"
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@id/itemIconInCards"
             app:layout_constraintBottom_toTopOf="@id/itemNameInCards"
@@ -47,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxHeight="40dp"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:maxWidth="180dp"
             android:maxLines="2"
             android:textAlignment="center"

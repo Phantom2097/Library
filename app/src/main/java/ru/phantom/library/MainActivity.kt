@@ -6,11 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import data.repository.LibraryRepository
-import ru.phantom.library.domain.LibraryService
+import androidx.recyclerview.widget.ItemTouchHelper
+import ru.phantom.library.data.repository.LibraryRepository
 import ru.phantom.library.data.entites.library.items.Itemable
 import ru.phantom.library.databinding.ActivityMainBinding
-import ru.phantom.library.domain.main_recycler.LibraryItemsAdapter
+import ru.phantom.library.domain.library_service.LibraryService
+import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation.decoration.SpacesItemDecoration
 import ru.phantom.library.presentation.main.createBooks
 import ru.phantom.library.presentation.main.createDisks
@@ -19,7 +20,7 @@ import ru.phantom.library.presentation.main.createNewspapers
 class MainActivity : AppCompatActivity() {
 
     private val libraryAdapter = LibraryItemsAdapter()
-    private var items = mutableSetOf<Itemable>()
+    private var items = mutableListOf<Itemable>()
 
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -41,6 +42,13 @@ class MainActivity : AppCompatActivity() {
             addItemDecoration(SpacesItemDecoration(8))
         }
 
+        val recyclerView = binding.recyclerMainScreen
+
+        // Добавляю itemTouchHelper
+        val itemTouchHelper = ItemTouchHelper( libraryAdapter.getMySimpleCallback() )
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+
+        // Создаю элементы для отображения
         val libraryService = LibraryService()
         createBooks(libraryService)
         createNewspapers(libraryService)
@@ -50,6 +58,6 @@ class MainActivity : AppCompatActivity() {
         items.addAll(LibraryRepository.getNewspapersInLibrary())
         items.addAll(LibraryRepository.getDisksInLibrary())
 
-        libraryAdapter.addItems(items.toList())
+        libraryAdapter.addItems(items)
     }
 }

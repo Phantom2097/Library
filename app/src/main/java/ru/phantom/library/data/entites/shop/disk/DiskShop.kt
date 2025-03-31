@@ -3,11 +3,11 @@ package ru.phantom.library.data.entites.shop.disk
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
 import ru.phantom.library.data.entites.library.items.disk.Type
-import data.entites.shop.Shop
+import ru.phantom.library.data.entites.shop.Shop
 import ru.phantom.library.data.entites.shop.disk.DiskShop.DiskShopConsts.DISK_SHOP_ID
 import ru.phantom.library.data.entites.shop.disk.DiskShop.DiskShopConsts.START_COUNTER_INDEX
 import ru.phantom.library.data.entites.shop.disk.DiskShop.DiskShopConsts.START_TYPE_INDEX
-import ru.phantom.library.domain.LibraryService
+import ru.phantom.library.domain.library_service.LibraryService
 
 private typealias DiskShopType = Shop<DiskImpl>
 

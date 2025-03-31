@@ -2,10 +2,10 @@ package ru.phantom.library.data.entites.shop.book
 
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.book.BookImpl
-import data.entites.shop.Shop
+import ru.phantom.library.data.entites.shop.Shop
 import ru.phantom.library.data.entites.shop.book.BookShop.BookShopConsts.BOOK_SHOP_ID
 import ru.phantom.library.data.entites.shop.book.BookShop.BookShopConsts.START_COUNTER_INDEX
-import ru.phantom.library.domain.LibraryService
+import ru.phantom.library.domain.library_service.LibraryService
 
 private typealias BookShopType = Shop<BookImpl>
 

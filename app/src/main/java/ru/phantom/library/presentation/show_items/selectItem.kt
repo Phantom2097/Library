@@ -1,6 +1,6 @@
 package presentation.show_items
 
-import data.repository.LibraryRepository.getItem
+import ru.phantom.library.data.repository.LibraryRepository.getItem
 import ru.phantom.library.data.entites.library.Readable
 import ru.phantom.library.data.entites.library.Showable
 import presentation.show_actions.showActions

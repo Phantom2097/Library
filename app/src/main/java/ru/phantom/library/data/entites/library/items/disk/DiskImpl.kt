@@ -1,7 +1,7 @@
 package ru.phantom.library.data.entites.library.items.disk
 
-import ru.phantom.library.domain.LibraryService
-import data.Position
+import ru.phantom.library.domain.library_service.LibraryService
+import ru.phantom.library.data.Position
 import ru.phantom.library.data.entites.library.Showable
 import ru.phantom.library.data.entites.library.Readable
 import ru.phantom.library.data.entites.library.items.Digitable
@@ -24,9 +24,11 @@ class DiskImpl(
 
     private val name = item.name
 
+    override fun getItem(): LibraryItem = item
     override fun getName(): String = item.name
     override fun getId(): Int = item.id
     override fun getAvailability(): Boolean = item.availability
+
     override fun setAvailability() {
         libraryService.setAvailability(!getAvailability(), item)
     }

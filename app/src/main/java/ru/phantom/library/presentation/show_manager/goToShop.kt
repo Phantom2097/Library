@@ -1,6 +1,6 @@
 package presentation.show_manager
 
-import data.entites.shop.Shop
+import ru.phantom.library.data.entites.shop.Shop
 import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW

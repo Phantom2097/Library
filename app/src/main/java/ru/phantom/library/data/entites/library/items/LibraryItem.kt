@@ -1,6 +1,6 @@
 package ru.phantom.library.data.entites.library.items
 
-import data.Position
+import ru.phantom.library.data.Position
 
 data class LibraryItem (
     val name: String,

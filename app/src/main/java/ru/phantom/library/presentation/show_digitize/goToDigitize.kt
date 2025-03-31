@@ -1,13 +1,13 @@
 package presentation.show_digitize
 
 import ru.phantom.library.data.entites.library.Showable
-import data.repository.LibraryRepository.addItem
-import data.repository.LibraryRepository.getBooksInLibrary
-import data.repository.LibraryRepository.getDigitizeItems
-import data.repository.LibraryRepository.getNewspapersInLibrary
-import domain.item_mappers.digitize.DigitizationOffice
-import domain.item_mappers.digitize.DigitizationOffice.DigitizeBook
-import domain.item_mappers.digitize.DigitizationOffice.DigitizeNewspaper
+import ru.phantom.library.data.repository.LibraryRepository.addItem
+import ru.phantom.library.data.repository.LibraryRepository.getBooksInLibrary
+import ru.phantom.library.data.repository.LibraryRepository.getDigitizeItems
+import ru.phantom.library.data.repository.LibraryRepository.getNewspapersInLibrary
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitizeBook
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitizeNewspaper
 import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW

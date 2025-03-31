@@ -1,11 +1,11 @@
 package ru.phantom.library.presentation.main
 
-import data.Position
-import data.repository.LibraryRepository.addItemBook
-import data.repository.LibraryRepository.addItemDisk
-import data.repository.LibraryRepository.addItemNewspaper
-import data.repository.LibraryRepository.getItemsCounter
-import ru.phantom.library.domain.LibraryService
+import ru.phantom.library.data.Position
+import ru.phantom.library.data.repository.LibraryRepository.addItemBook
+import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
+import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
+import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
+import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl

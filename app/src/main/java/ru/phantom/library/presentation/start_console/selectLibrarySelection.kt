@@ -7,6 +7,9 @@ import presentation.show_manager.selectShop
 import presentation.show_menu_for_selection.showMenuForSelection
 import presentation.start_console.SelectLibrarySelectionConsts.DIGITIZE_MENU
 import presentation.start_console.SelectLibrarySelectionConsts.SHOPS_MENU
+import presentation.start_console.selectLibrarySelectionConsts.DIGITIZE
+import presentation.start_console.selectLibrarySelectionConsts.GO_BACK
+import presentation.start_console.selectLibrarySelectionConsts.MANAGER
 
 private typealias MethodType = (Int) -> Unit
 
@@ -17,20 +20,20 @@ internal fun selectLibrarySelection(method: MethodType): Boolean {
             false
         }
         // Покупка менеджером товаров в соответствующем магазине
-        4 -> {
+        MANAGER -> {
             // showShops()
             val message = SHOPS_MENU
             showMenuForSelection(message, ::selectShop)
             false
         }
         //  Оцифровка предметов
-        5 -> {
+        DIGITIZE -> {
             // showStartDigitize()
             val message = DIGITIZE_MENU
             showMenuForSelection(message, ::goToDigitize)
             false
         }
-        6 -> true
+        GO_BACK -> true
         else -> {
             method(elementType)
             false
@@ -53,4 +56,10 @@ object SelectLibrarySelectionConsts {
                 3 - Показать оцифрованные предметы
                 4 - Выйти в главное меню
             """.trimIndent()
+}
+
+private object selectLibrarySelectionConsts {
+    const val MANAGER = 4
+    const val DIGITIZE = 5
+    const val GO_BACK = 6
 }
