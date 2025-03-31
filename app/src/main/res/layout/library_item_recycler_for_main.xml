@@ -5,10 +5,11 @@
     android:id="@+id/libraryItemsCards"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    app:cardCornerRadius="8dp"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     android:outlineAmbientShadowColor="@color/black"
-    app:cardCornerRadius="8dp">
+    >
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/libraryItemsCardsLayout"
@@ -20,10 +21,10 @@
             android:id="@+id/itemIconInCards"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:contentDescription="@string/itemiconincards"
             android:scaleType="fitCenter"
-            android:src="@drawable/twotone_menu_book_24"
             app:layout_constraintDimensionRatio="2:3"
+            android:contentDescription="@string/itemiconincards"
+            android:src="@drawable/twotone_menu_book_24"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -32,29 +33,29 @@
             android:id="@+id/itemIdInCards"
             android:layout_width="wrap_content"
             android:layout_height="20dp"
-            android:textAlignment="center"
+            tools:text="id Элемента"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@id/itemNameInCards"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@id/itemIconInCards"
-            tools:text="id Элемента" />
+            app:layout_constraintBottom_toTopOf="@id/itemNameInCards"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
             android:id="@+id/itemNameInCards"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxWidth="180dp"
             android:maxHeight="40dp"
+            android:textSize="22sp"
+            android:maxWidth="180dp"
             android:maxLines="2"
             android:textAlignment="center"
-            android:textSize="22sp"
+            android:ellipsize="end"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/itemIdInCards"
-            tools:ignore="MissingConstraints"
-            tools:text="Название предмета в библиотеке" />
+            tools:text="Название предмета в библиотеке"
+            tools:ignore="MissingConstraints" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
