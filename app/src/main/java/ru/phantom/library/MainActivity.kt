@@ -39,9 +39,9 @@ class MainActivity : AppCompatActivity() {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {
-            layoutManager = GridLayoutManager(context, 2)
+            layoutManager = GridLayoutManager(context, SPAN_COUNT)
             adapter = libraryAdapter
-            addItemDecoration(SpacesItemDecoration(8))
+            addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
         }
 
         // Добавляю itemTouchHelper
@@ -59,5 +59,10 @@ class MainActivity : AppCompatActivity() {
         items.addAll(LibraryRepository.getDisksInLibrary())
 
         libraryAdapter.addItems(items)
+    }
+
+    private companion object MainActivityConsts {
+        const val SPAN_COUNT = 2
+        const val SPACES_ITEM_DECORATION_COUNT = 8
     }
 }
