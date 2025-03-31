@@ -47,15 +47,21 @@ class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) 
 
     fun bindAvailability(availability: Boolean) = with(binding) {
         if (availability) {
-//            libraryItemsCardsLayout.alpha = 1.0f
-            itemNameInCards.alpha = 1.0f
-            itemIdInCards.alpha = 1.0f
-            libraryItemsCards.elevation = 10.0f
+            itemNameInCards.alpha = ENABLED_ALPHA
+            itemIdInCards.alpha = ENABLED_ALPHA
+            libraryItemsCards.elevation = ENABLED_ELEVATION
         } else {
-//            libraryItemsCardsLayout.alpha = 0.3f
-            itemNameInCards.alpha = 0.3f
-            itemIdInCards.alpha = 0.3f
-            libraryItemsCards.elevation = 1.0f
+            itemNameInCards.alpha = DISABLED_ALPHA
+            itemIdInCards.alpha = DISABLED_ALPHA
+            libraryItemsCards.elevation = DISABLED_ELEVATION
         }
+    }
+
+    companion object LibraryViewHolderConsts {
+        const val ENABLED_ALPHA = 1.0f
+        const val DISABLED_ALPHA = 0.3f
+
+        const val ENABLED_ELEVATION = 10.0f
+        const val DISABLED_ELEVATION = 1.0f
     }
 }
