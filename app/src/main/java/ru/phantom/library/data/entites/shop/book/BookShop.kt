@@ -20,9 +20,9 @@ object BookShop : BookShopType {
                 id = BOOK_SHOP_ID + counter++,
                 availability = true,
             ),
-            LibraryService()
+            LibraryService
         ).apply {
-            this.author = "МАГАЗИН"
+            this.author = listOf("МАГАЗИН")
             this.numberOfPages = Int.MAX_VALUE
         }
     }

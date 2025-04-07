@@ -22,7 +22,7 @@ object DiskShop : DiskShopType {
                 id = DISK_SHOP_ID + counter++,
                 availability = true,
             ),
-            LibraryService()
+            LibraryService
         ).apply {
             val typeSize = Type.entries.size
             type = Type.entries[(START_TYPE_INDEX ..< typeSize).random()]

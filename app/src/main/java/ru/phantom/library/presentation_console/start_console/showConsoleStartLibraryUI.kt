@@ -1,4 +1,4 @@
-package ru.phantom.library.presentation.start_console
+package ru.phantom.library.presentation_console.start_console
 
 import presentation.show_items.printLibraryItems
 import presentation.start_console.selectLibrarySelection
