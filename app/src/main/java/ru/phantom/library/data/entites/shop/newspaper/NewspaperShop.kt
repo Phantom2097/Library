@@ -2,8 +2,8 @@ package ru.phantom.library.data.entites.shop.newspaper
 
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
-import ru.phantom.library.data.entites.library.items.newspaper_with_month.Month
-import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.Month
+import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.entites.shop.Shop
 import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.END_ISSUE_NUMBER
 import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop.NewspaperShopConsts.NEWSPAPER_SHOP_ID
@@ -24,7 +24,7 @@ object NewspaperShop : NewspaperShopType {
                 id = NEWSPAPER_SHOP_ID + counter++,
                 availability = true,
             ),
-            LibraryService()
+            LibraryService
         ).apply {
             issueNumber = (START_ISSUE_NUMBER ..< END_ISSUE_NUMBER).random()
             issueMonth = Month.entries.random()

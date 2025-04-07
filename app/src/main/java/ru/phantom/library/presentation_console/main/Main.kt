@@ -1,4 +1,4 @@
-package ru.phantom.library.presentation.main
+package ru.phantom.library.presentation_console.main
 
 import ru.phantom.library.data.Position
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -7,34 +7,34 @@ import ru.phantom.library.data.entites.library.items.disk.DiskImpl
 import ru.phantom.library.data.entites.library.items.disk.Type.CD
 import ru.phantom.library.data.entites.library.items.disk.Type.DVD
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.entites.library.items.newspaper_with_month.Month.JANUARY
-import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.Month.JANUARY
+import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.repository.LibraryRepository.addItemBook
 import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
 import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
 import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
-import ru.phantom.library.data.repository.LibraryRepository.getNewspapersInLibrary
 import ru.phantom.library.domain.library_service.LibraryService
+import ru.phantom.library.presentation_console.start_console.showConsoleStartLibraryUI
 
 fun main() {
-    val libraryService = LibraryService()
+    val libraryService = LibraryService
     createBooks(libraryService)
     createNewspapers(libraryService)
     createDisks(libraryService)
 
-    val news = getNewspapersInLibrary()
-    news.forEach {
-        println(it.fullInformation())
-    }
-//    showConsoleStartLibraryUI()
+//    val news = getNewspapersInLibrary()
+//    news.forEach {
+//        println(it.fullInformation())
+//    }
+    showConsoleStartLibraryUI()
 }
 
-private fun createBook(
+fun createBook(
     name: String,
     id: Int = getItemsCounter(),
     availability: Boolean = true,
     position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
-    author: String = " ",
+    author: String = "",
     numberOfPages: Int? = null,
     service: LibraryService
 ) {
@@ -46,9 +46,11 @@ private fun createBook(
                 availability = availability,
                 position = position
             ),
-            service
+            service,
+            author = author.split(", "),
+            numberOfPages = numberOfPages
         ).apply {
-            this.author = author
+            this.author = author.split(", ")
             this.numberOfPages = numberOfPages
         })
 }

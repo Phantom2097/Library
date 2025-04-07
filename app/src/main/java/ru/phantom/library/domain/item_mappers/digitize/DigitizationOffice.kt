@@ -3,8 +3,8 @@ package ru.phantom.library.domain.item_mappers.digitize
 import presentation.colors.Colors.ANSI_PURPLE
 import presentation.colors.Colors.ANSI_RESET
 import ru.phantom.library.data.entites.library.Showable
-import ru.phantom.library.data.entites.library.items.Digitable
-import ru.phantom.library.data.entites.library.items.book.BookImpl
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Digitable
 import ru.phantom.library.data.entites.library.items.disk.Disk
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitalType.CD
@@ -34,9 +34,9 @@ sealed interface DigitizationOffice {
         }
     }
     class DigitizeBook(
-        private val book: BookImpl,
+        private val book: Book,
         override var type: Digitable = CD
-    ) : DigitizationOffice, Disk {
+    ) : DigitizationOffice, Disk(book.item, book.service) {
         override fun toDigitize(): DigitalItem {
             return DigitalItem(book, type)
         }
@@ -45,7 +45,7 @@ sealed interface DigitizationOffice {
     class DigitizeNewspaper(
         private val newspaper: Newspaper,
         override var type: Digitable = CD
-    ) : DigitizationOffice, Disk {
+    ) : DigitizationOffice, Disk(newspaper.item, newspaper.service) {
         override fun toDigitize(): DigitalItem {
             return DigitalItem(newspaper, type)
         }

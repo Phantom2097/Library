@@ -1,19 +1,18 @@
 package ru.phantom.library.data.repository
 
-import ru.phantom.library.data.entites.library.items.book.BookImpl
-import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.repository.LibraryRepository.LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
-import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
 import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RED
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Disk
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.data.repository.LibraryRepository.LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
 
 object LibraryRepository {
-    private val _booksList by lazy { mutableListOf<BookImpl>() }
-    private val _disksList by lazy { mutableListOf<DiskImpl>() }
+    private val _booksList by lazy { mutableListOf<Book>() }
+    private val _disksList by lazy { mutableListOf<Disk>() }
     private val _newspapersList by lazy { mutableListOf<Newspaper>() }
 
     // Оцифрованные предметы
@@ -22,8 +21,8 @@ object LibraryRepository {
     private var itemsCounter = START_LIBRARY_ITEM_INDEX
 
     // Book
-    fun addItemBook(book: BookImpl) { _booksList.add(book) }
-    fun getBooksInLibrary(): List<BookImpl> = _booksList.ifEmpty {
+    fun addItemBook(book: Book) { _booksList.add(book) }
+    fun getBooksInLibrary(): List<Book> = _booksList.ifEmpty {
         println(ANSI_RED + "На данный момент в библиотеке нет ни одной книги 🤷‍♂️\n" + ANSI_RESET)
         emptyList()
     }
@@ -36,17 +35,17 @@ object LibraryRepository {
     }
 
     // Disk
-    fun addItemDisk(disk: DiskImpl) { _disksList.add(disk) }
-    fun getDisksInLibrary(): List<DiskImpl> = _disksList.ifEmpty {
+    fun addItemDisk(disk: Disk) { _disksList.add(disk) }
+    fun getDisksInLibrary(): List<Disk> = _disksList.ifEmpty {
         println(ANSI_RED + "На данный момент в библиотеке нет ни одного диска 🤷‍♂️\n" + ANSI_RESET)
         emptyList()
     }
 
     fun <LibraryType> addItem(item: LibraryType) {
         when (item) {
-            is BookImpl -> _booksList.add(item)
-            is NewspaperImpl -> _newspapersList.add(item)
-            is DiskImpl -> _disksList.add(item)
+            is Book -> _booksList.add(item)
+            is Newspaper -> _newspapersList.add(item)
+            is Disk -> _disksList.add(item)
             is DigitizationOffice.DigitalItem -> _digitizeSet.add(item)
             else -> {
                 println(ANSI_RED + "Подборки для этого предмета в библиотеке нет!!!" + ANSI_RESET)

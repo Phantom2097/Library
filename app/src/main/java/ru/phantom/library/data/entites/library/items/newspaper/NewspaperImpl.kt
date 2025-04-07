@@ -5,14 +5,13 @@ import ru.phantom.library.domain.library_service.LibraryService
 
 data class NewspaperImpl(
     override val item: LibraryItem,
-    override val libraryService: LibraryService
-) :
-    Newspaper(item, libraryService)
-{
+    override val service: LibraryService,
     override var issueNumber: Int? = null
-
+) :
+    Newspaper(item, service)
+{
     override fun toString(): String {
-        val tempAvailability = if (item.availability) "Да" else "Нет"
+        val tempAvailability = service.showAvailability(item.availability)
         return "Выпуск: ${issueNumber ?: "*неизвестно*"} газеты ${item.name} с id: ${item.id} доступен: $tempAvailability\n"
     }
 }

@@ -3,4 +3,16 @@
     <string name="itemiconincards">itemIconInCards</string>
     <string name="helloLibraryMessage">Библиотека</string>
     <string name="recyclerMainDescription">Лист с предметами хранящимися в библиотеке</string>
+    <string name="selected_item_icon">Selected item icon</string>
+    <string name="text_for_current_item_description">Text for current item description</string>
+    <string name="selected_item_view_description_top">Описание</string>
+    <string name="buttonOnMainForAddItems">Кнопка для добавления элементов</string>
+    <string name="selectedItemEnterName">Введите название</string>
+    <string name="selectedItemEnterId">Введите Id</string>
+    <string name="selectedItemNameTop">Название</string>
+    <string name="saveElementButton">Сохранить</string>
+    <string name="addBookText">Книга</string>
+    <string name="addNewspaperText">Газета</string>
+    <string name="addDiscText">Диск</string>
+    <string name="bottomSheetDialogMainUpText">Добавить предмет в библиотеку</string>
 </resources>

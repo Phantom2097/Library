@@ -3,30 +3,17 @@ package ru.phantom.library.data.entites.library.items.newspaper
 import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
 import ru.phantom.library.data.Position
-import ru.phantom.library.data.entites.library.Showable
-import ru.phantom.library.data.entites.library.Readable
-import ru.phantom.library.data.entites.library.items.Itemable
+import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.domain.library_service.LibraryService
 
 abstract class Newspaper(
-    open val item: LibraryItem,
-    open val libraryService: LibraryService,
+    override val item: LibraryItem,
+    override val service: LibraryService,
 ) :
-    Showable,
-    Readable,
-    Itemable
+    BasicLibraryElement(item, service)
 {
     abstract var issueNumber: Int?
-
-//    override fun getItem(): LibraryItem = item
-    override fun getName(): String = item.name
-    override fun getId(): Int = item.id
-    override fun getAvailability(): Boolean = item.availability
-
-    override fun setAvailability() {
-        libraryService.setAvailability(!getAvailability(), item)
-    }
 
     // Вывод информации
     override fun briefInformation(): String {
@@ -38,9 +25,9 @@ abstract class Newspaper(
 
     // Возврат в библиотеку
     override fun returnInLibrary(): String =
-        if (libraryService.setAvailability(true, item)) {
+        if (service.setAvailability(true, item)) {
 
-            libraryService.setPosition(Position.LIBRARY, item)
+            service.setPosition(Position.LIBRARY, item)
 
             "$ANSI_GREEN*Газета ${item.name} выпуск ${issueNumber ?: "*неизвестно*"} id: ${item.id} вернули в библиотеку*$ANSI_RESET\n" +
                     "Газета \"${item.name}\" возвращена\n"
@@ -50,9 +37,9 @@ abstract class Newspaper(
 
     // Читать в читальном зале
     override fun readInTheReadingRoom(): String =
-        if (libraryService.setAvailability(false, item)) {
+        if (service.setAvailability(false, item)) {
 
-            libraryService.setPosition(Position.IN_READING_ROOM, item)
+            service.setPosition(Position.IN_READING_ROOM, item)
 
             "$ANSI_GREEN*Газета ${item.name} выпуск ${issueNumber ?: "*неизвестно*"} id: ${item.id} взяли в читальный зал*$ANSI_RESET\n" +
                     "Газета \"${item.name}\" ваша, не забудьте вернуть до закрытия\n"

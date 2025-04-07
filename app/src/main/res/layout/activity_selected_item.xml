@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/selectedItem"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mainBackground"
+    tools:context=".presentation.selected_item.SelectedItemActivity">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/libraryItemsCards"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="12dp"
+        android:outlineAmbientShadowColor="@color/black"
+        app:cardCornerRadius="16dp">
+
+        <!--  Так выглядит поинтереснее, с анимацией cardView мог бы расшириться до экрана  -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/selectedItemIcon"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_margin="10dp"
+                android:contentDescription="@string/selected_item_icon"
+                android:maxWidth="180dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/twotone_menu_book_24"
+                app:layout_constraintBottom_toTopOf="@id/selectedItemName"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/selectedItemNameTop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:alpha="0.8"
+                android:paddingHorizontal="8dp"
+                android:text="@string/selectedItemNameTop"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toTopOf="@id/selectedItemName"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <EditText
+                android:id="@+id/selectedItemName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="20dp"
+                android:background="@color/transparent"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:hint="@string/selectedItemEnterName"
+                android:importantForAutofill="no"
+                android:inputType="textCapWords|textMultiLine"
+                android:maxLines="2"
+                android:textAlignment="center"
+                android:textSize="30sp"
+                app:layout_constraintBottom_toTopOf="@id/selectedItemId"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectedItemIcon" />
+
+            <EditText
+                android:id="@+id/selectedItemId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="10dp"
+                android:alpha="0.8"
+                android:background="@color/transparent"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:hint="@string/selectedItemEnterId"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:textAlignment="center"
+                app:layout_constraintBottom_toTopOf="@id/scrollDescription"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectedItemName" />
+
+
+            <TextView
+                android:id="@+id/selectedItemViewDescriptionTop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:alpha="0.8"
+                android:paddingHorizontal="8dp"
+                android:text="@string/selected_item_view_description_top"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toTopOf="@id/scrollDescription"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <ScrollView
+                android:id="@+id/scrollDescription"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="24dp"
+                app:layout_constraintBottom_toTopOf="@id/saveElementButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectedItemId">
+
+                <TextView
+                    android:id="@+id/selectedItemDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:contentDescription="@string/text_for_current_item_description"
+                    android:paddingHorizontal="8dp"
+                    android:paddingBottom="8dp"
+                    android:textSize="20sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Very long Item Description for this item. And it is have multiple lines on layout....................................................................................................................................................................................................................................................................................................................................................................................................................................................... Возможно надо было просто найти какой-то текст и запихнуть сюда, но для этого надо взять мышку в руку и убрать пальцы с клавиатуры, а я уже почти смог заполнить экран, ещё одну строчку дописать, последнее слово и всё. Да теперь это уже частично за экраном, но проблема в том, что тут в студии на превью экран 16 на 9, а это значит, что текст может всё равно влезть, потому что от ширины уменьшится картинка и экран будет более вытянутый. Думаю этого хватит." />
+            </ScrollView>
+
+            <Button
+                android:id="@+id/saveElementButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/saveElementButton"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/scrollDescription" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,40 +6,57 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast.LENGTH_SHORT
 import android.widget.Toast.makeText
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import ru.phantom.library.data.entites.library.items.Itemable
+import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.entites.library.items.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
-import ru.phantom.library.domain.main_recycler.ViewTypedLibraryWrapper
-import ru.phantom.library.domain.main_recycler.utils.DiffCallback
+import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
+import ru.phantom.library.presentation.main.MainViewModel
+import ru.phantom.library.presentation.selected_item.SelectedItemActivity
 
-class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
-
-    var data: List<ViewTypedLibraryWrapper> = emptyList()
+// Теперь использую ListAdapter и ItemCallback
+class LibraryItemsAdapter(
+    private val viewModel: MainViewModel
+) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
-            LayoutInflater.from(parent.context)
+            LayoutInflater.from(parent.context), parent, false
         )
         return LibraryViewHolder(binding).apply {
-            binding.root.setOnClickListener {
-                changeAvailabilityClick(parent.context, adapterPosition)
+            // Переход на view с конкретным элементом
+            binding.root.setOnClickListener { view ->
+                goToSelectItemActivity(view.context, adapterPosition)
+            }
+            // Долго нажатие для изменения видимости элемента
+            binding.root.setOnLongClickListener { view ->
+                changeAvailabilityClick(view.context, adapterPosition)
+                true
             }
         }
     }
 
+    private fun goToSelectItemActivity(context: Context, position: Int) {
+        if (position != RecyclerView.NO_POSITION) {
+            context.startActivity(
+                SelectedItemActivity.createIntent(
+                    context,
+                    getItem(position)
+                )
+            )
+        }
+    }
+
     override fun onBindViewHolder(holder: LibraryViewHolder, position: Int) {
-        val itemWrapper = data[position].getItemable()
-        holder.bind(itemWrapper)
+        holder.bind(getItem(position))
     }
 
     override fun onBindViewHolder(
@@ -52,88 +69,45 @@ class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
         } else {
             payloads.forEach { payload ->
                 when (payload) {
-                    is DiffCallback.ItemAvailabilityChange ->
+                    is ElementDiffCallback.ItemAvailabilityChange ->
                         holder.bindAvailability(payload.changedAvailability)
                 }
             }
         }
     }
 
-    override fun getItemCount(): Int = data.size
-
-    fun addItems(items: MutableList<Itemable>) {
-
-        val wrapped = items.map { item ->
-            when (item) {
-                is BookImpl -> ViewTypedLibraryWrapper.Book(item)
-                is DiskImpl -> ViewTypedLibraryWrapper.Disk(item)
-                is Newspaper -> ViewTypedLibraryWrapper.Newspaper(item)
-                else -> throw IllegalArgumentException("Так не должно быть")
-            }
-        }
-
-        updateList(data, wrapped)
-    }
-
-    fun removeItem(position: Int) {
-        val newList = data.toMutableList().apply { removeAt(position) }
-
-        Log.d("Size", "prev size = ${data.size}")
-        Log.d("Size", "new size = ${newList.size}")
-
-        updateList(data, newList)
-    }
+    override fun getItemCount(): Int = currentList.size
 
     private fun changeAvailabilityClick(context: Context, position: Int) {
-        if (position !in data.indices) return
+        if (position !in currentList.indices) return
 
-        val oldItem = data[position].getItemable()
+        val oldItem = getItem(position)
+        val newLibraryItem = oldItem.item.copy(availability = !oldItem.item.availability)
         val newItem = when (oldItem) {
-            is BookImpl -> {
-                val itemForBook = oldItem.item.copy().apply { availability = !availability }
-                ViewTypedLibraryWrapper.Book(oldItem.copy(item = itemForBook))
-            }
-            is DiskImpl -> ViewTypedLibraryWrapper.Disk(oldItem.copy())
-            is NewspaperImpl -> ViewTypedLibraryWrapper.Newspaper(oldItem.copy())
-            is NewspaperWithMonthImpl -> ViewTypedLibraryWrapper.Newspaper(oldItem.copy())
+            is BookImpl -> oldItem.copy(item = newLibraryItem)
+            is DiskImpl -> oldItem.copy(item = newLibraryItem)
+            is NewspaperImpl -> oldItem.copy(item = newLibraryItem)
+            is NewspaperWithMonthImpl -> oldItem.copy(item = newLibraryItem)
             else -> throw IllegalArgumentException("Неверный тип элемента")
         }
 
-        val newList = data.toMutableList()
-        newList[position] = newItem //.apply { getItemable().setAvailability() }
+        // Обновление списка теперь через ViewModel
+        viewModel.updateElementContent(position, newItem)
 
-        // проблема сразу видна
         Log.d(
             "Availability",
-            "prev availability = ${oldItem.getAvailability()}"
+            "prev availability = ${oldItem.item.availability}"
         )
-        Log.d("Availability", "new availability = ${newItem.getItemable().getAvailability()}")
-
-        /*
-        Принудительное обновление, потому что классы не data, иначе не могу использовать наследование
-        Пробовал поменять наследование Newspaper на композицию и делегирование,
-        Но тогда надо менять всю логику старого кода
-        */
-        updateList(data, newList)
-//        notifyItemChanged(position, DiffCallback.ItemAvailabilityChange(newItem.getItemable().getAvailability()))
+        Log.d(
+            "Availability",
+            "new availability = ${newItem.item.availability}"
+        )
 
         makeText(
             context,
-            "Предмет c id: ${newItem.getItemable().getId()} ${if (newItem.getItemable().getAvailability()) "да" else "нет"}",
+            newItem.briefInformation(),
             LENGTH_SHORT
         ).show()
-    }
-
-    private fun updateList(
-        oldList: List<ViewTypedLibraryWrapper>,
-        newList: List<ViewTypedLibraryWrapper>
-    ) {
-        val diffUtil = DiffCallback(oldList, newList)
-        val diffResult = DiffUtil.calculateDiff(diffUtil)
-
-        data = newList
-
-        diffResult.dispatchUpdatesTo(this)
     }
 
     // Callback для ItemTouchCallback, чтобы свайпать элементы
@@ -155,12 +129,13 @@ class LibraryItemsAdapter : RecyclerView.Adapter<LibraryViewHolder>() {
             val currPosition = viewHolder.adapterPosition
 
             if (currPosition != RecyclerView.NO_POSITION) {
-                removeItem(currPosition)
+                // Удаление теперь через ViewModel
+                viewModel.removeElement(currPosition)
             }
         }
     }
 
-    companion object AdapterConsts {
+    companion object {
         const val NO_ACTION = 0
     }
 }

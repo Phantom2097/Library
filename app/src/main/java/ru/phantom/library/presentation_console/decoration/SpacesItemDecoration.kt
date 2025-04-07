@@ -1,4 +1,4 @@
-package ru.phantom.library.presentation.decoration
+package ru.phantom.library.presentation_console.decoration
 
 import android.graphics.Rect
 import android.view.View
