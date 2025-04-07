@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import android.widget.Toast.makeText
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -61,20 +63,35 @@ class SelectedItemActivity : AppCompatActivity() {
                 text = "Сохранить"
 
                 setOnClickListener {
-                    val newName = selectedItemName.text.toString()
+                    val newName = selectedItemName.text?.toString()?.trim()
                     val newId = selectedItemId.text.toString().toIntOrNull() ?: -1
 
-                    val resultIntent = Intent().apply {
-                        putExtra(SELECTED_NAME, newName)
-                        putExtra(SELECTED_ID, newId)
-                        putExtra(TYPE_KEY, image)
+                    val textToast = when {
+                        newName.isNullOrBlank() && newId == -1 -> "Неверные название и ID"
+                        newName.isNullOrBlank() -> "Неверное название"
+                        newId == -1 -> "Неверный ID"
+                        else -> {
+                            returnResult(newName, newId, image)
+                            null
+                        }
                     }
-
-                    setResult(RESULT_OK, resultIntent)
-                    finish()
+                    textToast?.let { text ->
+                        makeText(this@SelectedItemActivity, text, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
+    }
+
+    private fun returnResult(newName: String, newId: Int, image: Int) {
+        val resultIntent = Intent().apply {
+            putExtra(SELECTED_NAME, newName)
+            putExtra(SELECTED_ID, newId)
+            putExtra(TYPE_KEY, image)
+        }
+
+        setResult(RESULT_OK, resultIntent)
+        finish()
     }
 
     private fun showOnly() {

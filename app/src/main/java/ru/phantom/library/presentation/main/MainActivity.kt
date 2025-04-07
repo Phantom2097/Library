@@ -17,10 +17,10 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
+import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.repository.LibraryRepository
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
-import ru.phantom.library.domain.library_service.LibraryElementFactory
 import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation.selected_item.SelectedItemActivity
@@ -94,11 +94,11 @@ class MainActivity : AppCompatActivity() {
         createNewspapers(libraryService)
         createDisks(libraryService)
 
-        val items = mutableListOf<BasicLibraryElement>()
-
-        items.addAll(LibraryRepository.getBooksInLibrary())
-        items.addAll(LibraryRepository.getNewspapersInLibrary())
-        items.addAll(LibraryRepository.getDisksInLibrary())
+        val items = mutableListOf<BasicLibraryElement>().apply {
+            addAll(LibraryRepository.getBooksInLibrary())
+            addAll(LibraryRepository.getNewspapersInLibrary())
+            addAll(LibraryRepository.getDisksInLibrary())
+        }
 
         viewModel.updateElements(items)
     }
@@ -106,61 +106,43 @@ class MainActivity : AppCompatActivity() {
     private fun resultHandler(): ActivityResultLauncher<Intent> {
         return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == RESULT_OK) {
-                val name = result.data?.getStringExtra(SELECTED_NAME)?.trim()
+
+                val name = result.data?.getStringExtra(SELECTED_NAME)
                 val id = result.data?.getIntExtra(SELECTED_ID, DEFAULT_ID) ?: DEFAULT_ID
                 // Я решил сделать через IMAGE, так как на данный момент их логика совпадает
                 val elementType = result.data?.getIntExtra(TYPE_KEY, DEFAULT_IMAGE) ?: DEFAULT_IMAGE
 
-                if (name != null && id != DEFAULT_ID) {
-                    when (elementType) {
-                        BOOK_IMAGE -> {
-                            val newBook = LibraryElementFactory.createBook(name, id)
-                            viewModel.updateElements(listOf(newBook))
-                            makeText(
-                                this@MainActivity,
-                                "Добавлена книга",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        NEWSPAPER_IMAGE -> {
-                            val newNewspaper = LibraryElementFactory.createNewspaper(name, id)
-                            viewModel.updateElements(listOf(newNewspaper))
-                            makeText(
-                                this@MainActivity,
-                                "Добавлена газета",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        DISK_IMAGE -> {
-                            val newDisk = LibraryElementFactory.createDisk(name, id)
-                            viewModel.updateElements(listOf(newDisk))
-
-                            makeText(
-                                this@MainActivity,
-                                "Добавлен диск",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        else -> {
-                            makeText(
-                                this,
-                                "Такой подборки в библиотеке нет",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
+                val showText = if (name != null && id != DEFAULT_ID) {
+                    val newLibraryItem = LibraryItem(name, id)
+                    itemCreator(newLibraryItem, elementType)
                 } else {
-                    makeText(
-                        this,
-                        "Неверное имя или id, попробуйте ещё раз",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    "Неверное имя или id, попробуйте ещё раз"
                 }
+                makeText(
+                    this@MainActivity,
+                    showText,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
+    }
+
+    /*
+    * Вынес общий код в отдельный метод, в начале сделал вариант, где вся обработка выполняется в
+    * этом методе, но перенёс логику по созданию во вьюМодель
+     */
+    private fun itemCreator(item: LibraryItem, elementType: Int): String {
+
+        viewModel.addNewElement(item, elementType)
+
+        val text = when (elementType) {
+            BOOK_IMAGE -> "Добавлена книга"
+            NEWSPAPER_IMAGE -> "Добавлена газета"
+            DISK_IMAGE -> "Добавлен диск"
+            else -> "Такой подборки в библиотеке нет"
+        }
+
+        return text
     }
 
     private fun showAddItemBottomSheet() {
@@ -173,47 +155,28 @@ class MainActivity : AppCompatActivity() {
 
         // Устанавливаю слушателей нажатий для кнопок добавления
         bottomSheet.apply {
-            addBook.setOnClickListener {
-                startForResult.launch( // возвращает Result, для добавления созданного элемента через ViewModel
-                    SelectedItemActivity.createIntent(
-                        this@MainActivity,
-                        null,
-                        CREATE_TYPE,
-                        BOOK_IMAGE
-                    )
-                )
-                bottomSheetDialog.dismiss()
-            }
-
-            addNewspaper.setOnClickListener {
-                startForResult.launch(
-                    SelectedItemActivity.createIntent(
-                        this@MainActivity,
-                        null,
-                        CREATE_TYPE,
-                        NEWSPAPER_IMAGE
-                    )
-                )
-                bottomSheetDialog.dismiss()
-            }
-
-            addDisk.setOnClickListener {
-                startForResult.launch(
-                    SelectedItemActivity.createIntent(
-                        this@MainActivity,
-                        null,
-                        CREATE_TYPE,
-                        DISK_IMAGE
-                    )
-                )
-                bottomSheetDialog.dismiss()
-            }
+            // Вынес в отдельную функцию скрытие диалога и запуск активити создания элемента
+            addBook.setOnClickListener { setBottomSheetButtons(BOOK_IMAGE, bottomSheetDialog) }
+            addNewspaper.setOnClickListener { setBottomSheetButtons(NEWSPAPER_IMAGE, bottomSheetDialog) }
+            addDisk.setOnClickListener { setBottomSheetButtons(DISK_IMAGE, bottomSheetDialog) }
         }
 
         // Это тоже не помогло, оно всё равно вылезает несколько раз при быстром нажатии
         if (!bottomSheetDialog.isShowing && !isFinishing) {
             bottomSheetDialog.show()
         }
+    }
+
+    private fun setBottomSheetButtons(elementType: Int, dialog: BottomSheetDialog) {
+        startForResult.launch(
+            SelectedItemActivity.createIntent(
+                this@MainActivity,
+                null,
+                CREATE_TYPE,
+                elementType
+            )
+        )
+        dialog.dismiss()
     }
 
     private fun initViewModel() {
@@ -226,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
+    private companion object {
         // Для списка элементов
         const val SPAN_COUNT = 2
         const val SPACES_ITEM_DECORATION_COUNT = 12

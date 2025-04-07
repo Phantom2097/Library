@@ -13,7 +13,7 @@ import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_mo
 import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 
 object LibraryElementFactory {
-    fun createBook(
+    fun createBook (
         name: String,
         id: Int = getItemsCounter(),
         availability: Boolean = true,
@@ -23,35 +23,64 @@ object LibraryElementFactory {
         service: LibraryService = LibraryService
     ): Book {
         return BookImpl(
-                LibraryItem(
-                    name = name,
-                    id = id,
-                    availability = availability,
-                    position = position
-                ),
-                service,
-                author = author.split(", "),
-                numberOfPages = numberOfPages
-            )
-    }
-
-    fun createNewspaper(
-        name: String,
-        id: Int = getItemsCounter(),
-        availability: Boolean = true,
-        position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
-        issueNumber: Int? = null,
-        issueMonth: Month = Month.UNKNOWN,
-        service: LibraryService = LibraryService
-    ): Newspaper {
-        return NewspaperWithMonthImpl(
             LibraryItem(
                 name = name,
                 id = id,
                 availability = availability,
                 position = position
             ),
-            service,
+            service = service,
+            author = author.trim().split(", "),
+            numberOfPages = numberOfPages
+        )
+    }
+
+    // Перегрузка со сразу готовым item
+    fun createBook (
+        item: LibraryItem,
+        author: String = "",
+        numberOfPages: Int? = null,
+        service: LibraryService = LibraryService
+    ): Book {
+        return BookImpl(
+            item = item,
+            service = service,
+            author = author.split(", "),
+            numberOfPages = numberOfPages
+        )
+    }
+
+//    fun createNewspaper(
+//        name: String,
+//        id: Int = getItemsCounter(),
+//        availability: Boolean = true,
+//        position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
+//        issueNumber: Int? = null,
+//        issueMonth: Month = Month.UNKNOWN,
+//        service: LibraryService = LibraryService
+//    ): Newspaper {
+//        return NewspaperWithMonthImpl(
+//            LibraryItem(
+//                name = name,
+//                id = id,
+//                availability = availability,
+//                position = position
+//            ),
+//            service = service,
+//            issueNumber = issueNumber,
+//            issueMonth = issueMonth
+//        )
+//    }
+
+    fun createNewspaper (
+        item: LibraryItem,
+        issueNumber: Int? = null,
+        issueMonth: Month = Month.UNKNOWN,
+        service: LibraryService = LibraryService
+    ): Newspaper {
+        return NewspaperWithMonthImpl(
+            item = item,
+            service = service,
             issueNumber = issueNumber,
             issueMonth = issueMonth
         )
@@ -72,7 +101,19 @@ object LibraryElementFactory {
                 availability = availability,
                 position = position
             ),
-            service,
+            service = service,
+            type = type
+        )
+    }
+
+    fun createDisk (
+        item: LibraryItem,
+        type: Type = Type.UNKNOWN,
+        service: LibraryService = LibraryService
+    ): Disk {
+        return DiskImpl(
+            item = item,
+            service = service,
             type = type
         )
     }

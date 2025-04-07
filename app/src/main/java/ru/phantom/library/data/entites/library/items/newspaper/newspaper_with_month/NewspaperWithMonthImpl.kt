@@ -16,13 +16,14 @@ data class NewspaperWithMonthImpl(
 {
     override fun toString(): String {
         val tempAvailability = service.showAvailability(item.availability)
-        val tempMonth = issueMonth.getMonth()
         val tempIssueNumber = issueNumber ?: "*неизвестно*"
+        val tempMonth = issueMonth.getMonth()
 
         val resultMessage = buildString {
-            append("Выпуск: $tempIssueNumber газеты ${item.name}")
-            append("за месяц $tempMonth")
-            append(" с id: ${item.id} доступен: $tempAvailability\n")
+            append("Газета ${item.name}\n")
+            append("Выпуск: $tempIssueNumber\n")
+            append("Месяц: $tempMonth\n")
+            append("Доступна: $tempAvailability\n")
         }
         return resultMessage
     }

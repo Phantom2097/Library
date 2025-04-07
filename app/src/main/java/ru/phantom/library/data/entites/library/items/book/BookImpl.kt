@@ -10,6 +10,7 @@ data class BookImpl(
     override var numberOfPages: Int? = null
 ) : Book(item, service) {
 
+
     override fun toString(): String {
         val tempAvailability = service.showAvailability(item.availability)
         val tempNumberOfPages = numberOfPages?.let {
@@ -17,10 +18,19 @@ data class BookImpl(
         } ?: "*неизвестно*"
 
         val tempAuthor = when {
-            author.size == 1 -> "автор: ${author[0]}"
-            author.size > 1 -> "авторы: ${author.joinToString(separator = ", ", postfix = ".")}"
+            author.size == 1 -> {
+                val tempAuthor = author[0].ifBlank { "Неизвестен" }
+                "Автор: $tempAuthor"
+            }
+            author.size > 1 -> "Авторы: ${author.joinToString(separator = ", ", postfix = ".")}"
             else ->"*автор неизвестен*"
         }
-        return "Книга: ${item.name} ($tempNumberOfPages стр.) $tempAuthor с id: ${item.id} доступна: $tempAvailability\n"
+        // Я планировал использовать фрагменты для отображения параметров, но по техническим причинам не успел
+        return buildString {
+            append("Книга: ${item.name}\n")
+            append("($tempNumberOfPages стр.)\n")
+            append("$tempAuthor\n")
+            append("Доступна: $tempAvailability")
+        }
     }
 }

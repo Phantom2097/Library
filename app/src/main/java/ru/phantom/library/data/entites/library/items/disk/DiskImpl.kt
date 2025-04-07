@@ -11,7 +11,12 @@ data class DiskImpl(
 ) : Disk(item, service) {
 
     override fun toString(): String {
-        val tempAvailability = if (item.availability) "Да" else "Нет"
-        return "${type.getType()} ${item.name} доступен: $tempAvailability\n"
+        val tempAvailability = service.showAvailability(item.availability)
+        return buildString {
+            append("Диск: ${item.name}\n")
+            append("Тип: ${type.getType()}\n")
+            append("Доступен: $tempAvailability\n")
+        }
+//            "${type.getType()} ${item.name} доступен: $tempAvailability\n"
     }
 }
