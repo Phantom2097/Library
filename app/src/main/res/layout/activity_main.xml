@@ -8,6 +8,7 @@
     android:background="@color/mainBackground"
     tools:context=".MainActivity">
 
+<!--Этот комментарий, чтобы файл отображался в PR-->
     <TextView
         android:id="@+id/helloText"
         android:layout_width="match_parent"
