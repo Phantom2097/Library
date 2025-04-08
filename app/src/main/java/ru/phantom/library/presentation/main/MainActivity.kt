@@ -16,12 +16,9 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.repository.LibraryRepository
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
-import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation.selected_item.SelectedItemActivity
 import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.BOOK_IMAGE
@@ -34,9 +31,6 @@ import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Compan
 import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.SELECTED_NAME
 import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.TYPE_KEY
 import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
-import ru.phantom.library.presentation_console.main.createBooks
-import ru.phantom.library.presentation_console.main.createDisks
-import ru.phantom.library.presentation_console.main.createNewspapers
 
 class MainActivity : AppCompatActivity() {
 
@@ -62,9 +56,6 @@ class MainActivity : AppCompatActivity() {
 
         // Делаю то, что связано с UI
         initUi()
-
-        // Создаю элементы для списка
-        createItems()
     }
 
     private fun initUi() {
@@ -85,22 +76,7 @@ class MainActivity : AppCompatActivity() {
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
-    }
 
-    private fun createItems() {
-        // Создаю элементы для отображения
-        val libraryService = LibraryService
-        createBooks(libraryService)
-        createNewspapers(libraryService)
-        createDisks(libraryService)
-
-        val items = mutableListOf<BasicLibraryElement>().apply {
-            addAll(LibraryRepository.getBooksInLibrary())
-            addAll(LibraryRepository.getNewspapersInLibrary())
-            addAll(LibraryRepository.getDisksInLibrary())
-        }
-
-        viewModel.updateElements(items)
     }
 
     private fun resultHandler(): ActivityResultLauncher<Intent> {

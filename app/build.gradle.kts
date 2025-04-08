@@ -42,8 +42,17 @@ android {
 dependencies {
     implementation(libs.androidx.cardview)
 
+    // ViewModel
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    // Fragment
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.fragment.ktx)
+
+    // Fragment Navigation
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
