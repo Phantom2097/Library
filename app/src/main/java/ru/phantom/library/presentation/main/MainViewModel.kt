@@ -11,9 +11,13 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createBoo
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.BOOK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DISK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.NEWSPAPER_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_ID
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_NAME
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
 import ru.phantom.library.presentation_console.main.createBooks
 import ru.phantom.library.presentation_console.main.createDisks
 import ru.phantom.library.presentation_console.main.createNewspapers
@@ -21,6 +25,39 @@ import ru.phantom.library.presentation_console.main.createNewspapers
 class MainViewModel : ViewModel() {
     private val _elements = MutableLiveData<List<BasicLibraryElement>>()
     val elements: LiveData<List<BasicLibraryElement>> = _elements
+
+    private val _detailState = MutableLiveData<DetailState>(DetailState())
+    val detailState: LiveData<DetailState> = _detailState
+
+    private val _itemClickEvent = MutableLiveData<BasicLibraryElement?>()
+    val itemClickEvent: LiveData<BasicLibraryElement?> = _itemClickEvent
+
+    private val _scrollToEnd = MutableLiveData<Boolean>()
+    val scrollToEnd: LiveData<Boolean> = _scrollToEnd
+
+    fun scrollToEndReset() {
+        _scrollToEnd.value = false
+    }
+
+    fun onItemClicked(element: BasicLibraryElement) {
+        _itemClickEvent.value = element
+    }
+
+    fun reloadListener() {
+        _itemClickEvent.value = null
+    }
+
+    data class DetailState(
+        val uiType: Int = DEFAULT_TYPE,
+        val name: String = DEFAULT_NAME,
+        val id: Int = DEFAULT_ID,
+        val image: Int = DEFAULT_IMAGE,
+        val description: String? = null
+    )
+
+    fun setDetailState(state: DetailState) {
+        _detailState.value = state
+    }
 
     init {
         createItems()
@@ -39,6 +76,8 @@ class MainViewModel : ViewModel() {
             else -> null
         }
 
+        _scrollToEnd.value = true
+
         element?.let {
             updateElements(listOf(element))
         }
@@ -51,6 +90,12 @@ class MainViewModel : ViewModel() {
 
         oldList?.let {
             _elements.value = it
+        }
+    }
+
+    fun selectedRemove(element: BasicLibraryElement) {
+        if (element.item.id == _detailState.value?.id) {
+            _detailState.value = DetailState()
         }
     }
 
@@ -67,10 +112,6 @@ class MainViewModel : ViewModel() {
         _elements.value = newList
     }
 
-    /*
-     Перенёс функцию создания стартовых элементов во viewModel
-     Теперь фича с бесконечным добавлением элементов не работает
-     */
     private fun createItems() {
         if (_elements.value == null) {
             // Создаю элементы для отображения

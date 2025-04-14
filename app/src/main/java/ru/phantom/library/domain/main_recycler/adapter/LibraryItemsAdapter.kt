@@ -20,38 +20,27 @@ import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity
 
 // Теперь использую ListAdapter и ItemCallback
 class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return LibraryViewHolder(binding).apply {
             // Переход на view с конкретным элементом
-            binding.root.setOnClickListener { view ->
-                goToSelectItemActivity(view.context, adapterPosition)
+            binding.root.setOnClickListener {
+                val position = adapterPosition
+                Log.d("CLICKED", "в адаптере")
+                viewModel.onItemClicked(getItem(position))
             }
             // Долго нажатие для изменения видимости элемента
             binding.root.setOnLongClickListener { view ->
                 changeAvailabilityClick(view.context, adapterPosition)
                 true
             }
-        }
-    }
-
-    private fun goToSelectItemActivity(context: Context, position: Int) {
-        if (position != RecyclerView.NO_POSITION) {
-            context.startActivity(
-                SelectedItemActivity.createIntent(
-                    context,
-                    getItem(position)
-                )
-            )
         }
     }
 
@@ -130,6 +119,7 @@ class LibraryItemsAdapter(
 
             if (currPosition != RecyclerView.NO_POSITION) {
                 // Удаление теперь через ViewModel
+                viewModel.selectedRemove(getItem(currPosition))
                 viewModel.removeElement(currPosition)
             }
         }

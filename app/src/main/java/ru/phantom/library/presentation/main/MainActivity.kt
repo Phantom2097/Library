@@ -1,45 +1,38 @@
 package ru.phantom.library.presentation.main
 
-import android.content.Intent
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
-import android.widget.Toast
-import android.widget.Toast.makeText
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.LibraryItem
+import ru.phantom.library.data.entites.library.items.BasicLibraryElement
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Disk
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.BOOK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.CREATE_TYPE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DEFAULT_ID
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DEFAULT_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DISK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.SELECTED_ID
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.SELECTED_NAME
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.TYPE_KEY
-import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
+import ru.phantom.library.presentation.selected_item.DetailFragment
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
 
 class MainActivity : AppCompatActivity() {
 
-    private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
-    private lateinit var viewModel: MainViewModel
-
-    private val startForResult = resultHandler()
+    private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,74 +44,83 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Инициализирую view модель
-        initViewModel()
-
         // Делаю то, что связано с UI
         initUi()
+
+        // инициализирую слушателя нажатий на элемент списка
+        initListenerViewModel()
+
+        if (savedInstanceState == null) {
+            openListFragment()
+        } else {
+            openDetailFragment()
+        }
+    }
+
+    private fun openListFragment() {
+        val listFragment: Fragment = AllLibraryItemsList.createListFragment()
+        supportFragmentManager
+            .beginTransaction()
+            .replace(binding.mainListContainer.id, listFragment, LIST_FRAGMENT_TAG)
+            .commit()
+    }
+
+    fun openDetailFragment(element: BasicLibraryElement? = null) {
+        val currentOrientation = resources.configuration.orientation
+
+        val container = if (currentOrientation == ORIENTATION_LANDSCAPE) {
+            Log.d("ORIENTATION1", "isLandscape")
+            binding.mainRightContainer!!.id
+        } else {
+            Log.d("ORIENTATION1", "isPortrait")
+            binding.mainListContainer.id
+        }
+
+        val detailFragment = supportFragmentManager.findFragmentByTag(DETAIL_FRAGMENT_TAG)
+
+        Log.d("ORIENTATION1", "before detail $currentOrientation")
+        detailFragment?.let { fragment ->
+            supportFragmentManager.apply {
+                popBackStack(DETAIL_FRAGMENT_TAG, POP_BACK_STACK_INCLUSIVE)
+
+                beginTransaction()
+                    .remove(detailFragment).commit()
+            }
+        }
+
+        element?.let { element ->
+            val image = when (element) {
+                is Book -> BOOK_IMAGE
+                is Newspaper -> NEWSPAPER_IMAGE
+                is Disk -> DISK_IMAGE
+                else -> DEFAULT_IMAGE
+            }
+            viewModel.setDetailState(
+                MainViewModel.DetailState(
+                    uiType = SHOW_TYPE,
+                    name = element.item.name,
+                    id = element.item.id,
+                    image = image,
+                    description = element.fullInformation()
+                )
+            )
+        }
+        if (detailFragment != null || element != null) {
+            val newDetailFragment = DetailFragment.createDetailFragment()
+            supportFragmentManager
+                .beginTransaction()
+                .replace(container, newDetailFragment, DETAIL_FRAGMENT_TAG)
+                .addToBackStack(DETAIL_FRAGMENT_TAG)
+                .commit()
+        }
     }
 
     private fun initUi() {
-        val recyclerView = binding.recyclerMainScreen
-
-        with(recyclerView) {
-            layoutManager = GridLayoutManager(context, SPAN_COUNT)
-            adapter = libraryAdapter
-            addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
-        }
-
-        // Добавляю itemTouchHelper
-        val itemTouchHelper = ItemTouchHelper(libraryAdapter.getMySimpleCallback())
-        itemTouchHelper.attachToRecyclerView(recyclerView)
-
         val addButton = binding.mainAddButton
 
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
-
-    }
-
-    private fun resultHandler(): ActivityResultLauncher<Intent> {
-        return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == RESULT_OK) {
-
-                val name = result.data?.getStringExtra(SELECTED_NAME)
-                val id = result.data?.getIntExtra(SELECTED_ID, DEFAULT_ID) ?: DEFAULT_ID
-                // Я решил сделать через IMAGE, так как на данный момент их логика совпадает
-                val elementType = result.data?.getIntExtra(TYPE_KEY, DEFAULT_IMAGE) ?: DEFAULT_IMAGE
-
-                val showText = if (name != null && id != DEFAULT_ID) {
-                    val newLibraryItem = LibraryItem(name, id)
-                    itemCreator(newLibraryItem, elementType)
-                } else {
-                    "Неверное имя или id, попробуйте ещё раз"
-                }
-                makeText(
-                    this@MainActivity,
-                    showText,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
-    /*
-    * Вынес общий код в отдельный метод, в начале сделал вариант, где вся обработка выполняется в
-    * этом методе, но перенёс логику по созданию во вьюМодель
-     */
-    private fun itemCreator(item: LibraryItem, elementType: Int): String {
-
-        viewModel.addNewElement(item, elementType)
-
-        val text = when (elementType) {
-            BOOK_IMAGE -> "Добавлена книга"
-            NEWSPAPER_IMAGE -> "Добавлена газета"
-            DISK_IMAGE -> "Добавлен диск"
-            else -> "Такой подборки в библиотеке нет"
-        }
-
-        return text
     }
 
     private fun showAddItemBottomSheet() {
@@ -127,47 +129,66 @@ class MainActivity : AppCompatActivity() {
         val bottomSheetDialog = BottomSheetDialog(this).apply {
             setContentView(bottomSheet.root)
             setCancelable(true)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
         // Устанавливаю слушателей нажатий для кнопок добавления
         bottomSheet.apply {
             // Вынес в отдельную функцию скрытие диалога и запуск активити создания элемента
             addBook.setOnClickListener { setBottomSheetButtons(BOOK_IMAGE, bottomSheetDialog) }
-            addNewspaper.setOnClickListener { setBottomSheetButtons(NEWSPAPER_IMAGE, bottomSheetDialog) }
+            addNewspaper.setOnClickListener {
+                setBottomSheetButtons(NEWSPAPER_IMAGE, bottomSheetDialog)
+            }
             addDisk.setOnClickListener { setBottomSheetButtons(DISK_IMAGE, bottomSheetDialog) }
         }
 
-        // Это тоже не помогло, оно всё равно вылезает несколько раз при быстром нажатии
-        if (!bottomSheetDialog.isShowing && !isFinishing) {
-            bottomSheetDialog.show()
+        bottomSheetDialog.show()
+    }
+
+    private fun initListenerViewModel() {
+        viewModel.itemClickEvent.observe(this) { element ->
+            Log.d("CLICKED", "Дошло до слушателя")
+            element?.let {
+                openDetailFragment(element)
+                viewModel.reloadListener()
+            }
+        }
+
+        viewModel.detailState.observe(this) { state ->
+            if (state.uiType == DEFAULT_TYPE) {
+                supportFragmentManager.popBackStack(DETAIL_FRAGMENT_TAG, POP_BACK_STACK_INCLUSIVE)
+            }
         }
     }
 
     private fun setBottomSheetButtons(elementType: Int, dialog: BottomSheetDialog) {
-        startForResult.launch(
-            SelectedItemActivity.createIntent(
-                this@MainActivity,
-                null,
-                CREATE_TYPE,
-                elementType
-            )
+        val fragment = DetailFragment.createDetailFragment()
+
+        viewModel.setDetailState(
+            MainViewModel.DetailState(uiType = CREATE_TYPE, image = elementType)
         )
+
+        supportFragmentManager
+            .beginTransaction().apply {
+                // Если есть такой фрагмент в бэкстеке, то вроде удаляю все вхождения (вроде одинаковое поведение у нуля и POP_BACK_STACK_INCLUSIVE)
+                // POP_BACK_STACK_INCLUSIVE удаляет все, 0 видимо не удаляет
+                supportFragmentManager.popBackStack(
+                    DETAIL_FRAGMENT_TAG,
+                    POP_BACK_STACK_INCLUSIVE
+                )
+                addToBackStack(DETAIL_FRAGMENT_TAG)
+                // Здесь задаю container
+                val container = binding.mainRightContainer?.id ?: binding.mainListContainer.id
+                replace(container, fragment, DETAIL_FRAGMENT_TAG)
+            }
+            .commit()
+
         dialog.dismiss()
     }
 
-    private fun initViewModel() {
-        val factory = ViewModelFactory()
-
-        viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
-
-        viewModel.elements.observe(this) { notes ->
-            libraryAdapter.submitList(notes)
-        }
-    }
-
-    private companion object {
+    companion object {
         // Для списка элементов
-        const val SPAN_COUNT = 2
-        const val SPACES_ITEM_DECORATION_COUNT = 12
+        const val LIST_FRAGMENT_TAG = "listFragmentTag"
+        const val DETAIL_FRAGMENT_TAG = "detailFragmentTag"
     }
 }
