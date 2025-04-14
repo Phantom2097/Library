@@ -74,7 +74,5 @@ class AllLibraryItemsList : Fragment(R.layout.all_library_items_list) {
         // Для списка элементов
         private const val SPAN_COUNT = 2
         private const val SPACES_ITEM_DECORATION_COUNT = 12
-
-        fun createListFragment() = AllLibraryItemsList()
     }
 }

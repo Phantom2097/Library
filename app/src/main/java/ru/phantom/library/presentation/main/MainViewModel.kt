@@ -12,12 +12,9 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createDis
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_ID
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_NAME
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailState
 import ru.phantom.library.presentation_console.main.createBooks
 import ru.phantom.library.presentation_console.main.createDisks
 import ru.phantom.library.presentation_console.main.createNewspapers
@@ -47,13 +44,7 @@ class MainViewModel : ViewModel() {
         _itemClickEvent.value = null
     }
 
-    data class DetailState(
-        val uiType: Int = DEFAULT_TYPE,
-        val name: String = DEFAULT_NAME,
-        val id: Int = DEFAULT_ID,
-        val image: Int = DEFAULT_IMAGE,
-        val description: String? = null
-    )
+
 
     fun setDetailState(state: DetailState) {
         _detailState.value = state

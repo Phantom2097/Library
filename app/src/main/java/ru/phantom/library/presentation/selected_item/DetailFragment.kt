@@ -8,12 +8,11 @@ import android.widget.Toast
 import android.widget.Toast.makeText
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.databinding.DetailInformationScreenBinding
-import ru.phantom.library.presentation.main.MainActivity.Companion.DETAIL_FRAGMENT_TAG
 import ru.phantom.library.presentation.main.MainViewModel
 
 class DetailFragment : Fragment(R.layout.detail_information_screen) {
@@ -22,11 +21,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     val binding get() = _binding!!
 
     private val viewModel by activityViewModels<MainViewModel>()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
+//    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,7 +44,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         inputObserve()
     }
 
-    private fun onlyShow(element: MainViewModel.DetailState) {
+    private fun onlyShow(element: DetailState) {
         binding.apply {
             selectedItemName.setText(element.name)
             selectedItemId.setText(element.id.toString())
@@ -59,9 +54,10 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             }
 
             saveElementButton.apply {
-                text = "Назад"
+                text = context.getString(R.string.saveButtonShowType)
                 setOnClickListener {
-                    requireActivity().supportFragmentManager.popBackStack()
+                    findNavController().popBackStack()
+//                    requireActivity().supportFragmentManager.popBackStack()
                 }
             }
         }
@@ -76,7 +72,6 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                 focusable = View.FOCUSABLE
                 isFocusableInTouchMode = true
                 setText(viewModel.detailState.value?.name.orEmpty())
-
             }
 
             selectedItemId.apply {
@@ -87,28 +82,26 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                         this@apply.setText(it.id.toString())
                     }
                 }
-
             }
 
             selectedItemIcon.setImageResource(image)
 
             saveElementButton.apply {
-                text = "Сохранить"
+                text = context.getString(R.string.saveButtonCreateType)
 
                 setOnClickListener {
                     val newName = selectedItemName.text?.toString()?.trim()
                     val newId = selectedItemId.text.toString().toIntOrNull() ?: -1
 
                     val textToast = when {
-                        newName.isNullOrBlank() && newId == -1 -> "Неверные название и ID"
-                        newName.isNullOrBlank() -> "Неверное название"
-                        newId == -1 -> "Неверный ID"
+                        newName.isNullOrBlank() && newId == -1 -> context.getString(R.string.noNameAndIdCreateType)
+                        newName.isNullOrBlank() -> context.getString(R.string.noNameCreateType)
+                        newId == -1 -> context.getString(R.string.noIdCreateType)
                         else -> {
                             viewModel.addNewElement(LibraryItem(newName, newId), image)
-                            requireActivity().supportFragmentManager.popBackStack(
-                                DETAIL_FRAGMENT_TAG,
-                                FragmentManager.POP_BACK_STACK_INCLUSIVE
-                            )
+
+                            findNavController().popBackStack()
+
                             null
                         }
                     }
@@ -129,14 +122,14 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             }
             selectedItemId.doAfterTextChanged { newId ->
                 viewModel.detailState.value?.let {
-                    viewModel.setDetailState(it.copy(id = newId?.toString()?.toIntOrNull() ?: DEFAULT_ID))
+                    viewModel.setDetailState(
+                        it.copy(
+                            id = newId?.toString()?.toIntOrNull() ?: DEFAULT_ID
+                        )
+                    )
                 }
             }
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
@@ -157,7 +150,5 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         val NEWSPAPER_IMAGE = R.drawable.twotone_newspaper_24
         val DISK_IMAGE = R.drawable.twotone_album_24
         val DEFAULT_IMAGE = R.drawable.baseline_question_mark_24
-
-        fun createDetailFragment() = DetailFragment()
     }
 }

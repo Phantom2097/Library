@@ -15,4 +15,11 @@
     <string name="addNewspaperText">Газета</string>
     <string name="addDiscText">Диск</string>
     <string name="bottomSheetDialogMainUpText">Добавить предмет в библиотеку</string>
+
+<!--  DetailFragment sources  -->
+    <string name="saveButtonCreateType">Сохранить</string>
+    <string name="saveButtonShowType">Назад</string>
+    <string name="noNameAndIdCreateType">Неверные название и ID</string>
+    <string name="noNameCreateType">Неверное название</string>
+    <string name="noIdCreateType">Неверный ID</string>
 </resources>

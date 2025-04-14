@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/allLibraryItemsList">
+
+<!--    Просто в какой-то момент начала выдавать ошибку на названия фрагментов-->
+    <fragment
+        android:id="@+id/allLibraryItemsList"
+        android:name="ru.phantom.library.presentation.main.AllLibraryItemsList"
+        android:label="All Items"
+        tools:layout="@layout/all_library_items_list">
+
+        <action
+            android:id="@+id/action_to_detail"
+            app:destination="@id/detailFragment"/>
+        <action
+            android:id="@+id/action_to_detail_landscape"
+            app:destination="@id/detailFragment"
+            />
+    </fragment>
+
+    <fragment
+        android:id="@+id/detailFragment"
+        android:name="ru.phantom.library.presentation.selected_item.DetailFragment"
+        android:label="Detail screen"
+        tools:layout="@layout/detail_information_screen">
+
+        <action
+            android:id="@+id/action_detailFragment_to_allLibraryItemsList"
+            app:destination="@id/allLibraryItemsList" />
+        <action
+            android:id="@+id/action_detailFragment_self"
+            app:destination="@id/detailFragment" />
+    </fragment>
+
+</navigation>
