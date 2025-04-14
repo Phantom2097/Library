@@ -22,4 +22,6 @@
     <string name="noNameAndIdCreateType">Неверные название и ID</string>
     <string name="noNameCreateType">Неверное название</string>
     <string name="noIdCreateType">Неверный ID</string>
+    <string name="all_items">All Items</string>
+    <string name="detail_screen">Detail screen</string>
 </resources>

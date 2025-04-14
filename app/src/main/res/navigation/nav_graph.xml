@@ -9,7 +9,7 @@
     <fragment
         android:id="@+id/allLibraryItemsList"
         android:name="ru.phantom.library.presentation.main.AllLibraryItemsList"
-        android:label="All Items"
+        android:label="@string/all_items"
         tools:layout="@layout/all_library_items_list">
 
         <action
@@ -24,7 +24,7 @@
     <fragment
         android:id="@+id/detailFragment"
         android:name="ru.phantom.library.presentation.selected_item.DetailFragment"
-        android:label="Detail screen"
+        android:label="@string/detail_screen"
         tools:layout="@layout/detail_information_screen">
 
         <action
