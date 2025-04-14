@@ -5,11 +5,11 @@ import presentation.colors.Colors.ANSI_YELLOW
 import presentation.show_digitize.goToDigitize
 import presentation.show_manager.selectShop
 import presentation.show_menu_for_selection.showMenuForSelection
+import presentation.start_console.SelectLibrarySelectionConsts.DIGITIZE
 import presentation.start_console.SelectLibrarySelectionConsts.DIGITIZE_MENU
+import presentation.start_console.SelectLibrarySelectionConsts.GO_BACK
+import presentation.start_console.SelectLibrarySelectionConsts.MANAGER
 import presentation.start_console.SelectLibrarySelectionConsts.SHOPS_MENU
-import presentation.start_console.selectLibrarySelectionConsts.DIGITIZE
-import presentation.start_console.selectLibrarySelectionConsts.GO_BACK
-import presentation.start_console.selectLibrarySelectionConsts.MANAGER
 
 private typealias MethodType = (Int) -> Unit
 
@@ -42,6 +42,10 @@ internal fun selectLibrarySelection(method: MethodType): Boolean {
 }
 
 object SelectLibrarySelectionConsts {
+    const val MANAGER = 4
+    const val DIGITIZE = 5
+    const val GO_BACK = 6
+
     val SHOPS_MENU = """
             Введите номер магазина, в который должен пойти менеджер
                 1 - Магазин книг
@@ -56,10 +60,4 @@ object SelectLibrarySelectionConsts {
                 3 - Показать оцифрованные предметы
                 4 - Выйти в главное меню
             """.trimIndent()
-}
-
-private object selectLibrarySelectionConsts {
-    const val MANAGER = 4
-    const val DIGITIZE = 5
-    const val GO_BACK = 6
 }

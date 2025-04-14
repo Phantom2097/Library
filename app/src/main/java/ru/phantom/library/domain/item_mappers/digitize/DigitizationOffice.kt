@@ -1,13 +1,13 @@
 package ru.phantom.library.domain.item_mappers.digitize
 
-import ru.phantom.library.data.entites.library.Showable
-import ru.phantom.library.data.entites.library.items.Digitable
-import ru.phantom.library.data.entites.library.items.book.BookImpl
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitalType.CD
 import presentation.colors.Colors.ANSI_PURPLE
 import presentation.colors.Colors.ANSI_RESET
+import ru.phantom.library.data.entites.library.Showable
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Digitable
+import ru.phantom.library.data.entites.library.items.disk.Disk
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitalType.CD
 
 sealed interface DigitizationOffice {
     data class DigitalItem(val item: Showable, private val type: Digitable = CD): Showable {
@@ -34,18 +34,18 @@ sealed interface DigitizationOffice {
         }
     }
     class DigitizeBook(
-        private val book: BookImpl,
+        private val book: Book,
         override var type: Digitable = CD
-    ) : DigitizationOffice, Disk {
+    ) : DigitizationOffice, Disk(book.item, book.service) {
         override fun toDigitize(): DigitalItem {
             return DigitalItem(book, type)
         }
     }
 
     class DigitizeNewspaper(
-        private val newspaper: NewspaperImpl,
+        private val newspaper: Newspaper,
         override var type: Digitable = CD
-    ) : DigitizationOffice, Disk {
+    ) : DigitizationOffice, Disk(newspaper.item, newspaper.service) {
         override fun toDigitize(): DigitalItem {
             return DigitalItem(newspaper, type)
         }

@@ -2,28 +2,28 @@ package ru.phantom.library.domain.main_recycler.view_holder
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.Itemable
-import ru.phantom.library.data.entites.library.items.book.BookImpl
-import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.entites.library.items.BasicLibraryElement
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Disk
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 
 class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) :
     ViewHolder(binding.root) {
 
-    fun bind(item: Itemable) {
+    fun bind(element: BasicLibraryElement) {
 
         // Название
-        bindName(item.getName())
+        bindName(element.item.name)
 
         // Id
-        bindId(item.getId())
+        bindId(element.item.id)
 
         // Картинка
-        bindImage(item)
+        bindImage(element)
 
         // Видимость (Доступность)
-        bindAvailability(item.getAvailability())
+        bindAvailability(element.item.availability)
     }
 
     private fun bindName(name: String) = with(binding) {
@@ -34,11 +34,11 @@ class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) 
         itemIdInCards.text = id.toString()
     }
 
-    private fun bindImage(item: Itemable) {
+    private fun bindImage(item: BasicLibraryElement) {
         val icon = when (item) {
-            is BookImpl -> R.drawable.twotone_menu_book_24
-            is DiskImpl -> R.drawable.twotone_album_24
-            is NewspaperImpl -> R.drawable.twotone_newspaper_24
+            is Book -> R.drawable.twotone_menu_book_24
+            is Disk -> R.drawable.twotone_album_24
+            is Newspaper -> R.drawable.twotone_newspaper_24
             else -> R.drawable.baseline_question_mark_24
         }
 

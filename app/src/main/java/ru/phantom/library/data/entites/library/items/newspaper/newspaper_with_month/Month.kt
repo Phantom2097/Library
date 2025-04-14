@@ -1,8 +1,4 @@
-package ru.phantom.library.data.entites.library.items.newspaper_with_month
-
-interface NewspaperWithMonth {
-    var issueMonth: Month
-}
+package ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month
 
 enum class Month(private val month: String) {
     JANUARY("Январь"),
