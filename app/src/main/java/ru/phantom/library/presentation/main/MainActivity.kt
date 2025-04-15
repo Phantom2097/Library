@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import ru.phantom.library.R
@@ -20,6 +21,7 @@ import ru.phantom.library.data.entites.library.items.disk.Disk
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
+import ru.phantom.library.presentation.selected_item.DetailFragment
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
@@ -36,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     private lateinit var navController: NavController
-//    private lateinit var detailNavController: NavController
 
     private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
 
@@ -50,21 +51,12 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        setupNavigation()
-
-        // Делаю то, что связано с UI
-        initUi()
-//        setupNavigation()
+        initUiAndVariables()
 
         // инициализирую слушателя нажатий на элемент списка
         initListenerViewModel()
     }
 
-    private fun setupNavigation() {
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.mainListContainer) as NavHostFragment
-        navController = navHostFragment.navController
-    }
 
     fun changeDetailState(element: BasicLibraryElement? = null) {
         element?.let { element ->
@@ -86,12 +78,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initUi() {
+    private fun initUiAndVariables() {
         val addButton = binding.mainAddButton
 
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
+
+        val navHost =
+            supportFragmentManager
+                .findFragmentById(binding.mainListContainer.id)
+                    as NavHostFragment
+        navController = navHost.findNavController()
     }
 
     private fun showAddItemBottomSheet() {
@@ -123,7 +121,7 @@ class MainActivity : AppCompatActivity() {
             DetailState(uiType = CREATE_TYPE, image = elementType)
         )
 
-        navigateToDetail()
+        toDetail()
 
         dialog.dismiss()
     }
@@ -133,7 +131,8 @@ class MainActivity : AppCompatActivity() {
             Log.d("CLICKED", "Дошло до слушателя")
             element?.let {
                 changeDetailState(element)
-                navigateToDetail()
+
+                toDetail()
 
                 viewModel.reloadListener()
             }
@@ -146,17 +145,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToDetail() {
+    override fun onResume() {
+        super.onResume()
+
+        startDetailInLandscape()
+    }
+
+    private fun toDetail() {
         if (isLandscape) {
-            val navHostRight =
-                supportFragmentManager.findFragmentById(R.id.mainRightContainer) as NavHostFragment
-            val navControllerRight = navHostRight.navController
-            navControllerRight.popBackStack()
-            navControllerRight.navigate(R.id.detailFragment)
+            startDetailInLandscape()
         } else {
-            navController.navigate(
-                R.id.action_to_detail
-            )
+            if (navController.currentDestination?.label == this.getString(R.string.detail_screen)) {
+                navController.navigateUp()
+                viewModel.setDetailState(DetailState())
+            }
+            navController.navigate(R.id.action_to_detail)
+        }
+    }
+
+    private fun startDetailInLandscape() {
+        if (binding.mainRightContainer != null) {
+            supportFragmentManager.beginTransaction()
+                .replace(binding.mainRightContainer!!.id, DetailFragment())
+                .commit()
+        }
+        if (!isLandscape && viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
+            navController.navigate(R.id.action_to_detail)
         }
     }
 

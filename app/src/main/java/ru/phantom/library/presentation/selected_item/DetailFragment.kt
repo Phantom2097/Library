@@ -1,5 +1,6 @@
 package ru.phantom.library.presentation.selected_item
 
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,8 @@ import android.widget.Toast.makeText
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -21,7 +24,9 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     val binding get() = _binding!!
 
     private val viewModel by activityViewModels<MainViewModel>()
-//    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
+    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
+
+    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,18 +39,27 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        initNavController()
+
         val element = viewModel.detailState.value
         when (element?.uiType) {
             SHOW_TYPE -> onlyShow(element)
             CREATE_TYPE -> showCreateType()
-            else -> throw IllegalArgumentException("Такого типа не должно быть")
+            else -> showEmpty()
         }
 
         inputObserve()
     }
 
+    // Заглушка, чтобы было пустое место на экране
+    private fun showEmpty() {
+        binding.libraryItemsCards.alpha = 0.0f
+    }
+
     private fun onlyShow(element: DetailState) {
         binding.apply {
+            libraryItemsCards.alpha = 1.0f
             selectedItemName.setText(element.name)
             selectedItemId.setText(element.id.toString())
             selectedItemIcon.setImageResource(element.image)
@@ -56,8 +70,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             saveElementButton.apply {
                 text = context.getString(R.string.saveButtonShowType)
                 setOnClickListener {
-                    findNavController().popBackStack()
-//                    requireActivity().supportFragmentManager.popBackStack()
+                    backStackSimulator()
                 }
             }
         }
@@ -68,6 +81,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         val image = element!!.image
 
         with(binding) {
+            libraryItemsCards.alpha = 1.0f
             selectedItemName.apply {
                 focusable = View.FOCUSABLE
                 isFocusableInTouchMode = true
@@ -100,7 +114,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                         else -> {
                             viewModel.addNewElement(LibraryItem(newName, newId), image)
 
-                            findNavController().popBackStack()
+                            backStackSimulator()
 
                             null
                         }
@@ -130,6 +144,31 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                 }
             }
         }
+    }
+
+    // Этот метод позволяет притвориться, что всё хорошо
+    private fun backStackSimulator() {
+        viewModel.setDetailState(DetailState())
+        if (isLandscape) {
+            showEmpty()
+        } else {
+            findNavController().navigateUp()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (isLandscape) {
+            navController.navigateUp()
+        }
+    }
+
+    private fun initNavController() {
+        navController = Navigation.findNavController(
+            requireActivity(),
+            R.id.mainListContainer
+        )
     }
 
     override fun onDestroy() {

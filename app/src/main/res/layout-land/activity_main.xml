@@ -42,9 +42,9 @@
         app:layout_constraintStart_toEndOf="@id/mainListContainer"
         app:layout_constraintTop_toBottomOf="@id/helloText"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph"
         android:name="androidx.navigation.fragment.NavHostFragment"/>
-
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/mainAddButton"
