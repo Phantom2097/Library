@@ -21,7 +21,9 @@ import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
 
-// Теперь использую ListAdapter и ItemCallback
+/**
+ * Адаптер для всех элементов библиотеки
+ */
 class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
@@ -118,7 +120,6 @@ class LibraryItemsAdapter(
             val currPosition = viewHolder.adapterPosition
 
             if (currPosition != RecyclerView.NO_POSITION) {
-                // Удаление теперь через ViewModel
                 viewModel.selectedRemove(getItem(currPosition))
                 viewModel.removeElement(currPosition)
             }

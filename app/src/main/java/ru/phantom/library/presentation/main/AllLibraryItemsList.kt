@@ -13,7 +13,7 @@ import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
 
-class AllLibraryItemsList : Fragment(R.layout.all_library_items_list) {
+class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     private var _binding: AllLibraryItemsListBinding? = null
     val binding get() = _binding!!
@@ -32,11 +32,11 @@ class AllLibraryItemsList : Fragment(R.layout.all_library_items_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initUi()
+        initList()
         initViewModel()
     }
 
-    private fun initUi() {
+    private fun initList() {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {

@@ -8,7 +8,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -21,7 +20,6 @@ import ru.phantom.library.data.entites.library.items.disk.Disk
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
-import ru.phantom.library.presentation.selected_item.DetailFragment
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
@@ -38,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     private lateinit var navController: NavController
+    private lateinit var landController: NavController
 
     private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
 
@@ -52,6 +51,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         initUiAndVariables()
+        initNavigation()
+
+        if (isLandscape) {
+            if (viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
+                navController.popBackStack()
+                landController.navigate(R.id.detailFragment)
+            } else {
+                landController.navigate(R.id.emptyFragment)
+            }
+        } else {
+            toDetail()
+        }
 
         // инициализирую слушателя нажатий на элемент списка
         initListenerViewModel()
@@ -84,12 +95,31 @@ class MainActivity : AppCompatActivity() {
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
+    }
 
+    private fun initNavigation() {
         val navHost =
             supportFragmentManager
-                .findFragmentById(binding.mainListContainer.id)
+                .findFragmentById(R.id.mainListContainer)
                     as NavHostFragment
+
         navController = navHost.findNavController()
+
+        if (isLandscape) {
+            val landNavHost =
+                supportFragmentManager
+                    .findFragmentById(R.id.mainRightContainer)
+                        as NavHostFragment
+
+            landController = landNavHost.findNavController()
+
+            val detailGraph = landController
+                .navInflater
+                .inflate(R.navigation.nav_graph)
+                .apply { setStartDestination(R.id.emptyFragment) }
+
+            landController.graph = detailGraph
+        }
     }
 
     private fun showAddItemBottomSheet() {
@@ -101,6 +131,18 @@ class MainActivity : AppCompatActivity() {
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
+        setupBottomSheetDialogClickListener(bottomSheet, bottomSheetDialog)
+
+        bottomSheetDialog.show()
+    }
+
+    /**
+     * Функция устанавливает слушателей нажатий для кнопок диалога
+     */
+    private fun setupBottomSheetDialogClickListener(
+        bottomSheet: BottomSheetForAddLibraryItemBinding,
+        bottomSheetDialog: BottomSheetDialog
+    ) {
         bottomSheet.apply {
             addBook.setOnClickListener {
                 navigateToCreate(BOOK_IMAGE, bottomSheetDialog)
@@ -112,8 +154,6 @@ class MainActivity : AppCompatActivity() {
                 navigateToCreate(DISK_IMAGE, bottomSheetDialog)
             }
         }
-
-        bottomSheetDialog.show()
     }
 
     private fun navigateToCreate(elementType: Int, dialog: BottomSheetDialog) {
@@ -138,45 +178,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.detailState.observe(this) { state ->
-            if (state.uiType == DEFAULT_TYPE) {
-                supportFragmentManager.popBackStack(DETAIL_FRAGMENT_TAG, POP_BACK_STACK_INCLUSIVE)
+        viewModel.detailState.observe(this) {
+            if (isLandscape && viewModel.detailState.value?.uiType== DEFAULT_TYPE) {
+                landController.popBackStack()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        startDetailInLandscape()
     }
 
     private fun toDetail() {
         if (isLandscape) {
-            startDetailInLandscape()
+            landController.navigate(R.id.detailFragment)
         } else {
-            if (navController.currentDestination?.label == this.getString(R.string.detail_screen)) {
-                navController.navigateUp()
-                viewModel.setDetailState(DetailState())
+            if (navController.currentDestination?.label == getString(R.string.detail_screen)) {
+                navController.popBackStack(R.id.detailFragment, true)
             }
             navController.navigate(R.id.action_to_detail)
         }
-    }
-
-    private fun startDetailInLandscape() {
-        if (binding.mainRightContainer != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(binding.mainRightContainer!!.id, DetailFragment())
-                .commit()
-        }
-        if (!isLandscape && viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
-            navController.navigate(R.id.action_to_detail)
-        }
-    }
-
-    companion object {
-        // Для списка элементов
-//        const val LIST_FRAGMENT_TAG = "listFragmentTag"
-        const val DETAIL_FRAGMENT_TAG = "detailFragmentTag"
     }
 }

@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    // CardView
     implementation(libs.androidx.cardview)
 
     // ViewModel
@@ -51,6 +52,9 @@ dependencies {
     // Fragment
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.fragment.ktx)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
 
     // SafeArgs
 //    implementation(libs.androidx.androidx.navigation.safeargs.gradle.plugin)

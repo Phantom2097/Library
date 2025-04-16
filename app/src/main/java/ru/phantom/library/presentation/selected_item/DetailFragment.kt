@@ -1,17 +1,15 @@
 package ru.phantom.library.presentation.selected_item
 
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import android.widget.Toast.makeText
+import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -24,9 +22,6 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     val binding get() = _binding!!
 
     private val viewModel by activityViewModels<MainViewModel>()
-    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
-
-    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,21 +35,33 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initNavController()
-
         val element = viewModel.detailState.value
         when (element?.uiType) {
             SHOW_TYPE -> onlyShow(element)
             CREATE_TYPE -> showCreateType()
-            else -> showEmpty()
+            else -> findNavController().navigateUp()
         }
 
-        inputObserve()
+        inputTextObserve()
+
+        redefineBackButton()
     }
 
-    // Заглушка, чтобы было пустое место на экране
-    private fun showEmpty() {
-        binding.libraryItemsCards.alpha = 0.0f
+    /**
+     * Вот и последня деталь этого пазла
+     */
+    private fun redefineBackButton() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+
+                    viewModel.setDetailState()
+
+                    findNavController().popBackStack()
+                }
+            }
+        )
     }
 
     private fun onlyShow(element: DetailState) {
@@ -127,13 +134,19 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         }
     }
 
-    private fun inputObserve() {
+    /**
+     * Функция добавляет слушателей изменения текста
+     */
+    private fun inputTextObserve() {
+
         binding.apply {
+
             selectedItemName.doAfterTextChanged { newText ->
                 viewModel.detailState.value?.let {
                     viewModel.setDetailState(it.copy(name = newText?.toString() ?: DEFAULT_NAME))
                 }
             }
+
             selectedItemId.doAfterTextChanged { newId ->
                 viewModel.detailState.value?.let {
                     viewModel.setDetailState(
@@ -146,29 +159,12 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         }
     }
 
-    // Этот метод позволяет притвориться, что всё хорошо
+    // Этот метод теперь не притворяется, что всё хорошо, а делает нормально
     private fun backStackSimulator() {
-        viewModel.setDetailState(DetailState())
-        if (isLandscape) {
-            showEmpty()
-        } else {
-            findNavController().navigateUp()
-        }
-    }
 
-    override fun onResume() {
-        super.onResume()
+        viewModel.setDetailState()
 
-        if (isLandscape) {
-            navController.navigateUp()
-        }
-    }
-
-    private fun initNavController() {
-        navController = Navigation.findNavController(
-            requireActivity(),
-            R.id.mainListContainer
-        )
+        findNavController().navigateUp()
     }
 
     override fun onDestroy() {

@@ -44,9 +44,10 @@ class MainViewModel : ViewModel() {
         _itemClickEvent.value = null
     }
 
-
-
-    fun setDetailState(state: DetailState) {
+    /**
+     * Теперь при отсутствии передаваемого значения возвращает в Default
+     */
+    fun setDetailState(state: DetailState = DetailState()) {
         _detailState.value = state
     }
 
@@ -86,7 +87,7 @@ class MainViewModel : ViewModel() {
 
     fun selectedRemove(element: BasicLibraryElement) {
         if (element.item.id == _detailState.value?.id) {
-            _detailState.value = DetailState()
+            setDetailState()
         }
     }
 
