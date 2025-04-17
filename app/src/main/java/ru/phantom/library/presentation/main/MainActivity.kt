@@ -1,51 +1,44 @@
 package ru.phantom.library.presentation.main
 
-import android.content.Intent
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
-import android.widget.Toast
-import android.widget.Toast.makeText
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.repository.LibraryRepository
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Disk
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
-import ru.phantom.library.domain.library_service.LibraryService
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.BOOK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.CREATE_TYPE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DEFAULT_ID
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DEFAULT_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.DISK_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.SELECTED_ID
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.SELECTED_NAME
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity.Companion.TYPE_KEY
-import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
-import ru.phantom.library.presentation_console.main.createBooks
-import ru.phantom.library.presentation_console.main.createDisks
-import ru.phantom.library.presentation_console.main.createNewspapers
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
+import ru.phantom.library.presentation.selected_item.DetailState
 
 class MainActivity : AppCompatActivity() {
 
-    private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
-    private lateinit var viewModel: MainViewModel
+    private val viewModel by viewModels<MainViewModel>()
 
-    private val startForResult = resultHandler()
+    private lateinit var navController: NavController
+    private lateinit var landController: NavController
+
+    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,29 +50,46 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Инициализирую view модель
-        initViewModel()
+        initUiAndVariables()
+        initNavigation()
 
-        // Делаю то, что связано с UI
-        initUi()
-
-        // Создаю элементы для списка
-        createItems()
-    }
-
-    private fun initUi() {
-        val recyclerView = binding.recyclerMainScreen
-
-        with(recyclerView) {
-            layoutManager = GridLayoutManager(context, SPAN_COUNT)
-            adapter = libraryAdapter
-            addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
+        if (isLandscape) {
+            if (viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
+                navController.popBackStack()
+                landController.navigate(R.id.detailFragment)
+            } else {
+                landController.navigate(R.id.emptyFragment)
+            }
+        } else {
+            toDetail()
         }
 
-        // Добавляю itemTouchHelper
-        val itemTouchHelper = ItemTouchHelper(libraryAdapter.getMySimpleCallback())
-        itemTouchHelper.attachToRecyclerView(recyclerView)
+        // инициализирую слушателя нажатий на элемент списка
+        initListenerViewModel()
+    }
 
+
+    fun changeDetailState(element: BasicLibraryElement? = null) {
+        element?.let { element ->
+            val image = when (element) {
+                is Book -> BOOK_IMAGE
+                is Newspaper -> NEWSPAPER_IMAGE
+                is Disk -> DISK_IMAGE
+                else -> DEFAULT_IMAGE
+            }
+            viewModel.setDetailState(
+                DetailState(
+                    uiType = SHOW_TYPE,
+                    name = element.item.name,
+                    id = element.item.id,
+                    image = image,
+                    description = element.fullInformation()
+                )
+            )
+        }
+    }
+
+    private fun initUiAndVariables() {
         val addButton = binding.mainAddButton
 
         addButton.setOnClickListener {
@@ -87,62 +97,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createItems() {
-        // Создаю элементы для отображения
-        val libraryService = LibraryService
-        createBooks(libraryService)
-        createNewspapers(libraryService)
-        createDisks(libraryService)
+    private fun initNavigation() {
+        val navHost =
+            supportFragmentManager
+                .findFragmentById(R.id.mainListContainer)
+                    as NavHostFragment
 
-        val items = mutableListOf<BasicLibraryElement>().apply {
-            addAll(LibraryRepository.getBooksInLibrary())
-            addAll(LibraryRepository.getNewspapersInLibrary())
-            addAll(LibraryRepository.getDisksInLibrary())
+        navController = navHost.findNavController()
+
+        if (isLandscape) {
+            val landNavHost =
+                supportFragmentManager
+                    .findFragmentById(R.id.mainRightContainer)
+                        as NavHostFragment
+
+            landController = landNavHost.findNavController()
+
+            val detailGraph = landController
+                .navInflater
+                .inflate(R.navigation.nav_graph)
+                .apply { setStartDestination(R.id.emptyFragment) }
+
+            landController.graph = detailGraph
         }
-
-        viewModel.updateElements(items)
-    }
-
-    private fun resultHandler(): ActivityResultLauncher<Intent> {
-        return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == RESULT_OK) {
-
-                val name = result.data?.getStringExtra(SELECTED_NAME)
-                val id = result.data?.getIntExtra(SELECTED_ID, DEFAULT_ID) ?: DEFAULT_ID
-                // Я решил сделать через IMAGE, так как на данный момент их логика совпадает
-                val elementType = result.data?.getIntExtra(TYPE_KEY, DEFAULT_IMAGE) ?: DEFAULT_IMAGE
-
-                val showText = if (name != null && id != DEFAULT_ID) {
-                    val newLibraryItem = LibraryItem(name, id)
-                    itemCreator(newLibraryItem, elementType)
-                } else {
-                    "Неверное имя или id, попробуйте ещё раз"
-                }
-                makeText(
-                    this@MainActivity,
-                    showText,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
-    /*
-    * Вынес общий код в отдельный метод, в начале сделал вариант, где вся обработка выполняется в
-    * этом методе, но перенёс логику по созданию во вьюМодель
-     */
-    private fun itemCreator(item: LibraryItem, elementType: Int): String {
-
-        viewModel.addNewElement(item, elementType)
-
-        val text = when (elementType) {
-            BOOK_IMAGE -> "Добавлена книга"
-            NEWSPAPER_IMAGE -> "Добавлена газета"
-            DISK_IMAGE -> "Добавлен диск"
-            else -> "Такой подборки в библиотеке нет"
-        }
-
-        return text
     }
 
     private fun showAddItemBottomSheet() {
@@ -151,47 +128,71 @@ class MainActivity : AppCompatActivity() {
         val bottomSheetDialog = BottomSheetDialog(this).apply {
             setContentView(bottomSheet.root)
             setCancelable(true)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
-        // Устанавливаю слушателей нажатий для кнопок добавления
+        setupBottomSheetDialogClickListener(bottomSheet, bottomSheetDialog)
+
+        bottomSheetDialog.show()
+    }
+
+    /**
+     * Функция устанавливает слушателей нажатий для кнопок диалога
+     */
+    private fun setupBottomSheetDialogClickListener(
+        bottomSheet: BottomSheetForAddLibraryItemBinding,
+        bottomSheetDialog: BottomSheetDialog
+    ) {
         bottomSheet.apply {
-            // Вынес в отдельную функцию скрытие диалога и запуск активити создания элемента
-            addBook.setOnClickListener { setBottomSheetButtons(BOOK_IMAGE, bottomSheetDialog) }
-            addNewspaper.setOnClickListener { setBottomSheetButtons(NEWSPAPER_IMAGE, bottomSheetDialog) }
-            addDisk.setOnClickListener { setBottomSheetButtons(DISK_IMAGE, bottomSheetDialog) }
-        }
-
-        // Это тоже не помогло, оно всё равно вылезает несколько раз при быстром нажатии
-        if (!bottomSheetDialog.isShowing && !isFinishing) {
-            bottomSheetDialog.show()
+            addBook.setOnClickListener {
+                navigateToCreate(BOOK_IMAGE, bottomSheetDialog)
+            }
+            addNewspaper.setOnClickListener {
+                navigateToCreate(NEWSPAPER_IMAGE, bottomSheetDialog)
+            }
+            addDisk.setOnClickListener {
+                navigateToCreate(DISK_IMAGE, bottomSheetDialog)
+            }
         }
     }
 
-    private fun setBottomSheetButtons(elementType: Int, dialog: BottomSheetDialog) {
-        startForResult.launch(
-            SelectedItemActivity.createIntent(
-                this@MainActivity,
-                null,
-                CREATE_TYPE,
-                elementType
-            )
+    private fun navigateToCreate(elementType: Int, dialog: BottomSheetDialog) {
+        viewModel.setDetailState(
+            DetailState(uiType = CREATE_TYPE, image = elementType)
         )
+
+        toDetail()
+
         dialog.dismiss()
     }
 
-    private fun initViewModel() {
-        val factory = ViewModelFactory()
+    private fun initListenerViewModel() {
+        viewModel.itemClickEvent.observe(this) { element ->
+            Log.d("CLICKED", "Дошло до слушателя")
+            element?.let {
+                changeDetailState(element)
 
-        viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
+                toDetail()
 
-        viewModel.elements.observe(this) { notes ->
-            libraryAdapter.submitList(notes)
+                viewModel.reloadListener()
+            }
+        }
+
+        viewModel.detailState.observe(this) {
+            if (isLandscape && viewModel.detailState.value?.uiType == SHOW_TYPE) {
+                toDetail()
+            }
         }
     }
 
-    private companion object {
-        // Для списка элементов
-        const val SPAN_COUNT = 2
-        const val SPACES_ITEM_DECORATION_COUNT = 12
+    private fun toDetail() {
+        if (isLandscape) {
+            landController.navigate(R.id.detailFragment)
+        } else {
+            if (navController.currentDestination?.label == getString(R.string.detail_screen)) {
+                navController.popBackStack(R.id.detailFragment, true)
+            }
+            navController.navigate(R.id.action_to_detail)
+        }
     }
 }

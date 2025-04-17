@@ -14,6 +14,7 @@ import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
 import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
+import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.presentation_console.start_console.showConsoleStartLibraryUI
 
@@ -87,18 +88,15 @@ fun createBooks(service: LibraryService) {
 
 fun createNewspapers(service: LibraryService) {
     addItemNewspaper(
-        NewspaperImpl(
-            LibraryItem(
-                name = "Русская правда",
-                id = getItemsCounter(),
-                availability = false,
-                position = Position.IN_READING_ROOM
-            ),
-            service
-
-        ).apply {
+        createNewspaper(
+            name = "Русская правда",
+            id = getItemsCounter(),
+            availability = false,
+            position = Position.IN_READING_ROOM,
+            service = service,
             issueNumber = 794
-        })
+        )
+    )
     addItemNewspaper(
         NewspaperImpl(
             LibraryItem(

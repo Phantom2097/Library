@@ -13,9 +13,6 @@
         android:theme="@style/Theme.Library"
         tools:targetApi="31">
         <activity
-            android:name=".presentation.selected_item.SelectedItemActivity"
-            android:exported="false" />
-        <activity
             android:name=".presentation.main.MainActivity"
             android:exported="true">
             <intent-filter>

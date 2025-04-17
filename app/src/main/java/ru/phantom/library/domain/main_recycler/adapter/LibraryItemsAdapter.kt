@@ -20,38 +20,29 @@ import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
-import ru.phantom.library.presentation.selected_item.SelectedItemActivity
 
-// Теперь использую ListAdapter и ItemCallback
+/**
+ * Адаптер для всех элементов библиотеки
+ */
 class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return LibraryViewHolder(binding).apply {
             // Переход на view с конкретным элементом
-            binding.root.setOnClickListener { view ->
-                goToSelectItemActivity(view.context, adapterPosition)
+            binding.root.setOnClickListener {
+                val position = adapterPosition
+                Log.d("CLICKED", "в адаптере")
+                viewModel.onItemClicked(getItem(position))
             }
             // Долго нажатие для изменения видимости элемента
             binding.root.setOnLongClickListener { view ->
                 changeAvailabilityClick(view.context, adapterPosition)
                 true
             }
-        }
-    }
-
-    private fun goToSelectItemActivity(context: Context, position: Int) {
-        if (position != RecyclerView.NO_POSITION) {
-            context.startActivity(
-                SelectedItemActivity.createIntent(
-                    context,
-                    getItem(position)
-                )
-            )
         }
     }
 
@@ -91,8 +82,8 @@ class LibraryItemsAdapter(
             else -> throw IllegalArgumentException("Неверный тип элемента")
         }
 
-        // Обновление списка теперь через ViewModel
-        viewModel.updateElementContent(position, newItem)
+        // Обновление списка и состояния
+        updateViewModel(position, newItem)
 
         Log.d(
             "Availability",
@@ -108,6 +99,24 @@ class LibraryItemsAdapter(
             newItem.briefInformation(),
             LENGTH_SHORT
         ).show()
+    }
+
+    private fun updateViewModel(
+        position: Int,
+        newItem: BasicLibraryElement
+    ) {
+        viewModel.updateElementContent(position, newItem)
+
+        // Если изменилось состояние текущего элемента, то оно меняется и на DetailFragment
+        viewModel.detailState.value?.let { state ->
+            /*
+            Пока проверяю по названию и id, но если добавить проверку при создании,
+            чтобы предметы создавались только с уникальными id, то можно проверять только по id
+             */
+            if (state.id == newItem.item.id && state.name == newItem.item.name) {
+                viewModel.setDetailState(viewModel.detailState.value!!.copy(description = newItem.fullInformation()))
+            }
+        }
     }
 
     // Callback для ItemTouchCallback, чтобы свайпать элементы
@@ -129,7 +138,7 @@ class LibraryItemsAdapter(
             val currPosition = viewHolder.adapterPosition
 
             if (currPosition != RecyclerView.NO_POSITION) {
-                // Удаление теперь через ViewModel
+                viewModel.selectedRemove(getItem(currPosition))
                 viewModel.removeElement(currPosition)
             }
         }

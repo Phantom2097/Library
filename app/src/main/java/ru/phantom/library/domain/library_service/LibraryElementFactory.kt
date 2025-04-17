@@ -50,27 +50,27 @@ object LibraryElementFactory {
         )
     }
 
-//    fun createNewspaper(
-//        name: String,
-//        id: Int = getItemsCounter(),
-//        availability: Boolean = true,
-//        position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
-//        issueNumber: Int? = null,
-//        issueMonth: Month = Month.UNKNOWN,
-//        service: LibraryService = LibraryService
-//    ): Newspaper {
-//        return NewspaperWithMonthImpl(
-//            LibraryItem(
-//                name = name,
-//                id = id,
-//                availability = availability,
-//                position = position
-//            ),
-//            service = service,
-//            issueNumber = issueNumber,
-//            issueMonth = issueMonth
-//        )
-//    }
+    fun createNewspaper(
+        name: String,
+        id: Int = getItemsCounter(),
+        availability: Boolean = true,
+        position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
+        issueNumber: Int? = null,
+        issueMonth: Month = Month.UNKNOWN,
+        service: LibraryService = LibraryService
+    ): Newspaper {
+        return NewspaperWithMonthImpl(
+            LibraryItem(
+                name = name,
+                id = id,
+                availability = availability,
+                position = position
+            ),
+            service = service,
+            issueNumber = issueNumber,
+            issueMonth = issueMonth
+        )
+    }
 
     fun createNewspaper (
         item: LibraryItem,

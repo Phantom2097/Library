@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -40,10 +42,26 @@ android {
 }
 
 dependencies {
+    // CardView
     implementation(libs.androidx.cardview)
 
+    // ViewModel
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    // Fragment
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.fragment.ktx)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
+    // SafeArgs
+//    implementation(libs.androidx.androidx.navigation.safeargs.gradle.plugin)
+
+    // Fragment Navigation
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
