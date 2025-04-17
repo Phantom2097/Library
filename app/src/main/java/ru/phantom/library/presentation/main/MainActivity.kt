@@ -179,8 +179,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.detailState.observe(this) {
-            if (isLandscape && viewModel.detailState.value?.uiType== DEFAULT_TYPE) {
-                landController.popBackStack()
+            if (isLandscape && viewModel.detailState.value?.uiType == SHOW_TYPE) {
+                toDetail()
             }
         }
     }

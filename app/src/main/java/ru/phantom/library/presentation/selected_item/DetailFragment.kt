@@ -1,9 +1,11 @@
 package ru.phantom.library.presentation.selected_item
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
 import android.widget.Toast.makeText
 import androidx.activity.OnBackPressedCallback
@@ -22,6 +24,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     val binding get() = _binding!!
 
     private val viewModel by activityViewModels<MainViewModel>()
+    private val isLandscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,30 +38,30 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val element = viewModel.detailState.value
-        when (element?.uiType) {
-            SHOW_TYPE -> onlyShow(element)
-            CREATE_TYPE -> showCreateType()
-            else -> findNavController().navigateUp()
-        }
+        viewModel.detailState.value?.let { changeUiType(it) }
 
         inputTextObserve()
 
         redefineBackButton()
     }
 
+    private fun changeUiType(element: DetailState) {
+        when (element.uiType) {
+            SHOW_TYPE -> onlyShow(element)
+            CREATE_TYPE -> showCreateType()
+            else -> backButton()
+        }
+    }
+
     /**
-     * Вот и последня деталь этого пазла
+     * Добавляет действия выполняемые системной кнопкой назад
      */
     private fun redefineBackButton() {
         requireActivity().onBackPressedDispatcher.addCallback(
-            this,
+            this@DetailFragment,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-
-                    viewModel.setDetailState()
-
-                    findNavController().popBackStack()
+                    backButton()
                 }
             }
         )
@@ -66,7 +69,6 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
     private fun onlyShow(element: DetailState) {
         binding.apply {
-            libraryItemsCards.alpha = 1.0f
             selectedItemName.setText(element.name)
             selectedItemId.setText(element.id.toString())
             selectedItemIcon.setImageResource(element.image)
@@ -77,7 +79,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             saveElementButton.apply {
                 text = context.getString(R.string.saveButtonShowType)
                 setOnClickListener {
-                    backStackSimulator()
+                    backButton()
                 }
             }
         }
@@ -88,19 +90,18 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         val image = element!!.image
 
         with(binding) {
-            libraryItemsCards.alpha = 1.0f
             selectedItemName.apply {
-                focusable = View.FOCUSABLE
-                isFocusableInTouchMode = true
+                setEditState(this)
+
                 setText(viewModel.detailState.value?.name.orEmpty())
             }
 
             selectedItemId.apply {
-                focusable = View.FOCUSABLE
-                isFocusableInTouchMode = true
-                viewModel.detailState.value?.let {
-                    if (it.id != DEFAULT_ID) {
-                        this@apply.setText(it.id.toString())
+                setEditState(this)
+
+                viewModel.detailState.value?.let { state ->
+                    if (state.id != DEFAULT_ID) {
+                        this@apply.setText(state.id.toString())
                     }
                 }
             }
@@ -112,16 +113,16 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
                 setOnClickListener {
                     val newName = selectedItemName.text?.toString()?.trim()
-                    val newId = selectedItemId.text.toString().toIntOrNull() ?: -1
+                    val newId = selectedItemId.text.toString().toIntOrNull() ?: DEFAULT_ID
 
                     val textToast = when {
-                        newName.isNullOrBlank() && newId == -1 -> context.getString(R.string.noNameAndIdCreateType)
+                        newName.isNullOrBlank() && newId == DEFAULT_ID -> context.getString(R.string.noNameAndIdCreateType)
                         newName.isNullOrBlank() -> context.getString(R.string.noNameCreateType)
-                        newId == -1 -> context.getString(R.string.noIdCreateType)
+                        newId == DEFAULT_ID -> context.getString(R.string.noIdCreateType)
                         else -> {
                             viewModel.addNewElement(LibraryItem(newName, newId), image)
 
-                            backStackSimulator()
+                            backButton()
 
                             null
                         }
@@ -132,6 +133,11 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                 }
             }
         }
+    }
+
+    private fun setEditState(button: EditText) = with(button) {
+        focusable = View.FOCUSABLE
+        isFocusableInTouchMode = true
     }
 
     /**
@@ -159,12 +165,17 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         }
     }
 
-    // Этот метод теперь не притворяется, что всё хорошо, а делает нормально
-    private fun backStackSimulator() {
-
+    /**
+     * Действие выполняемое по нажатию кнопки назад
+     */
+    private fun backButton() {
         viewModel.setDetailState()
 
-        findNavController().navigateUp()
+        if (isLandscape) {
+            findNavController().popBackStack(R.id.emptyFragment, false)
+        } else {
+            findNavController().popBackStack(R.id.allLibraryItemsList, false)
+        }
     }
 
     override fun onDestroy() {

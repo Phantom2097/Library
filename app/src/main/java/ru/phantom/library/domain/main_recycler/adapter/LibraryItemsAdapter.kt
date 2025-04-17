@@ -82,8 +82,8 @@ class LibraryItemsAdapter(
             else -> throw IllegalArgumentException("Неверный тип элемента")
         }
 
-        // Обновление списка теперь через ViewModel
-        viewModel.updateElementContent(position, newItem)
+        // Обновление списка и состояния
+        updateViewModel(position, newItem)
 
         Log.d(
             "Availability",
@@ -99,6 +99,24 @@ class LibraryItemsAdapter(
             newItem.briefInformation(),
             LENGTH_SHORT
         ).show()
+    }
+
+    private fun updateViewModel(
+        position: Int,
+        newItem: BasicLibraryElement
+    ) {
+        viewModel.updateElementContent(position, newItem)
+
+        // Если изменилось состояние текущего элемента, то оно меняется и на DetailFragment
+        viewModel.detailState.value?.let { state ->
+            /*
+            Пока проверяю по названию и id, но если добавить проверку при создании,
+            чтобы предметы создавались только с уникальными id, то можно проверять только по id
+             */
+            if (state.id == newItem.item.id && state.name == newItem.item.name) {
+                viewModel.setDetailState(viewModel.detailState.value!!.copy(description = newItem.fullInformation()))
+            }
+        }
     }
 
     // Callback для ItemTouchCallback, чтобы свайпать элементы
