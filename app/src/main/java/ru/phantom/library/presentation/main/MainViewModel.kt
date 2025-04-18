@@ -4,6 +4,10 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.data.repository.LibraryRepository
@@ -19,7 +23,23 @@ import ru.phantom.library.presentation_console.main.createBooks
 import ru.phantom.library.presentation_console.main.createDisks
 import ru.phantom.library.presentation_console.main.createNewspapers
 
+/**
+ *  Вью модель
+ *  @param elements хранит список всех элементов
+ *  @param detailState хранит состояние
+ *  @param itemClickEvent нужен для обработки нажатия на элемент в списке
+ *  @param scrollToEnd хранит состояние положения адаптера списка,
+ *  пока используется для проматывания вниз
+ *
+ *  @see ru.phantom.library.presentation.selected_item.DetailFragment
+ *  @see DetailState
+ */
 class MainViewModel : ViewModel() {
+
+    init {
+        createItems()
+    }
+
     private val _elements = MutableLiveData<List<BasicLibraryElement>>()
     val elements: LiveData<List<BasicLibraryElement>> = _elements
 
@@ -51,27 +71,33 @@ class MainViewModel : ViewModel() {
         _detailState.value = state
     }
 
-    init {
-        createItems()
-    }
-
     fun updateElements(list: List<BasicLibraryElement>) {
         val oldList = _elements.value
         _elements.postValue(oldList?.plus(list) ?: list)
     }
 
-    fun addNewElement(libraryItem: LibraryItem, elementType: Int) {
-        val element = when (elementType) {
-            BOOK_IMAGE -> createBook(libraryItem)
-            NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
-            DISK_IMAGE -> createDisk(libraryItem)
-            else -> null
+    /**
+     * Добавляет новый элемент в соответствующую коллекцию
+     *
+     * @param libraryItem принимает созданный объект
+     * @param elementType тип элемента, который нужно создать (Книга, Газета, Диск)
+     *
+     * @see LibraryItem
+     */
+    fun addNewElement(libraryItem: LibraryItem, elementType: Int) = viewModelScope.launch {
+        val element = withContext(Dispatchers.Default) {
+            when (elementType) {
+                BOOK_IMAGE -> createBook(libraryItem)
+                NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
+                DISK_IMAGE -> createDisk(libraryItem)
+                else -> null
+            }
         }
 
         _scrollToEnd.value = true
 
         element?.let {
-            updateElements(listOf(element))
+            updateElements(listOf(it))
         }
     }
 

@@ -8,11 +8,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.book.Book
@@ -50,22 +54,24 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        initUiAndVariables()
+        initUi()
         initNavigation()
 
+        startScreenInitialise()
+
+        // инициализирую слушателя нажатий на элемент списка
+        initListenerViewModel()
+    }
+
+    private fun startScreenInitialise() {
         if (isLandscape) {
             if (viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
-                navController.popBackStack()
+                navController.navigateUp()
                 landController.navigate(R.id.detailFragment)
-            } else {
-                landController.navigate(R.id.emptyFragment)
             }
         } else {
             toDetail()
         }
-
-        // инициализирую слушателя нажатий на элемент списка
-        initListenerViewModel()
     }
 
 
@@ -89,11 +95,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initUiAndVariables() {
-        val addButton = binding.mainAddButton
+    private fun initUi() = lifecycleScope.launch {
+        withContext(Dispatchers.Default) {
+            val addButton = binding.mainAddButton
 
-        addButton.setOnClickListener {
-            showAddItemBottomSheet()
+            addButton.setOnClickListener {
+                showAddItemBottomSheet()
+            }
         }
     }
 
@@ -156,7 +164,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Осуществляет навигацию к DetailFragment и передаёт состояние соответствующее режиму
+     * создания элементов
+     * @param elementType принимает тип элемента (Книгу, Газету или Диск)
+     * @param dialog принимает BottomSheetDialog
+     */
     private fun navigateToCreate(elementType: Int, dialog: BottomSheetDialog) {
+
         viewModel.setDetailState(
             DetailState(uiType = CREATE_TYPE, image = elementType)
         )
@@ -166,7 +181,12 @@ class MainActivity : AppCompatActivity() {
         dialog.dismiss()
     }
 
+    /**
+     * Добавляет слушателей изменений данных viewModel
+     * @see MainViewModel
+     */
     private fun initListenerViewModel() {
+
         viewModel.itemClickEvent.observe(this) { element ->
             Log.d("CLICKED", "Дошло до слушателя")
             element?.let {
@@ -185,6 +205,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Осуществляет переход на DetailFragment учитывая текущую конфигурацию и открыт ли
+     * на данный момент фрагмент или нет
+     *
+     * @see ru.phantom.library.presentation.selected_item.DetailFragment
+     */
     private fun toDetail() {
         if (isLandscape) {
             landController.navigate(R.id.detailFragment)

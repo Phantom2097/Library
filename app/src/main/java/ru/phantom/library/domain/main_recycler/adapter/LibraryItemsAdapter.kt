@@ -27,6 +27,7 @@ import ru.phantom.library.presentation.main.MainViewModel
 class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
@@ -69,6 +70,11 @@ class LibraryItemsAdapter(
 
     override fun getItemCount(): Int = currentList.size
 
+    /**
+     * Функция выполняет обновление поля availability выбранного элемента,
+     * а также вызывает обновление состояний списка и детального фрагмента в случае
+     * совпадения id и name
+     */
     private fun changeAvailabilityClick(context: Context, position: Int) {
         if (position !in currentList.indices) return
 
@@ -101,6 +107,9 @@ class LibraryItemsAdapter(
         ).show()
     }
 
+    /**
+     * Осуществляет обновление состояний связанных с элементом, который был изменён
+     */
     private fun updateViewModel(
         position: Int,
         newItem: BasicLibraryElement
@@ -119,7 +128,9 @@ class LibraryItemsAdapter(
         }
     }
 
-    // Callback для ItemTouchCallback, чтобы свайпать элементы
+    /**
+     * Callback для ItemTouchCallback, чтобы свайпать элементы
+     */
     fun getMySimpleCallback() = MySimpleCallback()
 
     inner class MySimpleCallback : SimpleCallback(
