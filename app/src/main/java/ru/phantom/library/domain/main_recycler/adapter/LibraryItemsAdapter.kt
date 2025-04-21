@@ -6,11 +6,13 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast.LENGTH_SHORT
 import android.widget.Toast.makeText
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import kotlinx.coroutines.launch
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.book.BookImpl
 import ru.phantom.library.data.entites.library.items.disk.DiskImpl
@@ -20,6 +22,7 @@ import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
+import ru.phantom.library.presentation.selected_item.LoadingStateToDetail
 
 /**
  * Адаптер для всех элементов библиотеки
@@ -113,18 +116,19 @@ class LibraryItemsAdapter(
     private fun updateViewModel(
         position: Int,
         newItem: BasicLibraryElement
-    ) {
+    ) = viewModel.viewModelScope.launch {
+
         viewModel.updateElementContent(position, newItem)
 
         // Если изменилось состояние текущего элемента, то оно меняется и на DetailFragment
-        viewModel.detailState.value?.let { state ->
-            /*
-            Пока проверяю по названию и id, но если добавить проверку при создании,
-            чтобы предметы создавались только с уникальными id, то можно проверять только по id
-             */
-            if (state.id == newItem.item.id && state.name == newItem.item.name) {
-                viewModel.setDetailState(viewModel.detailState.value!!.copy(description = newItem.fullInformation()))
-            }
+        viewModel.detailState.value.takeIf { state ->
+            state is LoadingStateToDetail.Data
+                    && state.data.id == newItem.item.id
+                    && state.data.name == newItem.item.name
+        }?.let { state ->
+            viewModel.setDetailState(
+                (state as LoadingStateToDetail.Data)
+                    .data.copy(description = newItem.fullInformation()))
         }
     }
 

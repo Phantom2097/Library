@@ -4,6 +4,16 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/detailFragmentShimmer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:shimmer_duration="1200">
+
+        <include layout="@layout/detail_information_screen_shimmer"/>
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
     <androidx.cardview.widget.CardView
         android:id="@+id/libraryItemsCards"
         android:layout_width="match_parent"

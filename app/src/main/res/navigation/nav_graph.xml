@@ -5,7 +5,6 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/allLibraryItemsList">
 
-<!--    Снова появилась ошибка на полях name, она живёт своей жизнью я её не контролирую-->
     <fragment
         android:id="@+id/allLibraryItemsList"
         android:name="ru.phantom.library.presentation.main.AllLibraryItemsList"
@@ -38,6 +37,15 @@
         android:id="@+id/detailFragment"
         android:name="ru.phantom.library.presentation.selected_item.DetailFragment"
         android:label="@string/detail_screen"
-        tools:layout="@layout/detail_information_screen" />
+        tools:layout="@layout/detail_information_screen" >
+        <action
+            android:id="@+id/action_detailFragment_to_errorFragment"
+            app:destination="@id/errorFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/errorFragment"
+        android:name="ru.phantom.library.presentation.selected_item.ErrorFragment"
+        android:label="ErrorFragment" />
 
 </navigation>

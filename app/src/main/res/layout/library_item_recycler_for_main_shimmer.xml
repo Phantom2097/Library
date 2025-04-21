@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/libraryItemsCards"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:outlineAmbientShadowColor="@color/black"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/libraryItemsCardsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/itemIconInCards"
+            android:layout_width="match_parent"
+            android:layout_margin="8dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/itemiconincards"
+            android:scaleType="fitCenter"
+            android:background="@color/shimmer"
+            app:layout_constraintDimensionRatio="2:3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/itemIdInCards"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@id/itemNameInCards"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/itemIconInCards"
+            android:background="@color/shimmer"
+             />
+
+        <TextView
+            android:id="@+id/itemNameInCards"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/shimmer"
+            android:ellipsize="end"
+            android:maxWidth="180dp"
+            android:maxHeight="30dp"
+            android:lines="2"
+            android:textAlignment="center"
+            android:textSize="22sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/itemIdInCards" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

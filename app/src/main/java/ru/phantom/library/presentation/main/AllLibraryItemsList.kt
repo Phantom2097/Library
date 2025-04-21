@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
@@ -33,10 +37,14 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initList()
-        initViewModel()
+        lifecycleScope.launch {
+            binding.recyclerShimmer.isVisible = true
+            initViewModel()
+        }
+
     }
 
-    private fun initList() {
+    private fun initList() = lifecycleScope.launch {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {
@@ -57,6 +65,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     private fun initViewModel() {
         viewModel.elements.observe(viewLifecycleOwner) { notes ->
+            binding.recyclerShimmer.isGone = true
             libraryAdapter.submitList(notes)
         }
 

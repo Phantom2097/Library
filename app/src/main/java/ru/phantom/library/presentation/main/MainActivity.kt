@@ -2,7 +2,6 @@ package ru.phantom.library.presentation.main
 
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -18,20 +17,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
 import ru.phantom.library.presentation.selected_item.DetailState
+import ru.phantom.library.presentation.selected_item.LoadingStateToDetail
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,46 +50,29 @@ class MainActivity : AppCompatActivity() {
         initUi()
         initNavigation()
 
-        startScreenInitialise()
+        if (savedInstanceState != null) {
+            startScreenInitialise()
+        } else {
+            viewModel.updateElements(emptyList())
+        }
 
-        // инициализирую слушателя нажатий на элемент списка
         initListenerViewModel()
     }
 
-    private fun startScreenInitialise() {
+    private fun startScreenInitialise() = lifecycleScope.launch {
         if (isLandscape) {
-            if (viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
-                navController.navigateUp()
-                landController.navigate(R.id.detailFragment)
-            }
+            navController.navigateUp()
+            landController.navigate(R.id.detailFragment)
         } else {
             toDetail()
         }
     }
 
-
-    fun changeDetailState(element: BasicLibraryElement? = null) {
-        element?.let { element ->
-            val image = when (element) {
-                is Book -> BOOK_IMAGE
-                is Newspaper -> NEWSPAPER_IMAGE
-                is Disk -> DISK_IMAGE
-                else -> DEFAULT_IMAGE
-            }
-            viewModel.setDetailState(
-                DetailState(
-                    uiType = SHOW_TYPE,
-                    name = element.item.name,
-                    id = element.item.id,
-                    image = image,
-                    description = element.fullInformation()
-                )
-            )
-        }
-    }
-
+    /**
+     * Функция инициализирует floating Button
+     */
     private fun initUi() = lifecycleScope.launch {
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             val addButton = binding.mainAddButton
 
             addButton.setOnClickListener {
@@ -105,6 +81,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Функция определяет контроллеры навигации в зависимости от конфигурации
+     */
     private fun initNavigation() {
         val navHost =
             supportFragmentManager
@@ -175,6 +154,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.setDetailState(
             DetailState(uiType = CREATE_TYPE, image = elementType)
         )
+        viewModel.updateType(elementType)
 
         toDetail()
 
@@ -182,24 +162,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Добавляет слушателей изменений данных viewModel
+     * Добавляет слушателя изменений данных viewModel
      * @see MainViewModel
      */
-    private fun initListenerViewModel() {
-
-        viewModel.itemClickEvent.observe(this) { element ->
-            Log.d("CLICKED", "Дошло до слушателя")
-            element?.let {
-                changeDetailState(element)
-
-                toDetail()
-
-                viewModel.reloadListener()
-            }
-        }
-
-        viewModel.detailState.observe(this) {
-            if (isLandscape && viewModel.detailState.value?.uiType == SHOW_TYPE) {
+    private fun initListenerViewModel() = lifecycleScope.launch {
+        viewModel.detailState.collect { state ->
+            if (state is LoadingStateToDetail.Loading) {
                 toDetail()
             }
         }
@@ -215,7 +183,9 @@ class MainActivity : AppCompatActivity() {
         if (isLandscape) {
             landController.navigate(R.id.detailFragment)
         } else {
-            if (navController.currentDestination?.label == getString(R.string.detail_screen)) {
+            if (
+                navController.currentDestination?.label == getString(R.string.detail_screen) || navController.currentDestination?.id == R.id.errorFragment
+            ) {
                 navController.popBackStack(R.id.detailFragment, true)
             }
             navController.navigate(R.id.action_to_detail)

@@ -5,9 +5,6 @@ import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_NAME
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
 
-/**
- * Состояние для DetailFragment
- */
 data class DetailState(
     val uiType: Int = DEFAULT_TYPE,
     val name: String = DEFAULT_NAME,
