@@ -2,6 +2,7 @@ package ru.phantom.library.presentation.main
 
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -21,10 +22,11 @@ import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailState
-import ru.phantom.library.presentation.selected_item.LoadingStateToDetail
+import ru.phantom.library.presentation.selected_item.states.DetailState
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,21 +52,32 @@ class MainActivity : AppCompatActivity() {
         initUi()
         initNavigation()
 
-        if (savedInstanceState != null) {
-            startScreenInitialise()
-        } else {
-            viewModel.updateElements(emptyList())
+        lifecycleScope.launch {
+            if (savedInstanceState == null) {
+                viewModel.updateElements(emptyList())
+            }
         }
 
         initListenerViewModel()
+        startScreenInitialise()
     }
 
+    /**
+     * Функция для отображения DetailFragment в случае, если до поворота экрана, он ещё был открыт
+     */
     private fun startScreenInitialise() = lifecycleScope.launch {
-        if (isLandscape) {
-            navController.navigateUp()
-            landController.navigate(R.id.detailFragment)
-        } else {
-            toDetail()
+        val state = viewModel.detailState.value
+        if (state is LoadingStateToDetail.Loading || (state as? LoadingStateToDetail.Data)?.data?.uiType != DEFAULT_TYPE) {
+            if (isLandscape) {
+                Log.d("orientationDebug", "поворот в ландшафт в другой функции")
+                while (navController.currentDestination?.label != getString(R.string.all_items)) {
+                    navController.navigateUp()
+                    Log.d("orientationDebug", "отработал navigateUp")
+                }
+                landController.navigate(R.id.detailFragment)
+            } else {
+                toDetail()
+            }
         }
     }
 
@@ -181,8 +194,10 @@ class MainActivity : AppCompatActivity() {
      */
     private fun toDetail() {
         if (isLandscape) {
+            Log.d("orientationDebug", "поворот в ландшафт")
             landController.navigate(R.id.detailFragment)
         } else {
+            Log.d("orientationDebug", "поворот в портрет")
             if (
                 navController.currentDestination?.label == getString(R.string.detail_screen) || navController.currentDestination?.id == R.id.errorFragment
             ) {

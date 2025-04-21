@@ -1,8 +1,8 @@
-package ru.phantom.library.presentation.selected_item
+package ru.phantom.library.presentation.selected_item.states
 
 /**
  * Состояние для DetailFragment
- * @see DetailFragment
+ * @see ru.phantom.library.presentation.selected_item.DetailFragment
  */
 sealed class LoadingStateToDetail {
 

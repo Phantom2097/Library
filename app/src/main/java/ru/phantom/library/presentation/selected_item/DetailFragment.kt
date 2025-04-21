@@ -16,6 +16,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +24,8 @@ import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.LibraryItem
 import ru.phantom.library.databinding.DetailInformationScreenBinding
 import ru.phantom.library.presentation.main.MainViewModel
+import ru.phantom.library.presentation.selected_item.states.DetailState
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
@@ -32,11 +35,14 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     private val viewModel by activityViewModels<MainViewModel>()
     private val isLandscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    private lateinit var navController: NavController
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        navController = findNavController()
         _binding = DetailInformationScreenBinding.inflate(layoutInflater, container, false)
         return binding.root
     }
@@ -44,6 +50,17 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initDetailStateScreen()
+
+        redefineBackButton()
+    }
+
+    /**
+     * Обновляет состояние DetailFragment в зависимости от поступающего LoadingStateToDetail
+     *
+     * @see LoadingStateToDetail
+     */
+    private fun initDetailStateScreen() {
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.detailState.collect { state ->
                 when (state) {
@@ -65,15 +82,12 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                     }
 
                     is LoadingStateToDetail.Error -> {
-                        findNavController().navigate(R.id.errorFragment)
-                        makeText(requireContext(), "Ошибка, попробуйте ещё раз", Toast.LENGTH_SHORT)
+                        navController.navigate(R.id.errorFragment)
+//                        makeText(requireContext(), "Ошибка, попробуйте ещё раз", Toast.LENGTH_SHORT).show()
                     }
                 }
-
             }
         }
-
-        redefineBackButton()
     }
 
     private fun changeUiType(element: DetailState) {
@@ -198,9 +212,9 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         viewModel.setDetailState()
 
         if (isLandscape) {
-            findNavController().popBackStack(R.id.emptyFragment, false)
+            navController.popBackStack(R.id.emptyFragment, false)
         } else {
-            findNavController().popBackStack(R.id.allLibraryItemsList, false)
+            navController.popBackStack(R.id.allLibraryItemsList, false)
         }
     }
 

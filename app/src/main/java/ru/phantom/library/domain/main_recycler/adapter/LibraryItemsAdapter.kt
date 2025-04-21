@@ -22,7 +22,7 @@ import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
-import ru.phantom.library.presentation.selected_item.LoadingStateToDetail
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 /**
  * Адаптер для всех элементов библиотеки

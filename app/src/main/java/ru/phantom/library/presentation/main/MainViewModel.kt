@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,14 +23,14 @@ import ru.phantom.library.data.repository.ItemsRepositoryImpl
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
-import ru.phantom.library.presentation.selected_item.CreateState
+import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
-import ru.phantom.library.presentation.selected_item.DetailState
-import ru.phantom.library.presentation.selected_item.LoadingStateToDetail
+import ru.phantom.library.presentation.selected_item.states.DetailState
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 import kotlin.random.Random
 
 /**
@@ -110,25 +111,32 @@ class MainViewModel(
     }
 
     /**
+     * Хранит джобу для отмены перехода на DetailFragment при быстром обращении
+     */
+    private var detailStateJob: Job? = null
+    /**
      * Теперь при отсутствии передаваемого значения возвращает в Default
      */
-    fun setDetailState(state: DetailState = DetailState()) = viewModelScope.launch {
-        var detailFlag = false
-        flow {
-            if (state.uiType == SHOW_TYPE) {
-                emit(LoadingStateToDetail.Loading)
-                delayEmulator()
-                detailFlag = errorEmulator()
-            }
+    fun setDetailState(state: DetailState = DetailState()) {
+        detailStateJob?.cancel()
+        detailStateJob = viewModelScope.launch(Dispatchers.IO) {
+            var detailFlag = false
+            flow {
+                if (state.uiType == SHOW_TYPE) {
+                    emit(LoadingStateToDetail.Loading)
+                    delayEmulator()
+                    detailFlag = errorEmulator()
+                }
 
-            if (!detailFlag) {
-                Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
-                _detailState.emit(LoadingStateToDetail.Data(state))
-            }
-        }.collect(_detailState)
+                if (!detailFlag) {
+                    Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
+                    _detailState.emit(LoadingStateToDetail.Data(state))
+                }
+            }.collect(_detailState)
+        }
     }
 
-    fun updateElements(list: List<BasicLibraryElement>) {
+    suspend fun updateElements(list: List<BasicLibraryElement>) = withContext(Dispatchers.IO) {
         if (list.isEmpty()) {
             viewModelScope.launch {
                 _elements.value = itemsRepository.getItems()
