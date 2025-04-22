@@ -36,15 +36,18 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initList()
-        lifecycleScope.launch {
-            binding.recyclerShimmer.isVisible = true
-            initViewModel()
-        }
 
+        binding.recyclerShimmer.isVisible = true
+        initList()
     }
 
-    private fun initList() = lifecycleScope.launch {
+    override fun onResume() {
+        super.onResume()
+
+        initViewModel()
+    }
+
+    private fun initList() {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {
@@ -63,17 +66,20 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         _binding = null
     }
 
-    private fun initViewModel() {
-        viewModel.elements.observe(viewLifecycleOwner) { notes ->
-            binding.recyclerShimmer.isGone = true
-            libraryAdapter.submitList(notes)
+    private fun initViewModel() = viewLifecycleOwner.lifecycleScope.launch {
+        launch {
+            viewModel.elements.collect { notes ->
+                if (notes.isNotEmpty()) binding.recyclerShimmer.isGone = true
+                libraryAdapter.submitList(notes)
+            }
         }
-
-        viewModel.scrollToEnd.observe(viewLifecycleOwner) { scroll ->
-            if (scroll) {
-                binding.recyclerMainScreen.post {
-                    binding.recyclerMainScreen.smoothScrollToPosition(libraryAdapter.currentList.size)
-                    viewModel.scrollToEndReset()
+        launch {
+            viewModel.scrollToEnd.collect { scroll ->
+                if (scroll) {
+                    binding.recyclerMainScreen.post {
+                        binding.recyclerMainScreen.smoothScrollToPosition(libraryAdapter.currentList.size)
+                        viewModel.scrollToEndReset()
+                    }
                 }
             }
         }

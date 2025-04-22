@@ -16,9 +16,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -35,14 +33,11 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     private val viewModel by activityViewModels<MainViewModel>()
     private val isLandscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    private lateinit var navController: NavController
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        navController = findNavController()
         _binding = DetailInformationScreenBinding.inflate(layoutInflater, container, false)
         return binding.root
     }
@@ -50,9 +45,14 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initDetailStateScreen()
-
         redefineBackButton()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Нужно подписываться в onResume (╯°□°）╯︵ ┻━┻
+        initDetailStateScreen()
     }
 
     /**
@@ -61,8 +61,10 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
      * @see LoadingStateToDetail
      */
     private fun initDetailStateScreen() {
-        lifecycleScope.launch(Dispatchers.Main) {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.detailState.collect { state ->
+                if (!isAdded) return@collect
+
                 when (state) {
                     is LoadingStateToDetail.Loading -> {
                         Log.d("uitype", "Сейчас должен показываться загрузочный экран")
@@ -82,8 +84,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                     }
 
                     is LoadingStateToDetail.Error -> {
-                        navController.navigate(R.id.errorFragment)
-//                        makeText(requireContext(), "Ошибка, попробуйте ещё раз", Toast.LENGTH_SHORT).show()
+                        findNavController().navigate(R.id.action_detailFragment_to_errorFragment)
                     }
                 }
             }
@@ -134,26 +135,26 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     private fun showCreateType() = lifecycleScope.launch {
 
         val element = viewModel.createState.value
-        val image = element?.itemType
+        val image = element.itemType
 
         with(binding) {
             selectedItemName.apply {
                 setEditState(this)
 
-                setText(element?.name ?: DEFAULT_NAME)
+                setText(element.name ?: DEFAULT_NAME)
             }
 
             selectedItemId.apply {
                 setEditState(this)
 
-                if (element?.id != null && element.id != DEFAULT_ID) {
+                if (element.id != null && element.id != DEFAULT_ID) {
                     this@apply.setText(element.id.toString())
                 }
             }
 
             inputTextObserve()
 
-            selectedItemIcon.setImageResource(image!!)
+            selectedItemIcon.setImageResource(image)
 
             saveElementButton.apply {
                 text = context.getString(R.string.saveButtonCreateType)
@@ -191,7 +192,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     /**
      * Функция добавляет слушателей изменения текста
      */
-    private fun inputTextObserve() = lifecycleScope.launch {
+    private fun inputTextObserve() {
 
         binding.apply {
 
@@ -212,9 +213,9 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         viewModel.setDetailState()
 
         if (isLandscape) {
-            navController.popBackStack(R.id.emptyFragment, false)
+            findNavController().popBackStack(R.id.emptyFragment, false)
         } else {
-            navController.popBackStack(R.id.allLibraryItemsList, false)
+            findNavController().popBackStack(R.id.allLibraryItemsList, false)
         }
     }
 

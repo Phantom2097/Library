@@ -14,9 +14,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import ru.phantom.library.R
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
@@ -52,45 +50,36 @@ class MainActivity : AppCompatActivity() {
         initUi()
         initNavigation()
 
-        lifecycleScope.launch {
-            if (savedInstanceState == null) {
-                viewModel.updateElements(emptyList())
-            }
-        }
-
-        initListenerViewModel()
         startScreenInitialise()
+        initListenerViewModel()
+
+        initStartItemsList(savedInstanceState)
+    }
+
+    private fun initStartItemsList(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) {
+            viewModel.updateElements(emptyList())
+        }
     }
 
     /**
      * Функция для отображения DetailFragment в случае, если до поворота экрана, он ещё был открыт
      */
-    private fun startScreenInitialise() = lifecycleScope.launch {
+    private fun startScreenInitialise() {
         val state = viewModel.detailState.value
         if (state is LoadingStateToDetail.Loading || (state as? LoadingStateToDetail.Data)?.data?.uiType != DEFAULT_TYPE) {
-            if (isLandscape) {
-                Log.d("orientationDebug", "поворот в ландшафт в другой функции")
-                while (navController.currentDestination?.label != getString(R.string.all_items)) {
-                    navController.navigateUp()
-                    Log.d("orientationDebug", "отработал navigateUp")
-                }
-                landController.navigate(R.id.detailFragment)
-            } else {
-                toDetail()
-            }
+            toDetail()
         }
     }
 
     /**
      * Функция инициализирует floating Button
      */
-    private fun initUi() = lifecycleScope.launch {
-        withContext(Dispatchers.IO) {
-            val addButton = binding.mainAddButton
+    private fun initUi() {
+        val addButton = binding.mainAddButton
 
-            addButton.setOnClickListener {
-                showAddItemBottomSheet()
-            }
+        addButton.setOnClickListener {
+            showAddItemBottomSheet()
         }
     }
 
@@ -195,14 +184,16 @@ class MainActivity : AppCompatActivity() {
     private fun toDetail() {
         if (isLandscape) {
             Log.d("orientationDebug", "поворот в ландшафт")
-            landController.navigate(R.id.detailFragment)
+            navController.popBackStack(R.id.allLibraryItemsList, false)
+
+            landController.popBackStack(R.id.emptyFragment, false)
+
+            landController.navigate(R.id.action_emptyFragment_to_detailFragment)
         } else {
             Log.d("orientationDebug", "поворот в портрет")
-            if (
-                navController.currentDestination?.label == getString(R.string.detail_screen) || navController.currentDestination?.id == R.id.errorFragment
-            ) {
-                navController.popBackStack(R.id.detailFragment, true)
-            }
+
+            navController.popBackStack(R.id.allLibraryItemsList, false)
+
             navController.navigate(R.id.action_to_detail)
         }
     }

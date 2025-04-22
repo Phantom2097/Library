@@ -1,16 +1,15 @@
 package ru.phantom.library.presentation.main
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
@@ -23,15 +22,14 @@ import ru.phantom.library.data.repository.ItemsRepositoryImpl
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
-import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
+import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
-import kotlin.random.Random
 
 /**
  *  Вью модель
@@ -47,34 +45,33 @@ class MainViewModel(
     private val itemsRepository: ItemsRepository<BasicLibraryElement> = ItemsRepositoryImpl()
 ) : ViewModel() {
 
-    private var errorCounter = ERROR_COUNTER_INIT
-
-    private val _elements = MutableLiveData<List<BasicLibraryElement>>()
-    val elements: LiveData<List<BasicLibraryElement>> = _elements
+    private val _elements = MutableStateFlow<List<BasicLibraryElement>>(emptyList())
+    val elements = _elements.asStateFlow()
 
     private val _detailState =
         MutableStateFlow<LoadingStateToDetail>(LoadingStateToDetail.Data(DetailState()))
     val detailState = _detailState.asStateFlow()
 
-    private val _scrollToEnd = MutableLiveData<Boolean>()
-    val scrollToEnd: LiveData<Boolean> = _scrollToEnd
+    private val _scrollToEnd = MutableStateFlow<Boolean>(false)
+    val scrollToEnd = _scrollToEnd.asStateFlow()
 
-    private val _createState = MutableStateFlow<CreateState?>(CreateState())
+    private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
 
     fun updateType(type: Int) = viewModelScope.launch {
         _createState.emit(CreateState(itemType = type))
     }
 
-    fun updateName(name: String) = viewModelScope.launch {
-        _createState.value?.let {
-            _createState.emit(it.copy(name = name))
+    // Тут вроде и не сложная операция, но не уверен, нужно или нет
+    fun updateName(name: String) = viewModelScope.launch(Dispatchers.IO) {
+        _createState.update {
+            it.copy(name = name)
         }
     }
 
-    fun updateId(id: Int) = viewModelScope.launch {
-        _createState.value?.let {
-            _createState.emit(it.copy(id = id))
+    fun updateId(id: Int) = viewModelScope.launch(Dispatchers.IO) {
+        _createState.update {
+            it.copy(id = id)
         }
     }
 
@@ -90,7 +87,7 @@ class MainViewModel(
         changeDetailState(element)
     }
 
-    fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
+    private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
         val image = withContext(Dispatchers.IO) {
             when (element) {
                 is Book -> BOOK_IMAGE
@@ -114,36 +111,37 @@ class MainViewModel(
      * Хранит джобу для отмены перехода на DetailFragment при быстром обращении
      */
     private var detailStateJob: Job? = null
+
     /**
      * Теперь при отсутствии передаваемого значения возвращает в Default
      */
     fun setDetailState(state: DetailState = DetailState()) {
         detailStateJob?.cancel()
         detailStateJob = viewModelScope.launch(Dispatchers.IO) {
-            var detailFlag = false
             flow {
                 if (state.uiType == SHOW_TYPE) {
                     emit(LoadingStateToDetail.Loading)
-                    delayEmulator()
-                    detailFlag = errorEmulator()
-                }
-
-                if (!detailFlag) {
+                    itemsRepository.delayEmulator()
+                    itemsRepository.errorEmulator()
                     Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
-                    _detailState.emit(LoadingStateToDetail.Data(state))
+                    emit(LoadingStateToDetail.Data(state))
                 }
+                emit(LoadingStateToDetail.Data(state))
+            }.catch { e ->
+                _detailState.emit(LoadingStateToDetail.Error(e.message))
             }.collect(_detailState)
         }
     }
 
-    suspend fun updateElements(list: List<BasicLibraryElement>) = withContext(Dispatchers.IO) {
+    fun updateElements(list: List<BasicLibraryElement>) = viewModelScope.launch {
         if (list.isEmpty()) {
-            viewModelScope.launch {
-                _elements.value = itemsRepository.getItems()
-            }
+            _elements.value = itemsRepository.getItems()
         } else {
-            val oldList = _elements.value
-            _elements.postValue(oldList?.plus(list) ?: list)
+            itemsRepository.addItems(list[0])
+
+            _elements.update {
+                itemsRepository.getItems()
+            }
         }
     }
 
@@ -155,14 +153,12 @@ class MainViewModel(
      *
      * @see LibraryItem
      */
-    fun addNewElement(libraryItem: LibraryItem, elementType: Int) = viewModelScope.launch {
-        val element = withContext(Dispatchers.IO) {
-            when (elementType) {
-                BOOK_IMAGE -> createBook(libraryItem)
-                NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
-                DISK_IMAGE -> createDisk(libraryItem)
-                else -> null
-            }
+    fun addNewElement(libraryItem: LibraryItem, elementType: Int) {
+        val element = when (elementType) {
+            BOOK_IMAGE -> createBook(libraryItem)
+            NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
+            DISK_IMAGE -> createDisk(libraryItem)
+            else -> null
         }
 
         _scrollToEnd.value = true
@@ -173,16 +169,9 @@ class MainViewModel(
     }
 
     fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch {
-        if (_elements.value == null) {
-            _elements.value = itemsRepository.getItems()
-        } else {
-            val oldList = _elements.value?.toMutableList()
-
-            oldList?.set(position, newItem)
-
-            oldList?.let {
-                _elements.value = it
-            }
+        itemsRepository.changeItem(position, newItem)
+        _elements.update {
+            itemsRepository.getItems()
         }
     }
 
@@ -201,50 +190,9 @@ class MainViewModel(
     }
 
     fun removeElement(position: Int) = viewModelScope.launch {
-        val newList = _elements.value?.toMutableList() ?: mutableListOf()
-
-        if (position in newList.indices) {
-            newList.removeAt(position)
+        itemsRepository.removeItem(position)
+        _elements.update {
+            itemsRepository.getItems()
         }
-
-        Log.d("Size", "prev size = ${_elements.value?.size}")
-        Log.d("Size", "new size = ${newList.size}")
-
-        _elements.value = newList
-
-        launch(Dispatchers.IO) {
-            itemsRepository.removeItem(position)
-        }
-    }
-
-    /**
-     * Эмулирует задержку в диапазоне от 100мс до 2000мс
-     */
-    private suspend fun delayEmulator() {
-        val time = Random.nextLong(RANDOM_START, RANDOM_END)
-        delay(time)
-    }
-
-    /**
-     * Эмулирует состояние ошибки каждый 5ый раз
-     */
-    private suspend fun errorEmulator(): Boolean {
-        val isError = ++errorCounter % ERROR_FREQUENCY == ERROR_COUNTER_COMPARE
-        return if (isError) {
-            _detailState.emit(LoadingStateToDetail.Error())
-            errorCounter = ERROR_COUNTER_INIT
-            true
-        } else {
-            false
-        }
-    }
-
-    private companion object {
-        private const val ERROR_COUNTER_INIT = 0
-        private const val ERROR_COUNTER_COMPARE = 0
-        private const val ERROR_FREQUENCY = 5
-
-        private const val RANDOM_START = 100L
-        private const val RANDOM_END = 2000L
     }
 }

@@ -1,6 +1,9 @@
 package ru.phantom.library.data.repository
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import ru.phantom.library.data.Position
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.LibraryItem
@@ -15,11 +18,14 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createBoo
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
+import kotlin.random.Random
 
 class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
 
     private val _allItems = mutableListOf<BasicLibraryElement>()
     private var isNeedLoad = true
+
+    private var errorCounter = ERROR_COUNTER_INIT
 
     init {
         _allItems.addAll(createBooks())
@@ -30,12 +36,16 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     override suspend fun addItems(
         item: BasicLibraryElement
     ) {
-        _allItems.add(item)
+        withContext(Dispatchers.IO) {
+            _allItems.add(item)
+        }
     }
 
     override suspend fun removeItem(position: Int) {
-        if (position in _allItems.indices) {
-            _allItems.removeAt(position)
+        withContext(Dispatchers.IO) {
+            if (position in _allItems.indices) {
+                _allItems.removeAt(position)
+            }
         }
     }
 
@@ -51,13 +61,34 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
         position: Int,
         newItem: BasicLibraryElement
     ) {
-        _allItems[position] = newItem
+        withContext(Dispatchers.IO) {
+            _allItems[position] = newItem
+        }
+    }
+
+    /**
+     * Эмулирует задержку в диапазоне от 100мс до 2000мс
+     */
+    override suspend fun delayEmulator() {
+        val time = Random.nextLong(RANDOM_START, RANDOM_END)
+        delay(time)
+    }
+
+    /**
+     * Эмулирует состояние ошибки каждый 5ый раз
+     */
+    override suspend fun errorEmulator() {
+        val isError = ++errorCounter % ERROR_FREQUENCY == ERROR_COUNTER_COMPARE
+        if (isError) {
+            errorCounter = ERROR_COUNTER_INIT
+            throw CancellationException("Ошибка загрузки данных, попробуйте ещё раз")
+        }
     }
 
     /**
      * Создание книг
      */
-    fun createBooks() = buildList {
+    private fun createBooks() = buildList {
         add(
             createBook(
                 name = "Котлин для профессионалов",
@@ -118,7 +149,7 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     /**
      * Создание газет
      */
-    fun createNewspapers() = buildList {
+    private fun createNewspapers() = buildList {
         add(
             createNewspaper(
                 name = "Русская правда",
@@ -180,7 +211,7 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     /**
      * Создание дисков
      */
-    fun createDisks() = buildList {
+    private fun createDisks() = buildList {
         add(
             DiskImpl(
                 LibraryItem(
@@ -232,7 +263,14 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
 
     companion object {
         private val service = LibraryService
+
+        private const val ERROR_COUNTER_INIT = 0
+        private const val ERROR_COUNTER_COMPARE = 0
+        private const val ERROR_FREQUENCY = 5
+
+        private const val RANDOM_START = 1000L
+        private const val RANDOM_END = 2000L
+
         private const val START_DELAY = 2500L
-//        private const val ERROR_FREQUENCY = 5
     }
 }
