@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initStartItemsList(savedInstanceState: Bundle?) {
         if (savedInstanceState == null) {
-            viewModel.updateElements(emptyList())
+            viewModel.initStartItems()
         }
     }
 

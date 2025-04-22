@@ -15,7 +15,9 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
@@ -46,12 +48,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         super.onViewCreated(view, savedInstanceState)
 
         redefineBackButton()
-    }
 
-    override fun onResume() {
-        super.onResume()
-
-        // Нужно подписываться в onResume (╯°□°）╯︵ ┻━┻
         initDetailStateScreen()
     }
 
@@ -62,29 +59,33 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
      */
     private fun initDetailStateScreen() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.detailState.collect { state ->
-                if (!isAdded) return@collect
 
-                when (state) {
-                    is LoadingStateToDetail.Loading -> {
-                        Log.d("uitype", "Сейчас должен показываться загрузочный экран")
-                        binding.apply {
-                            detailFragmentShimmer.isVisible = true
-                            libraryItemsCards.isGone = true
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+
+                viewModel.detailState.collect { state ->
+                    if (!isAdded) return@collect
+
+                    when (state) {
+                        is LoadingStateToDetail.Loading -> {
+                            Log.d("uitype", "Сейчас должен показываться загрузочный экран")
+                            binding.apply {
+                                detailFragmentShimmer.isVisible = true
+                                libraryItemsCards.isGone = true
+                            }
                         }
-                    }
 
-                    is LoadingStateToDetail.Data -> {
-                        Log.d("uitype", "сейчас должны отобразиться данные")
-                        binding.apply {
-                            detailFragmentShimmer.isGone = true
-                            libraryItemsCards.isVisible = true
+                        is LoadingStateToDetail.Data -> {
+                            Log.d("uitype", "сейчас должны отобразиться данные")
+                            binding.apply {
+                                detailFragmentShimmer.isGone = true
+                                libraryItemsCards.isVisible = true
+                            }
+                            changeUiType(state.data)
                         }
-                        changeUiType(state.data)
-                    }
 
-                    is LoadingStateToDetail.Error -> {
-                        findNavController().navigate(R.id.action_detailFragment_to_errorFragment)
+                        is LoadingStateToDetail.Error -> {
+                            findNavController().navigate(R.id.action_detailFragment_to_errorFragment)
+                        }
                     }
                 }
             }
@@ -114,7 +115,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         )
     }
 
-    private fun onlyShow(element: DetailState) = lifecycleScope.launch {
+    private fun onlyShow(element: DetailState) {
         binding.apply {
             selectedItemName.setText(element.name)
             selectedItemId.setText(element.id.toString())
@@ -132,7 +133,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
         }
     }
 
-    private fun showCreateType() = lifecycleScope.launch {
+    private fun showCreateType() {
 
         val element = viewModel.createState.value
         val image = element.itemType

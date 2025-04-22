@@ -1,6 +1,6 @@
 package ru.phantom.library.data.repository
 
-import kotlinx.coroutines.CancellationException
+import android.accounts.NetworkErrorException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -69,7 +69,7 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     /**
      * Эмулирует задержку в диапазоне от 100мс до 2000мс
      */
-    override suspend fun delayEmulator() {
+    suspend fun delayEmulator() {
         val time = Random.nextLong(RANDOM_START, RANDOM_END)
         delay(time)
     }
@@ -77,11 +77,11 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     /**
      * Эмулирует состояние ошибки каждый 5ый раз
      */
-    override suspend fun errorEmulator() {
+    fun errorEmulator() {
         val isError = ++errorCounter % ERROR_FREQUENCY == ERROR_COUNTER_COMPARE
         if (isError) {
             errorCounter = ERROR_COUNTER_INIT
-            throw CancellationException("Ошибка загрузки данных, попробуйте ещё раз")
+            throw NetworkErrorException("Ошибка загрузки данных, попробуйте ещё раз")
         }
     }
 

@@ -26,8 +26,4 @@ interface ItemsRepository<T> {
      * @param newItem этот же элемент с изменённым состоянием
      */
     suspend fun changeItem(position: Int, newItem: T)
-
-    suspend fun delayEmulator()
-
-    suspend fun errorEmulator()
 }

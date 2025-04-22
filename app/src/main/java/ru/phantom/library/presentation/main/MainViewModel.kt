@@ -1,11 +1,14 @@
 package ru.phantom.library.presentation.main
 
+import android.accounts.NetworkErrorException
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -19,6 +22,7 @@ import ru.phantom.library.data.entites.library.items.disk.Disk
 import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.data.repository.ItemsRepositoryImpl
+import ru.phantom.library.data.repository.extensions.simulateRealRepository
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
@@ -30,6 +34,7 @@ import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SH
 import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
+import java.util.concurrent.CancellationException
 
 /**
  *  Вью модель
@@ -52,8 +57,8 @@ class MainViewModel(
         MutableStateFlow<LoadingStateToDetail>(LoadingStateToDetail.Data(DetailState()))
     val detailState = _detailState.asStateFlow()
 
-    private val _scrollToEnd = MutableStateFlow<Boolean>(false)
-    val scrollToEnd = _scrollToEnd.asStateFlow()
+    private val _scrollToEnd = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 1)
+    val scrollToEnd = _scrollToEnd.asSharedFlow()
 
     private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
@@ -63,13 +68,13 @@ class MainViewModel(
     }
 
     // Тут вроде и не сложная операция, но не уверен, нужно или нет
-    fun updateName(name: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun updateName(name: String) {
         _createState.update {
             it.copy(name = name)
         }
     }
 
-    fun updateId(id: Int) = viewModelScope.launch(Dispatchers.IO) {
+    fun updateId(id: Int) {
         _createState.update {
             it.copy(id = id)
         }
@@ -79,8 +84,12 @@ class MainViewModel(
         _createState.emit(CreateState())
     }
 
-    fun scrollToEndReset() {
-        _scrollToEnd.value = false
+    fun requestScrollToEnd() = viewModelScope.launch {
+        _scrollToEnd.emit(true)
+    }
+
+    fun resetScrollToEnd() = viewModelScope.launch {
+        _scrollToEnd.emit(false)
     }
 
     fun onItemClicked(element: BasicLibraryElement) {
@@ -118,30 +127,70 @@ class MainViewModel(
     fun setDetailState(state: DetailState = DetailState()) {
         detailStateJob?.cancel()
         detailStateJob = viewModelScope.launch(Dispatchers.IO) {
-            flow {
-                if (state.uiType == SHOW_TYPE) {
-                    emit(LoadingStateToDetail.Loading)
-                    itemsRepository.delayEmulator()
-                    itemsRepository.errorEmulator()
-                    Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
+            try {
+                flow {
+                    if (state.uiType == SHOW_TYPE) {
+                        emit(LoadingStateToDetail.Loading)
+
+                        itemsRepository.simulateRealRepository()
+                        Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
+
+                        emit(LoadingStateToDetail.Data(state))
+                    }
                     emit(LoadingStateToDetail.Data(state))
                 }
-                emit(LoadingStateToDetail.Data(state))
-            }.catch { e ->
-                _detailState.emit(LoadingStateToDetail.Error(e.message))
-            }.collect(_detailState)
+                    .catch { e ->
+                        val errorState = when (e) {
+                            is CancellationException -> {
+                                Log.w("DetailState", "Операция перехода отменена in flow", e)
+                                return@catch
+                            }
+
+                            is NetworkErrorException -> {
+                                Log.w("DetailState", "Ошибка сети", e)
+                                LoadingStateToDetail.Error("Ошибка сети, проверьте подключение")
+                            }
+
+                            else -> {
+                                Log.w("DetailState", "Ошибка сети", e)
+                                LoadingStateToDetail.Error(e.message ?: "Unknown error")
+                            }
+                        }
+                        _detailState.emit(errorState)
+                    }
+                    .collect(_detailState)
+            } catch (e: CancellationException) {
+                Log.w("DetailState", "Операция перехода отменена out flow", e)
+            } catch (e: Error) {
+                Log.e("DetailState", "Неизвестная ошибка", e)
+            }
         }
     }
 
-    fun updateElements(list: List<BasicLibraryElement>) = viewModelScope.launch {
-        if (list.isEmpty()) {
-            _elements.value = itemsRepository.getItems()
-        } else {
-            itemsRepository.addItems(list[0])
+    /**
+     * Вынес добавление стартовых элементов в отдельную функцию
+     */
+    fun initStartItems() {
+        viewModelScope.launch {
+            val items = itemsRepository.getItems()
+            _elements.update {
+                items
+            }
+        }
+    }
+
+    private fun updateElements(newItem: BasicLibraryElement) {
+        viewModelScope.launch {
+            itemsRepository.addItems(newItem)
+
+            val newItems = itemsRepository.getItems()
 
             _elements.update {
-                itemsRepository.getItems()
+                newItems
             }
+
+            Log.d("ScrollState", "Эмитется новое значение")
+            requestScrollToEnd()
         }
     }
 
@@ -161,10 +210,8 @@ class MainViewModel(
             else -> null
         }
 
-        _scrollToEnd.value = true
-
         element?.let {
-            updateElements(listOf(it))
+            updateElements(it)
         }
     }
 
