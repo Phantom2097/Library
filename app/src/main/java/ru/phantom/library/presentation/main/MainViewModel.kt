@@ -140,31 +140,28 @@ class MainViewModel(
                     emit(LoadingStateToDetail.Data(state))
                 }
                     .catch { e ->
-                        val errorState = when (e) {
-                            is CancellationException -> {
-                                Log.w("DetailState", "Операция перехода отменена in flow", e)
-                                return@catch
-                            }
-
-                            is NetworkErrorException -> {
-                                Log.w("DetailState", "Ошибка сети", e)
-                                LoadingStateToDetail.Error("Ошибка сети, проверьте подключение")
-                            }
-
-                            else -> {
-                                Log.w("DetailState", "Ошибка сети", e)
-                                LoadingStateToDetail.Error(e.message ?: "Unknown error")
-                            }
-                        }
-                        _detailState.emit(errorState)
+                        handleRepositoryErrors(e)
                     }
                     .collect(_detailState)
             } catch (e: CancellationException) {
                 Log.w("DetailState", "Операция перехода отменена out flow", e)
-            } catch (e: Error) {
-                Log.e("DetailState", "Неизвестная ошибка", e)
             }
         }
+    }
+
+    private suspend fun handleRepositoryErrors(e: Throwable) {
+        val errorState = when (e) {
+            is NetworkErrorException -> {
+                Log.w("DetailState", "Ошибка сети", e)
+                LoadingStateToDetail.Error("Ошибка сети, проверьте подключение")
+            }
+
+            else -> {
+                Log.w("DetailState", "Непредвиденная ошибка", e)
+                LoadingStateToDetail.Error(e.message ?: "Unknown error")
+            }
+        }
+        _detailState.emit(errorState)
     }
 
     /**
