@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 
-    id("androidx.navigation.safeargs.kotlin")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -41,6 +41,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     // CardView
     implementation(libs.androidx.cardview)
@@ -59,8 +63,10 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
-    // SafeArgs
-//    implementation(libs.androidx.androidx.navigation.safeargs.gradle.plugin)
+    //Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx) // Kotlin Extensions and Coroutines support
 
     // Fragment Navigation
     implementation(libs.androidx.navigation.fragment)

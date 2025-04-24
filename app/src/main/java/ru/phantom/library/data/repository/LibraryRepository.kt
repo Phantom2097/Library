@@ -4,9 +4,9 @@ import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RED
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.domain.entities.library.book.Book
+import ru.phantom.library.domain.entities.library.disk.Disk
+import ru.phantom.library.domain.entities.library.newspaper.Newspaper
 import ru.phantom.library.data.repository.LibraryRepository.LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
 import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
 

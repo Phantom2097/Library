@@ -1,7 +1,7 @@
 package presentation.show_actions
 
-import ru.phantom.library.data.entites.library.Readable
-import ru.phantom.library.data.entites.library.Showable
+import ru.phantom.library.domain.entities.library.Readable
+import ru.phantom.library.domain.entities.library.Showable
 import presentation.colors.Colors.ANSI_CYAN
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW

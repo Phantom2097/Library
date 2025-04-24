@@ -26,4 +26,5 @@
     <string name="detail_screen">Detail screen</string>
     <string name="emptyFragmentText">Выбери элемент или создайте свой</string>
     <string name="detailFragmentErrorText">Неизвестная ошибка, попробуйте ещё раз</string>
+    <string name="recyclerMainNoElementsText">Элементов нет\nДобаьте или обновите список</string>
 </resources>
