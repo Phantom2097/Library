@@ -1,13 +1,13 @@
 package ru.phantom.library.presentation_console.main
 
 import ru.phantom.library.data.Position
-import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.disk.Type.CD
-import ru.phantom.library.data.entites.library.items.disk.Type.DVD
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.Month.JANUARY
-import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
+import ru.phantom.library.domain.entities.library.disk.Type.CD
+import ru.phantom.library.domain.entities.library.disk.Type.DVD
+import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.domain.entities.library.newspaper.month.Month.JANUARY
+import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.repository.LibraryRepository.addItemBook
 import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
 import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper

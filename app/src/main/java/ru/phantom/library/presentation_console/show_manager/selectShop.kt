@@ -1,8 +1,8 @@
 package presentation.show_manager
 
-import ru.phantom.library.data.entites.shop.book.BookShop
-import ru.phantom.library.data.entites.shop.disk.DiskShop
-import ru.phantom.library.data.entites.shop.newspaper.NewspaperShop
+import ru.phantom.library.data.local.models.shop.book.BookShop
+import ru.phantom.library.data.local.models.shop.disk.DiskShop
+import ru.phantom.library.data.local.models.shop.newspaper.NewspaperShop
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW
 

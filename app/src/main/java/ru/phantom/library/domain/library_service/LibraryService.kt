@@ -1,7 +1,7 @@
 package ru.phantom.library.domain.library_service
 
 import ru.phantom.library.data.Position
-import ru.phantom.library.data.entites.library.items.LibraryItem
+import ru.phantom.library.data.local.models.library.items.LibraryItem
 
 object LibraryService: Service {
 

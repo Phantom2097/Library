@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.book.BookImpl
-import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+import ru.phantom.library.data.local.models.library.items.book.BookImpl
+import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
