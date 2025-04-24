@@ -1,10 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/recyclerMainScreen"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:contentDescription="@string/recyclerMainDescription"
-    android:padding="8dp"
-    tools:listitem="@layout/library_item_recycler_for_main" />
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerMainScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:contentDescription="@string/recyclerMainDescription"
+        android:padding="8dp"
+        tools:listitem="@layout/library_item_recycler_for_main" />
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/recyclerShimmer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="12dp"
+        android:visibility="gone"
+        app:shimmer_duration="1200">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="8dp">
+
+            <include
+                android:id="@+id/upLeft"
+                layout="@layout/library_item_recycler_for_main_shimmer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toTopOf="@id/downLeft"
+                app:layout_constraintEnd_toStartOf="@id/upRight"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <include
+                android:id="@+id/upRight"
+                layout="@layout/library_item_recycler_for_main_shimmer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toTopOf="@id/downRight"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/upLeft"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <include
+                android:id="@+id/downLeft"
+                layout="@layout/library_item_recycler_for_main_shimmer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/downRight"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/upLeft" />
+
+            <include
+                android:id="@+id/downRight"
+                layout="@layout/library_item_recycler_for_main_shimmer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/downLeft"
+                app:layout_constraintTop_toBottomOf="@id/upRight" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

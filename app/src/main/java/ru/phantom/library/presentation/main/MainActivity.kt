@@ -8,26 +8,23 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.launch
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
-import ru.phantom.library.presentation.selected_item.DetailState
+import ru.phantom.library.presentation.selected_item.states.DetailState
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,46 +47,35 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        initUiAndVariables()
+        initUi()
         initNavigation()
 
-        if (isLandscape) {
-            if (viewModel.detailState.value?.uiType != DEFAULT_TYPE) {
-                navController.popBackStack()
-                landController.navigate(R.id.detailFragment)
-            } else {
-                landController.navigate(R.id.emptyFragment)
-            }
-        } else {
+        startScreenInitialise()
+        initListenerViewModel()
+
+        initStartItemsList(savedInstanceState)
+    }
+
+    private fun initStartItemsList(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) {
+            viewModel.initStartItems()
+        }
+    }
+
+    /**
+     * Функция для отображения DetailFragment в случае, если до поворота экрана, он ещё был открыт
+     */
+    private fun startScreenInitialise() {
+        val state = viewModel.detailState.value
+        if (state is LoadingStateToDetail.Loading || (state as? LoadingStateToDetail.Data)?.data?.uiType != DEFAULT_TYPE) {
             toDetail()
         }
-
-        // инициализирую слушателя нажатий на элемент списка
-        initListenerViewModel()
     }
 
-
-    fun changeDetailState(element: BasicLibraryElement? = null) {
-        element?.let { element ->
-            val image = when (element) {
-                is Book -> BOOK_IMAGE
-                is Newspaper -> NEWSPAPER_IMAGE
-                is Disk -> DISK_IMAGE
-                else -> DEFAULT_IMAGE
-            }
-            viewModel.setDetailState(
-                DetailState(
-                    uiType = SHOW_TYPE,
-                    name = element.item.name,
-                    id = element.item.id,
-                    image = image,
-                    description = element.fullInformation()
-                )
-            )
-        }
-    }
-
-    private fun initUiAndVariables() {
+    /**
+     * Функция инициализирует floating Button
+     */
+    private fun initUi() {
         val addButton = binding.mainAddButton
 
         addButton.setOnClickListener {
@@ -97,6 +83,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Функция определяет контроллеры навигации в зависимости от конфигурации
+     */
     private fun initNavigation() {
         val navHost =
             supportFragmentManager
@@ -156,42 +145,55 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Осуществляет навигацию к DetailFragment и передаёт состояние соответствующее режиму
+     * создания элементов
+     * @param elementType принимает тип элемента (Книгу, Газету или Диск)
+     * @param dialog принимает BottomSheetDialog
+     */
     private fun navigateToCreate(elementType: Int, dialog: BottomSheetDialog) {
+
         viewModel.setDetailState(
             DetailState(uiType = CREATE_TYPE, image = elementType)
         )
+        viewModel.updateType(elementType)
 
         toDetail()
 
         dialog.dismiss()
     }
 
-    private fun initListenerViewModel() {
-        viewModel.itemClickEvent.observe(this) { element ->
-            Log.d("CLICKED", "Дошло до слушателя")
-            element?.let {
-                changeDetailState(element)
-
-                toDetail()
-
-                viewModel.reloadListener()
-            }
-        }
-
-        viewModel.detailState.observe(this) {
-            if (isLandscape && viewModel.detailState.value?.uiType == SHOW_TYPE) {
+    /**
+     * Добавляет слушателя изменений данных viewModel
+     * @see MainViewModel
+     */
+    private fun initListenerViewModel() = lifecycleScope.launch {
+        viewModel.detailState.collect { state ->
+            if (state is LoadingStateToDetail.Loading) {
                 toDetail()
             }
         }
     }
 
+    /**
+     * Осуществляет переход на DetailFragment учитывая текущую конфигурацию и открыт ли
+     * на данный момент фрагмент или нет
+     *
+     * @see ru.phantom.library.presentation.selected_item.DetailFragment
+     */
     private fun toDetail() {
         if (isLandscape) {
-            landController.navigate(R.id.detailFragment)
+            Log.d("orientationDebug", "поворот в ландшафт")
+            navController.popBackStack(R.id.allLibraryItemsList, false)
+
+            landController.popBackStack(R.id.emptyFragment, false)
+
+            landController.navigate(R.id.action_emptyFragment_to_detailFragment)
         } else {
-            if (navController.currentDestination?.label == getString(R.string.detail_screen)) {
-                navController.popBackStack(R.id.detailFragment, true)
-            }
+            Log.d("orientationDebug", "поворот в портрет")
+
+            navController.popBackStack(R.id.allLibraryItemsList, false)
+
             navController.navigate(R.id.action_to_detail)
         }
     }

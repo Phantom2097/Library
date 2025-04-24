@@ -1,13 +1,20 @@
 package ru.phantom.library.presentation.main
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
@@ -32,8 +39,12 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initList()
+
+        binding.recyclerShimmer.isVisible = true
+
         initViewModel()
+
+        initList()
     }
 
     private fun initList() {
@@ -51,20 +62,29 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     }
 
     override fun onDestroy() {
+        Log.d("ScrollState", "фрагмент разрушен")
         super.onDestroy()
         _binding = null
     }
 
-    private fun initViewModel() {
-        viewModel.elements.observe(viewLifecycleOwner) { notes ->
-            libraryAdapter.submitList(notes)
-        }
-
-        viewModel.scrollToEnd.observe(viewLifecycleOwner) { scroll ->
-            if (scroll) {
-                binding.recyclerMainScreen.post {
-                    binding.recyclerMainScreen.smoothScrollToPosition(libraryAdapter.currentList.size)
-                    viewModel.scrollToEndReset()
+    private fun initViewModel() = viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            launch {
+                viewModel.elements.collect { notes ->
+                    if (notes.isNotEmpty()) binding.recyclerShimmer.isGone = true
+                    libraryAdapter.submitList(notes)
+                }
+            }
+            launch {
+                viewModel.scrollToEnd.collect { state ->
+                    if (state) {
+                        val lastPosition = libraryAdapter.itemCount
+                        binding.recyclerMainScreen.post {
+                            Log.d("ScrollState", "Последняя позиция: $lastPosition")
+                            binding.recyclerMainScreen.smoothScrollToPosition(lastPosition)
+                        }
+                        viewModel.resetScrollToEnd()
+                    }
                 }
             }
         }

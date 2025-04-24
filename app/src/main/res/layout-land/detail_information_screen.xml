@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/detailFragmentShimmer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:shimmer_duration="1200">
+
+        <include layout="@layout/detail_information_screen_shimmer" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/libraryItemsCards"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginEnd="12dp"
         android:layout_marginVertical="12dp"
+        android:layout_marginEnd="12dp"
         android:outlineAmbientShadowColor="@color/black"
+        android:visibility="gone"
         app:cardCornerRadius="16dp">
 
-        <!--  Так выглядит поинтереснее, с анимацией cardView мог бы расшириться до экрана  -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -35,8 +45,8 @@
                 android:id="@+id/selectedItemNameTop"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="12dp"
                 android:alpha="0.8"
                 android:paddingHorizontal="8dp"
                 android:text="@string/selectedItemNameTop"

@@ -4,6 +4,8 @@
     <color name="unavailable_item">#0000004D</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="shimmer">#C2C2C2</color>
+
     <color name="appIcon">#2196F3</color>
     <color name="mainBackground">#262196F3</color>
     <color name="iconInRecyclerColor">#FFFFFFFF</color>

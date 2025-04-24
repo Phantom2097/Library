@@ -1,65 +1,204 @@
 package ru.phantom.library.presentation.main
 
+import android.accounts.NetworkErrorException
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.phantom.library.data.entites.library.items.BasicLibraryElement
 import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.repository.LibraryRepository
+import ru.phantom.library.data.entites.library.items.book.Book
+import ru.phantom.library.data.entites.library.items.disk.Disk
+import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.data.repository.ItemsRepository
+import ru.phantom.library.data.repository.ItemsRepositoryImpl
+import ru.phantom.library.data.repository.extensions.simulateRealRepository
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
-import ru.phantom.library.domain.library_service.LibraryService
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailState
-import ru.phantom.library.presentation_console.main.createBooks
-import ru.phantom.library.presentation_console.main.createDisks
-import ru.phantom.library.presentation_console.main.createNewspapers
+import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
+import ru.phantom.library.presentation.selected_item.states.CreateState
+import ru.phantom.library.presentation.selected_item.states.DetailState
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
+import java.util.concurrent.CancellationException
 
-class MainViewModel : ViewModel() {
-    private val _elements = MutableLiveData<List<BasicLibraryElement>>()
-    val elements: LiveData<List<BasicLibraryElement>> = _elements
+/**
+ *  Вью модель
+ *  @param elements хранит список всех элементов
+ *  @param detailState хранит состояние
+ *  @param scrollToEnd хранит состояние положения адаптера списка,
+ *  пока используется для проматывания вниз
+ *
+ *  @see ru.phantom.library.presentation.selected_item.DetailFragment
+ *  @see DetailState
+ */
+class MainViewModel(
+    private val itemsRepository: ItemsRepository<BasicLibraryElement> = ItemsRepositoryImpl()
+) : ViewModel() {
 
-    private val _detailState = MutableLiveData<DetailState>(DetailState())
-    val detailState: LiveData<DetailState> = _detailState
+    private val _elements = MutableStateFlow<List<BasicLibraryElement>>(emptyList())
+    val elements = _elements.asStateFlow()
 
-    private val _itemClickEvent = MutableLiveData<BasicLibraryElement?>()
-    val itemClickEvent: LiveData<BasicLibraryElement?> = _itemClickEvent
+    private val _detailState =
+        MutableStateFlow<LoadingStateToDetail>(LoadingStateToDetail.Data(DetailState()))
+    val detailState = _detailState.asStateFlow()
 
-    private val _scrollToEnd = MutableLiveData<Boolean>()
-    val scrollToEnd: LiveData<Boolean> = _scrollToEnd
+    private val _scrollToEnd = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 1)
+    val scrollToEnd = _scrollToEnd.asSharedFlow()
 
-    fun scrollToEndReset() {
-        _scrollToEnd.value = false
+    private val _createState = MutableStateFlow<CreateState>(CreateState())
+    val createState = _createState.asStateFlow()
+
+    fun updateType(type: Int) = viewModelScope.launch {
+        _createState.emit(CreateState(itemType = type))
+    }
+
+    // Тут вроде и не сложная операция, но не уверен, нужно или нет
+    fun updateName(name: String) {
+        _createState.update {
+            it.copy(name = name)
+        }
+    }
+
+    fun updateId(id: Int) {
+        _createState.update {
+            it.copy(id = id)
+        }
+    }
+
+    fun clearCreate() = viewModelScope.launch {
+        _createState.emit(CreateState())
+    }
+
+    fun requestScrollToEnd() = viewModelScope.launch {
+        _scrollToEnd.emit(true)
+    }
+
+    fun resetScrollToEnd() = viewModelScope.launch {
+        _scrollToEnd.emit(false)
     }
 
     fun onItemClicked(element: BasicLibraryElement) {
-        _itemClickEvent.value = element
+        changeDetailState(element)
     }
 
-    fun reloadListener() {
-        _itemClickEvent.value = null
+    private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
+        val image = withContext(Dispatchers.IO) {
+            when (element) {
+                is Book -> BOOK_IMAGE
+                is Newspaper -> NEWSPAPER_IMAGE
+                is Disk -> DISK_IMAGE
+                else -> DEFAULT_IMAGE
+            }
+        }
+        setDetailState(
+            DetailState(
+                uiType = SHOW_TYPE,
+                name = element.item.name,
+                id = element.item.id,
+                image = image,
+                description = element.fullInformation()
+            )
+        )
     }
+
+    /**
+     * Хранит джобу для отмены перехода на DetailFragment при быстром обращении
+     */
+    private var detailStateJob: Job? = null
 
     /**
      * Теперь при отсутствии передаваемого значения возвращает в Default
      */
     fun setDetailState(state: DetailState = DetailState()) {
-        _detailState.value = state
+        detailStateJob?.cancel()
+        detailStateJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                flow {
+                    if (state.uiType == SHOW_TYPE) {
+                        emit(LoadingStateToDetail.Loading)
+
+                        itemsRepository.simulateRealRepository()
+                        Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
+
+                        emit(LoadingStateToDetail.Data(state))
+                    }
+                    emit(LoadingStateToDetail.Data(state))
+                }
+                    .catch { e ->
+                        handleRepositoryErrors(e)
+                    }
+                    .collect(_detailState)
+            } catch (e: CancellationException) {
+                Log.w("DetailState", "Операция перехода отменена out flow", e)
+            }
+        }
     }
 
-    init {
-        createItems()
+    private suspend fun handleRepositoryErrors(e: Throwable) {
+        val errorState = when (e) {
+            is NetworkErrorException -> {
+                Log.w("DetailState", "Ошибка сети", e)
+                LoadingStateToDetail.Error("Ошибка сети, проверьте подключение")
+            }
+
+            else -> {
+                Log.w("DetailState", "Непредвиденная ошибка", e)
+                LoadingStateToDetail.Error(e.message ?: "Unknown error")
+            }
+        }
+        _detailState.emit(errorState)
     }
 
-    fun updateElements(list: List<BasicLibraryElement>) {
-        val oldList = _elements.value
-        _elements.postValue(oldList?.plus(list) ?: list)
+    /**
+     * Вынес добавление стартовых элементов в отдельную функцию
+     */
+    fun initStartItems() {
+        viewModelScope.launch {
+            val items = itemsRepository.getItems()
+            _elements.update {
+                items
+            }
+        }
     }
 
+    private fun updateElements(newItem: BasicLibraryElement) {
+        viewModelScope.launch {
+            itemsRepository.addItems(newItem)
+
+            val newItems = itemsRepository.getItems()
+
+            _elements.update {
+                newItems
+            }
+
+            Log.d("ScrollState", "Эмитется новое значение")
+            requestScrollToEnd()
+        }
+    }
+
+    /**
+     * Добавляет новый элемент в соответствующую коллекцию
+     *
+     * @param libraryItem принимает созданный объект
+     * @param elementType тип элемента, который нужно создать (Книга, Газета, Диск)
+     *
+     * @see LibraryItem
+     */
     fun addNewElement(libraryItem: LibraryItem, elementType: Int) {
         val element = when (elementType) {
             BOOK_IMAGE -> createBook(libraryItem)
@@ -68,58 +207,36 @@ class MainViewModel : ViewModel() {
             else -> null
         }
 
-        _scrollToEnd.value = true
-
         element?.let {
-            updateElements(listOf(element))
+            updateElements(it)
         }
     }
 
-    fun updateElementContent(position: Int, newItem: BasicLibraryElement) {
-        val oldList = _elements.value?.toMutableList()
-
-        oldList?.set(position, newItem)
-
-        oldList?.let {
-            _elements.value = it
+    fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch {
+        itemsRepository.changeItem(position, newItem)
+        _elements.update {
+            itemsRepository.getItems()
         }
     }
 
     fun selectedRemove(element: BasicLibraryElement) {
-        if (element.item.id == _detailState.value?.id) {
-            setDetailState()
-        }
-    }
-
-    fun removeElement(position: Int) {
-        val newList = _elements.value?.toMutableList() ?: mutableListOf()
-
-        if (position in newList.indices) {
-            newList.removeAt(position)
-        }
-
-        Log.d("Size", "prev size = ${_elements.value?.size}")
-        Log.d("Size", "new size = ${newList.size}")
-
-        _elements.value = newList
-    }
-
-    private fun createItems() {
-        if (_elements.value == null) {
-            // Создаю элементы для отображения
-            val libraryService = LibraryService
-
-            createBooks(libraryService)
-            createNewspapers(libraryService)
-            createDisks(libraryService)
-
-            val items = mutableListOf<BasicLibraryElement>().apply {
-                addAll(LibraryRepository.getBooksInLibrary())
-                addAll(LibraryRepository.getNewspapersInLibrary())
-                addAll(LibraryRepository.getDisksInLibrary())
+        when (val state = _detailState.value) {
+            is LoadingStateToDetail.Data -> {
+                if (element.item.id == state.data.id
+                    && element.item.name == state.data.name
+                ) {
+                    setDetailState()
+                }
             }
 
-            updateElements(items)
+            else -> return
+        }
+    }
+
+    fun removeElement(position: Int) = viewModelScope.launch {
+        itemsRepository.removeItem(position)
+        _elements.update {
+            itemsRepository.getItems()
         }
     }
 }

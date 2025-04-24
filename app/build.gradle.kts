@@ -45,6 +45,9 @@ dependencies {
     // CardView
     implementation(libs.androidx.cardview)
 
+    // Shimmer
+    implementation(libs.shimmer)
+
     // ViewModel
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

@@ -20,6 +20,7 @@ import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 /**
  * Адаптер для всех элементов библиотеки
@@ -27,6 +28,7 @@ import ru.phantom.library.presentation.main.MainViewModel
 class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<BasicLibraryElement, LibraryViewHolder>(ElementDiffCallback()) {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LibraryViewHolder {
         val binding = LibraryItemRecyclerForMainBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
@@ -69,6 +71,11 @@ class LibraryItemsAdapter(
 
     override fun getItemCount(): Int = currentList.size
 
+    /**
+     * Функция выполняет обновление поля availability выбранного элемента,
+     * а также вызывает обновление состояний списка и детального фрагмента в случае
+     * совпадения id и name
+     */
     private fun changeAvailabilityClick(context: Context, position: Int) {
         if (position !in currentList.indices) return
 
@@ -101,25 +108,31 @@ class LibraryItemsAdapter(
         ).show()
     }
 
+    /**
+     * Осуществляет обновление состояний связанных с элементом, который был изменён
+     */
     private fun updateViewModel(
         position: Int,
         newItem: BasicLibraryElement
     ) {
+
         viewModel.updateElementContent(position, newItem)
 
         // Если изменилось состояние текущего элемента, то оно меняется и на DetailFragment
-        viewModel.detailState.value?.let { state ->
-            /*
-            Пока проверяю по названию и id, но если добавить проверку при создании,
-            чтобы предметы создавались только с уникальными id, то можно проверять только по id
-             */
-            if (state.id == newItem.item.id && state.name == newItem.item.name) {
-                viewModel.setDetailState(viewModel.detailState.value!!.copy(description = newItem.fullInformation()))
-            }
+        viewModel.detailState.value.takeIf { state ->
+            state is LoadingStateToDetail.Data
+                    && state.data.id == newItem.item.id
+                    && state.data.name == newItem.item.name
+        }?.let { state ->
+            viewModel.setDetailState(
+                (state as LoadingStateToDetail.Data)
+                    .data.copy(description = newItem.fullInformation()))
         }
     }
 
-    // Callback для ItemTouchCallback, чтобы свайпать элементы
+    /**
+     * Callback для ItemTouchCallback, чтобы свайпать элементы
+     */
     fun getMySimpleCallback() = MySimpleCallback()
 
     inner class MySimpleCallback : SimpleCallback(
