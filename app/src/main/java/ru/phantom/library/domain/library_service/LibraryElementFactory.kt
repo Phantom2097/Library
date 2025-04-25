@@ -1,15 +1,15 @@
 package ru.phantom.library.domain.library_service
 
 import ru.phantom.library.data.Position
-import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.book.BookImpl
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.disk.DiskImpl
-import ru.phantom.library.data.entites.library.items.disk.Type
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
-import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.Month
-import ru.phantom.library.data.entites.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.domain.entities.library.book.Book
+import ru.phantom.library.data.local.models.library.items.book.BookImpl
+import ru.phantom.library.domain.entities.library.disk.Disk
+import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
+import ru.phantom.library.domain.entities.library.disk.Type
+import ru.phantom.library.domain.entities.library.newspaper.Newspaper
+import ru.phantom.library.domain.entities.library.newspaper.month.Month
+import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 
 object LibraryElementFactory {

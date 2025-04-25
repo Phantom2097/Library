@@ -1,6 +1,6 @@
 package presentation.show_digitize
 
-import ru.phantom.library.data.entites.library.Showable
+import ru.phantom.library.domain.entities.library.Showable
 import ru.phantom.library.data.repository.LibraryRepository.addItem
 import ru.phantom.library.data.repository.LibraryRepository.getBooksInLibrary
 import ru.phantom.library.data.repository.LibraryRepository.getDigitizeItems

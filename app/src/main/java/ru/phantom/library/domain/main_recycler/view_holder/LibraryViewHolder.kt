@@ -2,10 +2,10 @@ package ru.phantom.library.domain.main_recycler.view_holder
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.R
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+import ru.phantom.library.domain.entities.library.book.Book
+import ru.phantom.library.domain.entities.library.disk.Disk
+import ru.phantom.library.domain.entities.library.newspaper.Newspaper
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 
 class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) :

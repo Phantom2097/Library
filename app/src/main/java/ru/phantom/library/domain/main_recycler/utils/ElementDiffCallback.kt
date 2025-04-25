@@ -1,7 +1,7 @@
 package ru.phantom.library.domain.main_recycler.utils
 
 import androidx.recyclerview.widget.DiffUtil
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 
 class ElementDiffCallback : DiffUtil.ItemCallback<BasicLibraryElement>() {
     override fun areItemsTheSame(

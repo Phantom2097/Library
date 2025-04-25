@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
@@ -40,8 +41,6 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.recyclerShimmer.isVisible = true
-
         initViewModel()
 
         initList()
@@ -67,12 +66,27 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         _binding = null
     }
 
+    /**
+     *  Инициализация слушателей вью модели
+     */
     private fun initViewModel() = viewLifecycleOwner.lifecycleScope.launch {
         viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             launch {
                 viewModel.elements.collect { notes ->
-                    if (notes.isNotEmpty()) binding.recyclerShimmer.isGone = true
-                    libraryAdapter.submitList(notes)
+                    if (notes.isEmpty()) {
+                        binding.apply {
+                            recyclerShimmer.isVisible = true
+                            delay(LOAD_DELAY)
+                            recyclerShimmer.isGone = true
+                            recyclerMainNoElements.isVisible = true
+                        }
+                    } else {
+                        binding.apply {
+                            recyclerShimmer.isGone = true
+                            recyclerMainNoElements.isGone = true
+                        }
+                        libraryAdapter.submitList(notes)
+                    }
                 }
             }
             launch {
@@ -92,6 +106,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     companion object {
         // Для списка элементов
+        private const val LOAD_DELAY = 3000L
         private const val SPAN_COUNT = 2
         private const val SPACES_ITEM_DECORATION_COUNT = 12
     }

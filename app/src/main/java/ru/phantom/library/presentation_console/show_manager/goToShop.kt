@@ -4,7 +4,7 @@ import presentation.colors.Colors.ANSI_GREEN
 import presentation.colors.Colors.ANSI_RESET
 import presentation.colors.Colors.ANSI_YELLOW
 import presentation.show_manager.GoToShopConsts.INVALID_INDEX
-import ru.phantom.library.data.entites.shop.Shop
+import ru.phantom.library.domain.entities.shop.Shop
 
 
 fun <T> goToShop(shop: Shop<T>) {

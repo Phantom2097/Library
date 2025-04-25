@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
-import ru.phantom.library.data.entites.library.items.LibraryItem
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.domain.entities.library.book.Book
+import ru.phantom.library.domain.entities.library.disk.Disk
+import ru.phantom.library.domain.entities.library.newspaper.Newspaper
 import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.data.repository.ItemsRepositoryImpl
 import ru.phantom.library.data.repository.extensions.simulateRealRepository

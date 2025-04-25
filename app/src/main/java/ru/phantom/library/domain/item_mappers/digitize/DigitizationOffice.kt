@@ -2,11 +2,11 @@ package ru.phantom.library.domain.item_mappers.digitize
 
 import presentation.colors.Colors.ANSI_PURPLE
 import presentation.colors.Colors.ANSI_RESET
-import ru.phantom.library.data.entites.library.Showable
-import ru.phantom.library.data.entites.library.items.book.Book
-import ru.phantom.library.data.entites.library.items.disk.Digitable
-import ru.phantom.library.data.entites.library.items.disk.Disk
-import ru.phantom.library.data.entites.library.items.newspaper.Newspaper
+import ru.phantom.library.domain.entities.library.Showable
+import ru.phantom.library.domain.entities.library.book.Book
+import ru.phantom.library.domain.entities.library.disk.Digitable
+import ru.phantom.library.domain.entities.library.disk.Disk
+import ru.phantom.library.domain.entities.library.newspaper.Newspaper
 import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitalType.CD
 
 sealed interface DigitizationOffice {

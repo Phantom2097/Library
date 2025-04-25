@@ -1,6 +1,6 @@
 package ru.phantom.library.data.repository.extensions
 
-import ru.phantom.library.data.entites.library.items.BasicLibraryElement
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.data.repository.ItemsRepositoryImpl
 
