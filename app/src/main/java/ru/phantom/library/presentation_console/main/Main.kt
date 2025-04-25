@@ -28,7 +28,7 @@ fun main() {
 }
 
 
-fun createBooks(service: LibraryService) {
+private fun createBooks(service: LibraryService) {
     addItemBook(
         createBook(
             name = "Котлин для профессионалов",
@@ -86,7 +86,7 @@ fun createBooks(service: LibraryService) {
     )
 }
 
-fun createNewspapers(service: LibraryService) {
+private fun createNewspapers(service: LibraryService) {
     addItemNewspaper(
         createNewspaper(
             name = "Русская правда",
@@ -145,7 +145,7 @@ fun createNewspapers(service: LibraryService) {
         })
 }
 
-fun createDisks(service: LibraryService) {
+private fun createDisks(service: LibraryService) {
     addItemDisk(
         DiskImpl(
             LibraryItem(

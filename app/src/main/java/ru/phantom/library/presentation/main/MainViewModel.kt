@@ -63,6 +63,10 @@ class MainViewModel(
     private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
 
+    init {
+        subscribeToItemsUpdates()
+    }
+
     fun updateType(type: Int) = viewModelScope.launch {
         _createState.emit(CreateState(itemType = type))
     }
@@ -94,6 +98,18 @@ class MainViewModel(
 
     fun onItemClicked(element: BasicLibraryElement) {
         changeDetailState(element)
+    }
+
+    /**
+     * Метод подписывает ViewModel на обновления репозитория
+     */
+    private fun subscribeToItemsUpdates() {
+        viewModelScope.launch {
+            itemsRepository.getItems().collect { items ->
+                _elements.update { items }
+                requestScrollToEnd()
+            }
+        }
     }
 
     private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
@@ -164,27 +180,9 @@ class MainViewModel(
         _detailState.emit(errorState)
     }
 
-    /**
-     * Вынес добавление стартовых элементов в отдельную функцию
-     */
-    fun initStartItems() {
-        viewModelScope.launch {
-            val items = itemsRepository.getItems()
-            _elements.update {
-                items
-            }
-        }
-    }
-
     private fun updateElements(newItem: BasicLibraryElement) {
         viewModelScope.launch {
             itemsRepository.addItems(newItem)
-
-            val newItems = itemsRepository.getItems()
-
-            _elements.update {
-                newItems
-            }
 
             Log.d("ScrollState", "Эмитется новое значение")
             requestScrollToEnd()
@@ -214,9 +212,6 @@ class MainViewModel(
 
     fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch {
         itemsRepository.changeItem(position, newItem)
-        _elements.update {
-            itemsRepository.getItems()
-        }
     }
 
     fun selectedRemove(element: BasicLibraryElement) {
@@ -235,8 +230,5 @@ class MainViewModel(
 
     fun removeElement(position: Int) = viewModelScope.launch {
         itemsRepository.removeItem(position)
-        _elements.update {
-            itemsRepository.getItems()
-        }
     }
 }

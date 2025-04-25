@@ -1,5 +1,7 @@
 package ru.phantom.library.data.repository
 
+import kotlinx.coroutines.flow.Flow
+
 interface ItemsRepository<T> {
 
     /**
@@ -18,7 +20,7 @@ interface ItemsRepository<T> {
      * Функция запрашивает все элементы из репозитория
      * @return Список элементов репозитория
      */
-    suspend fun getItems() : List<T>
+    suspend fun getItems() : Flow<List<T>>
 
     /**
      * Изменяет состояние существующего элемента

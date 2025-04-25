@@ -52,14 +52,6 @@ class MainActivity : AppCompatActivity() {
 
         startScreenInitialise()
         initListenerViewModel()
-
-        initStartItemsList(savedInstanceState)
-    }
-
-    private fun initStartItemsList(savedInstanceState: Bundle?) {
-        if (savedInstanceState == null) {
-            viewModel.initStartItems()
-        }
     }
 
     /**

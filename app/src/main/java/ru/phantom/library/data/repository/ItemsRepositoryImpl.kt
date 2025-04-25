@@ -3,17 +3,19 @@ package ru.phantom.library.data.repository
 import android.accounts.NetworkErrorException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.Position
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
 import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
-import ru.phantom.library.domain.entities.library.disk.Type.CD
-import ru.phantom.library.domain.entities.library.disk.Type.DVD
 import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.domain.entities.library.newspaper.month.Month.JANUARY
 import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
+import ru.phantom.library.domain.entities.library.disk.Type.CD
+import ru.phantom.library.domain.entities.library.disk.Type.DVD
+import ru.phantom.library.domain.entities.library.newspaper.month.Month.JANUARY
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
@@ -22,22 +24,23 @@ import kotlin.random.Random
 
 class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
 
-    private val _allItems = mutableListOf<BasicLibraryElement>()
+    private val _allItems = mutableListOf<BasicLibraryElement>().apply {
+        addAll(createBooks())
+        addAll(createNewspapers())
+        addAll(createDisks())
+    }
     private var isNeedLoad = true
 
-    private var errorCounter = ERROR_COUNTER_INIT
+    private val _itemsFlow = MutableStateFlow(_allItems.toList())
 
-    init {
-        _allItems.addAll(createBooks())
-        _allItems.addAll(createNewspapers())
-        _allItems.addAll(createDisks())
-    }
+    private var errorCounter = ERROR_COUNTER_INIT
 
     override suspend fun addItems(
         item: BasicLibraryElement
     ) {
         withContext(Dispatchers.IO) {
             _allItems.add(item)
+            _itemsFlow.emit(_allItems.toList())
         }
     }
 
@@ -49,12 +52,12 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
         }
     }
 
-    override suspend fun getItems(): List<BasicLibraryElement> {
+    override suspend fun getItems(): Flow<List<BasicLibraryElement>> {
         if (isNeedLoad) {
             delay(START_DELAY)
             isNeedLoad = false
         }
-        return _allItems.toList()
+        return _itemsFlow
     }
 
     override suspend fun changeItem(
@@ -63,6 +66,7 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     ) {
         withContext(Dispatchers.IO) {
             _allItems[position] = newItem
+            _itemsFlow.emit(_allItems.toList())
         }
     }
 
@@ -271,6 +275,6 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
         private const val RANDOM_START = 1000L
         private const val RANDOM_END = 2000L
 
-        private const val START_DELAY = 2500L
+        private const val START_DELAY = 2000L
     }
 }
