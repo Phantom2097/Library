@@ -7,7 +7,7 @@ import ru.phantom.library.data.local.entities.BookEntity
 
 @Dao
 interface BookDao {
-    @Query("SELECT * FROM bookentity WHERE ownerId = :id")
+    @Query("SELECT * FROM books WHERE id = :id")
     suspend fun getBookInfoById(id: Int): BookEntity
 
     @Insert

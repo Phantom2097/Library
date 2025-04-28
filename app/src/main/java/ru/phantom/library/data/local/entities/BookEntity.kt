@@ -3,9 +3,9 @@ package ru.phantom.library.data.local.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(tableName = "books")
 data class BookEntity(
-    @PrimaryKey val ownerId: Int,
+    @PrimaryKey val id: Long,
     val author: String,
     val numberOfPages: Int?,
 )

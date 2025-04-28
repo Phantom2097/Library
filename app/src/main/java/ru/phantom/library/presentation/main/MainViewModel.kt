@@ -78,7 +78,7 @@ class MainViewModel(
         }
     }
 
-    fun updateId(id: Int) {
+    fun updateId(id: Long) {
         _createState.update {
             it.copy(id = id)
         }

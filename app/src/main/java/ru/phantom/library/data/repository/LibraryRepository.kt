@@ -74,6 +74,6 @@ object LibraryRepository {
     }
 
     private object LibraryRepositoryConsts {
-        const val START_LIBRARY_ITEM_INDEX = 0
+        const val START_LIBRARY_ITEM_INDEX = 0L
     }
 }

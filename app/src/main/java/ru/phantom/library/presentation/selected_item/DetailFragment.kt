@@ -162,7 +162,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
                 setOnClickListener {
                     val newName = selectedItemName.text?.toString()?.trim()
-                    val newId = selectedItemId.text.toString().toIntOrNull() ?: DEFAULT_ID
+                    val newId = selectedItemId.text.toString().toLongOrNull() ?: DEFAULT_ID
 
                     val textToast = when {
                         newName.isNullOrBlank() && newId == DEFAULT_ID -> context.getString(R.string.noNameAndIdCreateType)
@@ -202,7 +202,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             }
 
             selectedItemId.doAfterTextChanged { newId ->
-                viewModel.updateId(newId?.toString()?.toIntOrNull() ?: DEFAULT_ID)
+                viewModel.updateId(newId?.toString()?.toLongOrNull() ?: DEFAULT_ID)
             }
         }
     }
@@ -227,7 +227,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
     companion object {
         const val DEFAULT_NAME = ""
-        const val DEFAULT_ID = -1
+        const val DEFAULT_ID = -1L
 
         // Типы отображаемого UI
         const val DEFAULT_TYPE = -1
