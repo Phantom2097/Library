@@ -10,15 +10,18 @@ class App : Application() {
             applicationContext,
             LibraryDB::class.java,
             "library.db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration(false)
+            .build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
     }
 
     companion object {
-//        val service = LibraryService
-//        fun initStartItems() {
-//            createBooks()
-//            createNewspapers()
-//            createDisks()
-//        }
+        lateinit var instance: App
+            private set
     }
 }

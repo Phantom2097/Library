@@ -1,11 +1,24 @@
 package ru.phantom.library.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "newspapers")
+@Entity(
+    tableName = "newspapers",
+    foreignKeys = [
+        ForeignKey(
+            entity = ItemEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("id")]
+)
 data class NewspaperEntity(
-    @PrimaryKey val ownerId: Long,
-    val issueNumber: Int,
-    val month: Int
+    @PrimaryKey val id: Long,
+    val issueNumber: Int?,
+    val month: String?
 )

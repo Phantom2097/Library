@@ -17,11 +17,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.data.repository.DBRepository
 import ru.phantom.library.domain.entities.library.book.Book
 import ru.phantom.library.domain.entities.library.disk.Disk
 import ru.phantom.library.domain.entities.library.newspaper.Newspaper
 import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.data.repository.ItemsRepositoryImpl
+import ru.phantom.library.data.repository.extensions.setSortType
 import ru.phantom.library.data.repository.extensions.simulateRealRepository
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
@@ -47,7 +49,9 @@ import java.util.concurrent.CancellationException
  *  @see DetailState
  */
 class MainViewModel(
-    private val itemsRepository: ItemsRepository<BasicLibraryElement> = ItemsRepositoryImpl()
+    // Остался старый репозиторий, чтобы эмулировать задержку, он используется только для этого
+    private val itemsRepository: ItemsRepository<BasicLibraryElement> = ItemsRepositoryImpl(),
+    private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository(App.instance.database, App.instance)
 ) : ViewModel() {
 
     private val _elements = MutableStateFlow<List<BasicLibraryElement>>(emptyList())
@@ -105,9 +109,8 @@ class MainViewModel(
      */
     private fun subscribeToItemsUpdates() {
         viewModelScope.launch {
-            itemsRepository.getItems().collect { items ->
+            dbRepository.getItems().collect { items ->
                 _elements.update { items }
-                requestScrollToEnd()
             }
         }
     }
@@ -182,7 +185,7 @@ class MainViewModel(
 
     private fun updateElements(newItem: BasicLibraryElement) {
         viewModelScope.launch {
-            itemsRepository.addItems(newItem)
+            dbRepository.addItems(newItem)
 
             Log.d("ScrollState", "Эмитется новое значение")
             requestScrollToEnd()
@@ -210,8 +213,9 @@ class MainViewModel(
         }
     }
 
-    fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch {
-        itemsRepository.changeItem(position, newItem)
+    fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch(
+        Dispatchers.IO) {
+        dbRepository.changeItem(position, newItem)
     }
 
     fun selectedRemove(element: BasicLibraryElement) {
@@ -223,12 +227,17 @@ class MainViewModel(
                     setDetailState()
                 }
             }
-
             else -> return
         }
     }
 
-    fun removeElement(position: Int) = viewModelScope.launch {
-        itemsRepository.removeItem(position)
+    fun setSortType(sortState: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRepository.setSortType(sortState)
+        }
+    }
+
+    fun removeElementById(id: Long) = viewModelScope.launch(Dispatchers.IO) {
+        dbRepository.removeItem(id)
     }
 }

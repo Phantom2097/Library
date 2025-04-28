@@ -1,6 +1,7 @@
 package ru.phantom.library.data.repository
 
 import ru.phantom.library.data.Position
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
 import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
 import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
@@ -14,9 +15,9 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createDis
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
 
-fun initStartItems() {
+fun initStartItems(): List<BasicLibraryElement> {
     val service = LibraryService
-    val startItems = listOf(
+    return listOf(
         createBooks(service),
         createNewspapers(service),
         createDisks(service)

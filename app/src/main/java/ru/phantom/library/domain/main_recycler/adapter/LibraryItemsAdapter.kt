@@ -151,8 +151,9 @@ class LibraryItemsAdapter(
             val currPosition = viewHolder.adapterPosition
 
             if (currPosition != RecyclerView.NO_POSITION) {
-                viewModel.selectedRemove(getItem(currPosition))
-                viewModel.removeElement(currPosition)
+                val removedItem = getItem(currPosition)
+                viewModel.selectedRemove(removedItem)
+                viewModel.removeElementById(removedItem.item.id)
             }
         }
     }
