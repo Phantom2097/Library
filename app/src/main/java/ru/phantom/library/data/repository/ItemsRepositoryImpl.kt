@@ -7,13 +7,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+
 import kotlin.random.Random
 
 class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
 
-    private val _allItems = mutableListOf<BasicLibraryElement>().apply {
-//        addAll(initStartItems())
-    }
+    private val _allItems = mutableListOf<BasicLibraryElement>()
     private var isNeedLoad = true
 
     private val _itemsFlow = MutableStateFlow(_allItems.toList())
@@ -32,14 +31,6 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
     override suspend fun removeItem(id: Long) {
         TODO("Not yet implemented")
     }
-
-//    override suspend fun removeItem(position: Int) {
-//        withContext(Dispatchers.IO) {
-//            if (position in _allItems.indices) {
-//                _allItems.removeAt(position)
-//            }
-//        }
-//    }
 
     override suspend fun getItems(): Flow<List<BasicLibraryElement>> {
         if (isNeedLoad) {
