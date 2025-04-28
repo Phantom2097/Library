@@ -24,6 +24,6 @@ interface ItemDao {
     @Query("SELECT * FROM items ORDER BY time")
     fun getItemsSortedByTime(): Flow<List<ItemEntity>>
 
-    @Query("SELECT * FROM items ORDER BY time DESC")
-    fun getItemsSortedByTimeDescending(): Flow<List<ItemEntity>>
+    @Query("SELECT * FROM items ORDER BY name")
+    fun getItemsSortedByName(): Flow<List<ItemEntity>>
 }

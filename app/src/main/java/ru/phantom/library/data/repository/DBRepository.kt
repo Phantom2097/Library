@@ -67,7 +67,7 @@ class DBRepository(
             when (sortState.value) {
                 DEFAULT_SORT -> db.itemDao().getItems()
                 SORT_BY_TIME -> db.itemDao().getItemsSortedByTime()
-                SORT_BY_NAME -> db.itemDao().getItemsSortedByTimeDescending()
+                SORT_BY_NAME -> db.itemDao().getItemsSortedByName()
                 else -> throw IllegalStateException("Неверное состояние сортировки")
             }.map { itemEntities ->
                 itemEntities.mapNotNull {
