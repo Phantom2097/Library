@@ -32,12 +32,12 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getItems(): Flow<List<BasicLibraryElement>> {
+    override suspend fun getItems(limit: Int, offset: Int): List<BasicLibraryElement> {
         if (isNeedLoad) {
             delay(START_DELAY)
             isNeedLoad = false
         }
-        return _itemsFlow
+        return _allItems
     }
 
     override suspend fun changeItem(
@@ -48,6 +48,10 @@ class ItemsRepositoryImpl : ItemsRepository<BasicLibraryElement> {
             _allItems[position] = newItem
             _itemsFlow.emit(_allItems.toList())
         }
+    }
+
+    override fun getTotalCount(): Long {
+        TODO("Not yet implemented")
     }
 
     /**

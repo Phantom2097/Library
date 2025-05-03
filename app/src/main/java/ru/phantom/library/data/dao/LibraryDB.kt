@@ -14,7 +14,7 @@ import ru.phantom.library.data.local.entities.NewspaperEntity
         DiskEntity::class,
         NewspaperEntity::class
     ],
-    version = 1
+    version = 2
 )
 abstract class LibraryDB : RoomDatabase() {
     abstract fun itemDao() : ItemDao

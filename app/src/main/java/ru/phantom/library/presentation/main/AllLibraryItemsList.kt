@@ -16,11 +16,16 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
+import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
+import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
+import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
+import ru.phantom.library.domain.main_recycler.adapter.MyScrollListener
+import ru.phantom.library.domain.main_recycler.adapter.decoration.SpacesItemDecoration
 
 class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
@@ -52,9 +57,19 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {
-            layoutManager = GridLayoutManager(context, SPAN_COUNT)
+            layoutManager = GridLayoutManager(context, SPAN_COUNT).apply {
+                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return when (libraryAdapter.getItemViewType(position)) {
+                            TYPE_LOAD_BOTTOM, TYPE_LOAD_UP -> SPAN_COUNT
+                            else -> 1
+                        }
+                    }
+                }
+            }
             adapter = libraryAdapter
             addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
+            addOnScrollListener(MyScrollListener(viewModel, libraryAdapter))
         }
 
         // Добавляю itemTouchHelper
@@ -91,7 +106,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     private fun initViewModel() = viewLifecycleOwner.lifecycleScope.launch {
         viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             launch {
-                viewModel.elements.collect { notes ->
+                viewModel.elements.collectLatest { notes ->
                     if (notes.isEmpty()) {
                         binding.apply {
                             sortItemsButton.isGone = true
@@ -106,7 +121,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                             sortItemsButton.isVisible = true
                             recyclerMainNoElements.isGone = true
                         }
-                        libraryAdapter.submitList(notes)
+                        libraryAdapter.submitList(notes.map { AdapterItems.DataItem(it)})
                     }
                 }
             }
@@ -122,13 +137,18 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     }
                 }
             }
+            launch {
+                viewModel.loadingState.collect { state ->
+                    libraryAdapter.isLoading = state
+                }
+            }
         }
     }
 
     companion object {
         // Для списка элементов
         private const val LOAD_DELAY = 3000L
-        private const val SPAN_COUNT = 2
+        const val SPAN_COUNT = 2
         private const val SPACES_ITEM_DECORATION_COUNT = 12
 
         const val SORT_STATE_KEY = "SortStateForRecyclerMain"
