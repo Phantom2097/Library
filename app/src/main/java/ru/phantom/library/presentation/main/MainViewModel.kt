@@ -30,6 +30,7 @@ import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_ITEM
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
+import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.SPAN_COUNT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
@@ -340,10 +341,18 @@ class MainViewModel(
         }
     }
 
+    /*
+    Пока такая проверка
+     */
+    private var lastSortType = DEFAULT_SORT
+
     fun setSortType(sortState: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            (dbRepository as DBRepository).setSortType(sortState)
-            loadInitialData()
+        if (sortState != lastSortType) {
+            viewModelScope.launch(Dispatchers.IO) {
+                (dbRepository as DBRepository).setSortType(sortState)
+                loadInitialData()
+            }
+            lastSortType = sortState
         }
     }
 
