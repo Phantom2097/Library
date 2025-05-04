@@ -21,8 +21,7 @@ import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
+import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD
 import ru.phantom.library.domain.main_recycler.adapter.MyScrollListener
 import ru.phantom.library.domain.main_recycler.adapter.decoration.SpacesItemDecoration
 
@@ -60,7 +59,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
                         return when (libraryAdapter.getItemViewType(position)) {
-                            TYPE_LOAD_BOTTOM, TYPE_LOAD_UP -> SPAN_COUNT
+                            TYPE_LOAD -> SPAN_COUNT
                             else -> 1
                         }
                     }

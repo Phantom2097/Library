@@ -3,8 +3,6 @@ package ru.phantom.library.domain.main_recycler.adapter
 import android.util.Log
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.main.MainViewModel.Companion.LOAD_THRESHOLD
 
@@ -26,14 +24,12 @@ class MyScrollListener(
 
         // Подгрузка следующих элементов
         if (!isScrollingUp
-            && viewModel.loadingState.value != TYPE_LOAD_BOTTOM
             && lastVisible >= totalItems - LOAD_THRESHOLD) {
             Log.d("PAGINATION", "Trigger load next")
             viewModel.loadNext()
         }
         // Подгрузка предыдущих элементов
         else if (isScrollingUp
-            && viewModel.loadingState.value != TYPE_LOAD_UP
             && firstVisible <= LOAD_THRESHOLD) {
             Log.d("PAGINATION", "Trigger load prev")
             viewModel.loadPrev()

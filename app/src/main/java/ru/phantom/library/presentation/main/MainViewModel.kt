@@ -27,9 +27,7 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createDis
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_ITEM
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
+import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.SPAN_COUNT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
@@ -71,7 +69,7 @@ class MainViewModel(
     private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
 
-    private val _loadingState = MutableStateFlow(TYPE_ITEM)
+    private val _loadingState = MutableStateFlow(false)
     val loadingState = _loadingState.asStateFlow()
 
     private var currentStart = START_POSITION
@@ -133,7 +131,10 @@ class MainViewModel(
                 (dbRepository as DBRepository).delayEmulator()
                 currentStart = start
                 val items = dbRepository.getItems(size, currentStart)
-                _elements.value = items.map { DataItem(it) }.also { currentEnd = currentStart + it.size }
+                _elements.value =
+                    items
+                        .map { DataItem(it) }
+                        .also { currentEnd = currentStart + it.size }
                 Log.d(
                     "PAGINATION",
                     "Initial load: ${_elements.value.size} items, currentStart: $currentStart currentEnd $currentEnd"
@@ -155,8 +156,8 @@ class MainViewModel(
         if (loadNextJob != null || currentEnd.toLong() >= totalItems) return
 
         loadNextJob = viewModelScope.launch(Dispatchers.IO) {
-            _loadingState.update { TYPE_LOAD_BOTTOM }
             try {
+                startNextLoad()
                 (dbRepository as DBRepository).delayEmulator() // Задержка в развитии
 
                 val loadCount = min(COUNT_FOR_LOAD, totalItems.toInt() - currentEnd)
@@ -165,17 +166,21 @@ class MainViewModel(
                 val newItems = dbRepository.getItems(
                     loadCount,
                     currentEnd
-                ).map { DataItem(it) }.also {
-                    currentStart = changeToGridSpan(currentStart + dropCount)
-                    currentEnd += loadCount
-                    Log.d(
-                        "PAGINATION",
-                        "Next load: ${it.size} items, dropCount $dropCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
-                    )
-                }
+                )
+                    .map { DataItem(it) }
+                    .also {
+                        currentStart = changeToGridSpan(currentStart + dropCount)
+                        currentEnd += loadCount
+                        Log.d(
+                            "PAGINATION",
+                            "Next load: ${it.size} items, dropCount $dropCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
+                        )
+                    }
                 if (newItems.isNotEmpty()) {
-                    _elements.update {
-                        _elements.value.drop(changeToGridSpan(dropCount)) + newItems
+                    _elements.update { items ->
+                        (items.dropLast(DROP_COUNT) + newItems).drop(
+                            changeToGridSpan(dropCount)
+                        )
                     }
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -183,9 +188,18 @@ class MainViewModel(
                 Log.i("PAGINATION", "Загрузка следующих элементов отменена", e)
             } finally {
                 loadNextJob = null
-                _loadingState.value = TYPE_ITEM
+                _loadingState.value = false
             }
         }
+    }
+
+    /**
+     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в конце списка,
+     *      * при это очищая от других шиммеров
+     */
+    private fun startNextLoad() {
+        _loadingState.update { true }
+        _elements.update { it.filterNot { item -> item is LoadItem } + LoadItem }
     }
 
     fun loadPrev() {
@@ -194,8 +208,8 @@ class MainViewModel(
         if (loadPrevJob != null || currentStart == START_POSITION) return
 
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
-            _loadingState.update { TYPE_LOAD_UP }
             try {
+                startPrevLoad()
                 (dbRepository as DBRepository).delayEmulator() // Задержка
 
                 val loadCount = if (currentStart < COUNT_FOR_LOAD) currentStart else COUNT_FOR_LOAD
@@ -205,11 +219,13 @@ class MainViewModel(
                 val newItems = dbRepository.getItems(
                     loadCount,
                     currentStart
-                ).map { DataItem(it) }
+                )
+                    .map { DataItem(it) }
+
                 if (newItems.isNotEmpty()) {
                     currentEnd = changeToGridSpan(currentEnd - loadCount)
-                    _elements.update {
-                        newItems + _elements.value.take(takeCount)
+                    _elements.update { items ->
+                        newItems + items.drop(DROP_COUNT).take(takeCount)
                     }
                 }
                 Log.d(
@@ -220,8 +236,19 @@ class MainViewModel(
                 Log.i("PAGINATION", "Загрузка предыдущих элементов отменена", e)
             } finally {
                 loadPrevJob = null
-                _loadingState.value = TYPE_ITEM
+                _loadingState.value = false
             }
+        }
+    }
+
+    /**
+     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в начале списка,
+     * при это очищая от других шиммеров
+     */
+    private fun startPrevLoad() {
+        _loadingState.update { true }
+        _elements.update {
+            listOf(LoadItem) + it.filterNot { item -> item is LoadItem }
         }
     }
 
@@ -384,9 +411,10 @@ class MainViewModel(
     companion object {
         const val DOP_NUM_FOR_GRID_SPAN = 1
 
-        const val START_POSITION = 0
-        const val INIT_TOTAL_COUNT = 0L
+        private const val START_POSITION = 0
+        private const val INIT_TOTAL_COUNT = 0L
 
+        private const val DROP_COUNT = 1
         const val LOAD_THRESHOLD = 10
         const val INIT_SIZE = 48
         const val COUNT_FOR_LOAD = INIT_SIZE / 2

@@ -59,7 +59,7 @@ abstract class LibraryDB : RoomDatabase() {
 
         fun getDatabase(context: Context): LibraryDB {
             return Instance ?: synchronized(this) {
-                Room.databaseBuilder(
+                Instance ?: Room.databaseBuilder(
                     context,
                     LibraryDB::class.java,
                     "library.db"

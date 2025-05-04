@@ -19,7 +19,6 @@ import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImp
 import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.ErrorViewHolder
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
@@ -34,19 +33,15 @@ class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 
-    private var isLoading = TYPE_ITEM
+    private var isLoading = false
 
-    fun setLoading(state: Int) {
-        when (state) {
-            TYPE_LOAD_BOTTOM -> submitList(currentList + LoadItem)
-            TYPE_LOAD_UP -> submitList(listOf(LoadItem) + currentList)
-        }
+    fun setLoading(state: Boolean) {
         isLoading = state
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
-            TYPE_LOAD_UP, TYPE_LOAD_BOTTOM -> LoadingViewHolder(
+            TYPE_LOAD -> LoadingViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.shimmer_for_paggination, parent, false)
             )
@@ -80,12 +75,9 @@ class LibraryItemsAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (isLoading == TYPE_LOAD_BOTTOM && position == currentList.lastIndex) {
-            TYPE_LOAD_BOTTOM
-        } else if (isLoading == TYPE_LOAD_UP && position == ZERO_POSITION) {
-            TYPE_LOAD_UP
-        } else {
-            TYPE_ITEM
+        return when (currentList[position]) {
+            is DataItem -> TYPE_ITEM
+            else -> TYPE_LOAD
         }
     }
 
@@ -227,10 +219,7 @@ class LibraryItemsAdapter(
     companion object {
         const val NO_ACTION = 0
 
-        const val ZERO_POSITION = 0
-
         const val TYPE_ITEM = 0
-        const val TYPE_LOAD_UP = 1
-        const val TYPE_LOAD_BOTTOM = 2
+        const val TYPE_LOAD = 1
     }
 }
