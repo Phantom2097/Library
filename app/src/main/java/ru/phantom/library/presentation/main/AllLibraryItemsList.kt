@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_BOTTOM
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD_UP
@@ -107,6 +106,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             launch {
                 viewModel.elements.collectLatest { notes ->
+                    libraryAdapter.submitList(notes)
                     if (notes.isEmpty()) {
                         binding.apply {
                             sortItemsButton.isGone = true
@@ -115,13 +115,13 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                             recyclerShimmer.isGone = true
                             recyclerMainNoElements.isVisible = true
                         }
+
                     } else {
                         binding.apply {
                             recyclerShimmer.isGone = true
                             sortItemsButton.isVisible = true
                             recyclerMainNoElements.isGone = true
                         }
-                        libraryAdapter.submitList(notes.map { AdapterItems.DataItem(it)})
                     }
                 }
             }
@@ -139,7 +139,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
             }
             launch {
                 viewModel.loadingState.collect { state ->
-                    libraryAdapter.isLoading = state
+                    libraryAdapter.setLoading(state)
                 }
             }
         }

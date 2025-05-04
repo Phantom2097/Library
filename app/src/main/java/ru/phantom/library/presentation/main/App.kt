@@ -1,27 +1,23 @@
 package ru.phantom.library.presentation.main
 
 import android.app.Application
-import androidx.room.Room
+import android.content.Context
 import ru.phantom.library.data.dao.LibraryDB
 
 class App : Application() {
-    val database: LibraryDB by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            LibraryDB::class.java,
-            "library.db"
-        )
-            .fallbackToDestructiveMigration(false)
-            .build()
-    }
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
+
+        database = LibraryDB.getDatabase(this)
+        appContext = applicationContext
     }
 
     companion object {
-        lateinit var instance: App
+        lateinit var database: LibraryDB
+            private set
+
+        lateinit var appContext: Context
             private set
     }
 }

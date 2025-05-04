@@ -18,6 +18,6 @@ import androidx.room.PrimaryKey
     indices = [Index("id")]
 )
 data class DiskEntity(
-    @PrimaryKey val id: Long,
+    @PrimaryKey val id: Long = 0,
     val type: String
 )

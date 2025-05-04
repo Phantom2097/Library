@@ -38,5 +38,8 @@ class MyScrollListener(
             Log.d("PAGINATION", "Trigger load prev")
             viewModel.loadPrev()
         }
+        /*
+        Было прикольно скрывать floating action button при скроле вниз
+         */
     }
 }

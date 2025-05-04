@@ -27,12 +27,6 @@ import ru.phantom.library.domain.main_recycler.view_holder.LoadingViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
-sealed class AdapterItems {
-    object LoadItem : AdapterItems()
-    data class DataItem(val listElement: BasicLibraryElement) : AdapterItems()
-//    class Error(e: String) : AdapterItems()
-}
-
 /**
  * Адаптер для всех элементов библиотеки
  */
@@ -40,20 +34,15 @@ class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 
-    var isLoading = TYPE_ITEM
-        set(value) {
-            if (field != value) {
-                val current = currentList.toMutableList().filterNot { it is LoadItem }
-                when (value) {
-                    TYPE_LOAD_BOTTOM -> submitList(current + LoadItem)
-                    TYPE_LOAD_UP -> submitList(listOf(LoadItem) + current)
-                    else -> {
-                        Log.d("PAGINATION", "Блок else в isLoading")
-                    }
-                }
-                field = value
-            }
+    private var isLoading = TYPE_ITEM
+
+    fun setLoading(state: Int) {
+        when (state) {
+            TYPE_LOAD_BOTTOM -> submitList(currentList + LoadItem)
+            TYPE_LOAD_UP -> submitList(listOf(LoadItem) + currentList)
         }
+        isLoading = state
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
@@ -80,6 +69,7 @@ class LibraryItemsAdapter(
                     }
                 }
             }
+
             else -> {
                 ErrorViewHolder(
                     LayoutInflater.from(parent.context)
@@ -90,7 +80,7 @@ class LibraryItemsAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (isLoading == TYPE_LOAD_BOTTOM && position == itemCount - 1) {
+        return if (isLoading == TYPE_LOAD_BOTTOM && position == currentList.lastIndex) {
             TYPE_LOAD_BOTTOM
         } else if (isLoading == TYPE_LOAD_UP && position == ZERO_POSITION) {
             TYPE_LOAD_UP
@@ -101,7 +91,9 @@ class LibraryItemsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         when (holder) {
-            is LibraryViewHolder -> holder.bind((getItem(position) as DataItem).listElement)
+            is LibraryViewHolder -> (getItem(position) as? DataItem)?.let {
+                holder.bind(it.listElement)
+            }
             else -> {
                 Log.d("PAGINATION", "Shimmer add")
             }
@@ -228,7 +220,7 @@ class LibraryItemsAdapter(
         ): Int = if (viewHolder.itemViewType == TYPE_ITEM) {
             super.getSwipeDirs(recyclerView, viewHolder)
         } else {
-            0
+            NO_ACTION
         }
     }
 

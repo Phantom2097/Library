@@ -27,5 +27,5 @@ interface ItemsRepository<T> {
      */
     suspend fun changeItem(position: Int, newItem: T)
 
-    fun getTotalCount(): Long
+    suspend fun getTotalCount(): Long
 }

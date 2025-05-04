@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
     indices = [Index("id")]
     )
 data class BookEntity(
-    @PrimaryKey val id: Long,
+    @PrimaryKey val id: Long = 0,
     val author: String,
     val numberOfPages: Int?,
 )

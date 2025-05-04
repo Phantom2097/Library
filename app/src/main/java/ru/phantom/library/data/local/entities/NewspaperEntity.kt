@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
     indices = [Index("id")]
 )
 data class NewspaperEntity(
-    @PrimaryKey val id: Long,
+    @PrimaryKey val id: Long = 0,
     val issueNumber: Int?,
     val month: String?
 )
