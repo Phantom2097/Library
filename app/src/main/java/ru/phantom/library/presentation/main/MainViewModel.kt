@@ -131,14 +131,14 @@ class MainViewModel(
                 (dbRepository as DBRepository).delayEmulator()
                 currentStart = start
                 val items = dbRepository.getItems(size, currentStart)
-                _elements.value =
-                    items
-                        .map { DataItem(it) }
-                        .also { currentEnd = currentStart + it.size }
-                Log.d(
-                    "PAGINATION",
-                    "Initial load: ${_elements.value.size} items, currentStart: $currentStart currentEnd $currentEnd"
-                )
+
+                if (items.isNotEmpty()) {
+                    _elements.value = items.map { DataItem(it) }
+                            .also { currentEnd = currentStart + it.size }
+                }
+
+                paginationLogger("Load data complete", items.size)
+
             } catch (e: kotlinx.coroutines.CancellationException) {
                 Log.i("PAGINATION", "Загрузка элементов отменена", e)
             } finally {
@@ -168,14 +168,11 @@ class MainViewModel(
                     currentEnd
                 )
                     .map { DataItem(it) }
-                    .also {
-                        currentStart = changeToGridSpan(currentStart + dropCount)
-                        currentEnd += loadCount
-                        Log.d(
-                            "PAGINATION",
-                            "Next load: ${it.size} items, dropCount $dropCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
-                        )
-                    }
+
+                currentStart = changeToGridSpan(currentStart + dropCount)
+                currentEnd += loadCount
+
+
                 if (newItems.isNotEmpty()) {
                     _elements.update { items ->
                         (items.dropLast(DROP_COUNT) + newItems).drop(
@@ -183,7 +180,11 @@ class MainViewModel(
                         )
                     }
                 }
+
+                paginationLogger("LoadNext complite", dropCount)
+
             } catch (e: kotlinx.coroutines.CancellationException) {
+                excludeLoadItem(dropLastCount = DROP_COUNT)
                 // Я решил что тут лучше подойдёт информационный лог
                 Log.i("PAGINATION", "Загрузка следующих элементов отменена", e)
             } finally {
@@ -199,7 +200,9 @@ class MainViewModel(
      */
     private fun startNextLoad() {
         _loadingState.update { true }
-        _elements.update { it.filterNot { item -> item is LoadItem } + LoadItem }
+        _elements.update { items ->
+            items + LoadItem
+        }
     }
 
     fun loadPrev() {
@@ -219,8 +222,7 @@ class MainViewModel(
                 val newItems = dbRepository.getItems(
                     loadCount,
                     currentStart
-                )
-                    .map { DataItem(it) }
+                ).map { DataItem(it) }
 
                 if (newItems.isNotEmpty()) {
                     currentEnd = changeToGridSpan(currentEnd - loadCount)
@@ -228,16 +230,22 @@ class MainViewModel(
                         newItems + items.drop(DROP_COUNT).take(takeCount)
                     }
                 }
-                Log.d(
-                    "PAGINATION",
-                    "Prev load: ${_elements.value.size} items, takeCount $takeCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
-                )
+
+                paginationLogger("LoadPrev complete", takeCount)
+
             } catch (e: kotlinx.coroutines.CancellationException) {
+                excludeLoadItem(dropCount = DROP_COUNT)
                 Log.i("PAGINATION", "Загрузка предыдущих элементов отменена", e)
             } finally {
                 loadPrevJob = null
                 _loadingState.value = false
             }
+        }
+    }
+
+    private fun excludeLoadItem(dropCount: Int = 0, dropLastCount: Int = 0) {
+        _elements.update { items ->
+            items.drop(dropCount).dropLast(dropLastCount)
         }
     }
 
@@ -247,9 +255,16 @@ class MainViewModel(
      */
     private fun startPrevLoad() {
         _loadingState.update { true }
-        _elements.update {
-            listOf(LoadItem) + it.filterNot { item -> item is LoadItem }
+        _elements.update { items ->
+            listOf(LoadItem) + items
         }
+    }
+
+    private fun paginationLogger(message: String, takeCount: Int) {
+        Log.d(
+            "PAGINATION",
+            "$message: ${_elements.value.size} items, takeCount $takeCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
+        )
     }
 
     /**
