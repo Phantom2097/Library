@@ -5,7 +5,7 @@ import ru.phantom.library.presentation.selected_item.DetailFragment
 data class DetailState(
     val uiType: Int = DetailFragment.Companion.DEFAULT_TYPE,
     val name: String = DetailFragment.Companion.DEFAULT_NAME,
-    val id: Int = DetailFragment.Companion.DEFAULT_ID,
+    val id: Long = DetailFragment.Companion.DEFAULT_ID,
     val image: Int = DetailFragment.Companion.DEFAULT_IMAGE,
     val description: String? = null
 )

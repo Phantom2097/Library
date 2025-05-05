@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/actionSortDefault"
+        android:title="@string/recycler_sort_menuDefault"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/actionSortByName"
+        android:title="@string/recycler_sort_menuByName"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/actionSortByTime"
+        android:title="@string/recycler_sort_menu_byTimeText"
+        app:showAsAction="never"
+        />
+</menu>

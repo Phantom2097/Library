@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -15,11 +16,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.presentation_console.decoration.SpacesItemDecoration
+import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD
+import ru.phantom.library.domain.main_recycler.adapter.MyScrollListener
+import ru.phantom.library.domain.main_recycler.adapter.decoration.SpacesItemDecoration
 
 class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
@@ -44,20 +48,48 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         initViewModel()
 
         initList()
+        initMenuButton()
     }
 
     private fun initList() {
         val recyclerView = binding.recyclerMainScreen
 
         with(recyclerView) {
-            layoutManager = GridLayoutManager(context, SPAN_COUNT)
+            layoutManager = GridLayoutManager(context, SPAN_COUNT).apply {
+                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return when (libraryAdapter.getItemViewType(position)) {
+                            TYPE_LOAD -> SPAN_COUNT
+                            else -> 1
+                        }
+                    }
+                }
+            }
             adapter = libraryAdapter
             addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
+            addOnScrollListener(MyScrollListener(viewModel, libraryAdapter))
         }
 
         // Добавляю itemTouchHelper
         val itemTouchHelper = ItemTouchHelper(libraryAdapter.getMySimpleCallback())
         itemTouchHelper.attachToRecyclerView(recyclerView)
+    }
+
+    private fun initMenuButton() {
+        binding.sortItemsButton.setOnClickListener {
+            val menu = PopupMenu(requireContext(), it)
+            menu.menuInflater.inflate(R.menu.recycler_sort_menu, menu.menu)
+
+            menu.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.actionSortDefault -> viewModel.setSortType(DEFAULT_SORT)
+                    R.id.actionSortByName -> viewModel.setSortType(SORT_BY_NAME)
+                    R.id.actionSortByTime -> viewModel.setSortType(SORT_BY_TIME)
+                }
+                true
+            }
+            menu.show()
+        }
     }
 
     override fun onDestroy() {
@@ -72,27 +104,30 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     private fun initViewModel() = viewLifecycleOwner.lifecycleScope.launch {
         viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             launch {
-                viewModel.elements.collect { notes ->
+                viewModel.elements.collectLatest { notes ->
+                    libraryAdapter.submitList(notes)
                     if (notes.isEmpty()) {
                         binding.apply {
+                            sortItemsButton.isGone = true
                             recyclerShimmer.isVisible = true
                             delay(LOAD_DELAY)
                             recyclerShimmer.isGone = true
                             recyclerMainNoElements.isVisible = true
                         }
+
                     } else {
                         binding.apply {
                             recyclerShimmer.isGone = true
+                            sortItemsButton.isVisible = true
                             recyclerMainNoElements.isGone = true
                         }
-                        libraryAdapter.submitList(notes)
                     }
                 }
             }
             launch {
                 viewModel.scrollToEnd.collect { state ->
                     if (state) {
-                        val lastPosition = libraryAdapter.itemCount
+                        val lastPosition = libraryAdapter.itemCount + 1
                         binding.recyclerMainScreen.post {
                             Log.d("ScrollState", "Последняя позиция: $lastPosition")
                             binding.recyclerMainScreen.smoothScrollToPosition(lastPosition)
@@ -101,13 +136,23 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     }
                 }
             }
+            launch {
+                viewModel.loadingState.collect { state ->
+                    libraryAdapter.setLoading(state)
+                }
+            }
         }
     }
 
     companion object {
         // Для списка элементов
         private const val LOAD_DELAY = 3000L
-        private const val SPAN_COUNT = 2
+        const val SPAN_COUNT = 2
         private const val SPACES_ITEM_DECORATION_COUNT = 12
+
+        const val SORT_STATE_KEY = "SortStateForRecyclerMain"
+        const val DEFAULT_SORT = "DEFAULT_SORT"
+        const val SORT_BY_NAME = "SORT_BY_NAME"
+        const val SORT_BY_TIME = "SORT_BY_TIME"
     }
 }

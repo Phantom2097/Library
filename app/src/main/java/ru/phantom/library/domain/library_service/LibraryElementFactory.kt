@@ -15,7 +15,7 @@ import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 object LibraryElementFactory {
     fun createBook (
         name: String,
-        id: Int = getItemsCounter(),
+        id: Long = getItemsCounter(),
         availability: Boolean = true,
         position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
         author: String = "",
@@ -52,7 +52,7 @@ object LibraryElementFactory {
 
     fun createNewspaper(
         name: String,
-        id: Int = getItemsCounter(),
+        id: Long = getItemsCounter(),
         availability: Boolean = true,
         position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
         issueNumber: Int? = null,
@@ -88,7 +88,7 @@ object LibraryElementFactory {
 
     fun createDisk(
         name: String,
-        id: Int = getItemsCounter(),
+        id: Long = getItemsCounter(),
         availability: Boolean = true,
         position: Position = if (availability) Position.LIBRARY else Position.UNKNOWN,
         type: Type = Type.UNKNOWN,

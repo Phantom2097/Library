@@ -1,35 +1,33 @@
-package ru.phantom.library.presentation_console.main
+package ru.phantom.library.data.repository
 
 import ru.phantom.library.data.Position
+import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
 import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 import ru.phantom.library.domain.entities.library.disk.Type.CD
 import ru.phantom.library.domain.entities.library.disk.Type.DVD
-import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
 import ru.phantom.library.domain.entities.library.newspaper.month.Month.JANUARY
-import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
-import ru.phantom.library.data.repository.LibraryRepository.addItemBook
-import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
-import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
-import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.library.domain.library_service.LibraryService
-import ru.phantom.library.presentation_console.start_console.showConsoleStartLibraryUI
 
-fun main() {
-    val libraryService = LibraryService
-    createBooks(libraryService)
-    createNewspapers(libraryService)
-    createDisks(libraryService)
-
-    showConsoleStartLibraryUI()
+fun initStartItems(): List<BasicLibraryElement> {
+    val service = LibraryService
+    return listOf(
+        createBooks(service),
+        createNewspapers(service),
+        createDisks(service)
+    ).flatten()
 }
-
-
-private fun createBooks(service: LibraryService) {
-    addItemBook(
+/**
+ * Создание книг
+ */
+private fun createBooks(service: LibraryService) = buildList {
+    add(
         createBook(
             name = "Котлин для профессионалов",
             author = "Джош Скин, Дэвид Грэнхол, Эндрю Бэйли",
@@ -38,7 +36,7 @@ private fun createBooks(service: LibraryService) {
         )
     )
 
-    addItemBook(
+    add(
         createBook(
             name = "Маугли",
             availability = false,
@@ -47,7 +45,7 @@ private fun createBooks(service: LibraryService) {
             service = service
         )
     )
-    addItemBook(
+    add(
         createBook(
             name = "Kotlin Design Patterns and Best Practices",
             availability = false,
@@ -57,7 +55,7 @@ private fun createBooks(service: LibraryService) {
             service = service
         )
     )
-    addItemBook(
+    add(
         createBook(
             name = "Евгений Онегин",
             availability = false,
@@ -67,7 +65,7 @@ private fun createBooks(service: LibraryService) {
             service = service
         )
     )
-    addItemBook(
+    add(
         createBook(
             name = "Алые Плинтуса",
             id = getItemsCounter(),
@@ -76,7 +74,7 @@ private fun createBooks(service: LibraryService) {
             service = service
         )
     )
-    addItemBook(
+    add(
         createBook(
             name = "Война и привет",
             id = getItemsCounter(),
@@ -86,8 +84,11 @@ private fun createBooks(service: LibraryService) {
     )
 }
 
-private fun createNewspapers(service: LibraryService) {
-    addItemNewspaper(
+/**
+ * Создание газет
+ */
+private fun createNewspapers(service: LibraryService) = buildList {
+    add(
         createNewspaper(
             name = "Русская правда",
             id = getItemsCounter(),
@@ -97,7 +98,7 @@ private fun createNewspapers(service: LibraryService) {
             issueNumber = 794
         )
     )
-    addItemNewspaper(
+    add(
         NewspaperImpl(
             LibraryItem(
                 name = "Русская правда",
@@ -109,7 +110,7 @@ private fun createNewspapers(service: LibraryService) {
         ).apply {
             issueNumber = 795
         })
-    addItemNewspaper(
+    add(
         NewspaperImpl(
             LibraryItem(
                 name = "Русская правда",
@@ -121,7 +122,7 @@ private fun createNewspapers(service: LibraryService) {
         ).apply {
             issueNumber = 796
         })
-    addItemNewspaper(
+    add(
         NewspaperImpl(
             LibraryItem(
                 name = "Русская ложь",
@@ -131,7 +132,7 @@ private fun createNewspapers(service: LibraryService) {
             service
         )
     )
-    addItemNewspaper(
+    add(
         NewspaperWithMonthImpl(
             LibraryItem(
                 name = "Русская правда",
@@ -145,8 +146,11 @@ private fun createNewspapers(service: LibraryService) {
         })
 }
 
-private fun createDisks(service: LibraryService) {
-    addItemDisk(
+/**
+ * Создание дисков
+ */
+private fun createDisks(service: LibraryService) = buildList {
+    add(
         DiskImpl(
             LibraryItem(
                 name = "Дэдпул и Росомаха",
@@ -159,7 +163,7 @@ private fun createDisks(service: LibraryService) {
             type = DVD
         })
 
-    addItemDisk(
+    add(
         DiskImpl(
             LibraryItem(
                 name = "Какая-то песня",
@@ -172,7 +176,7 @@ private fun createDisks(service: LibraryService) {
             type = CD
         })
 
-    addItemDisk(
+    add(
         createDisk(
             name = "Просто диск",
             id = getItemsCounter(),
@@ -182,7 +186,7 @@ private fun createDisks(service: LibraryService) {
         )
     )
 
-    addItemDisk(
+    add(
         DiskImpl(
             LibraryItem(
                 name = "1111",

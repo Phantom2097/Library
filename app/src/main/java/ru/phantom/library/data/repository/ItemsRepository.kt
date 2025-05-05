@@ -10,15 +10,15 @@ interface ItemsRepository<T> {
 
     /**
      * Удаление элемента из репозитория
-     * @param position позиция элемента, который нужно удалить (соответствует позиции в RecyclerView)
+     * @param id id элемента, который нужно удалить
      */
-    suspend fun removeItem(position: Int)
+    suspend fun removeItem(id: Long)
 
     /**
      * Функция запрашивает все элементы из репозитория
      * @return Список элементов репозитория
      */
-    suspend fun getItems() : List<T>
+    suspend fun getItems(limit: Int, offset: Int) : List<T>
 
     /**
      * Изменяет состояние существующего элемента
@@ -26,4 +26,6 @@ interface ItemsRepository<T> {
      * @param newItem этот же элемент с изменённым состоянием
      */
     suspend fun changeItem(position: Int, newItem: T)
+
+    suspend fun getTotalCount(): Long
 }

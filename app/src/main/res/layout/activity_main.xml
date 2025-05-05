@@ -25,7 +25,6 @@
         android:id="@+id/mainListContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="50dp"
         android:clipToPadding="false"
         android:contentDescription="@string/recyclerMainDescription"
         android:padding="8dp"

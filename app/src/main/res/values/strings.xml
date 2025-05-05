@@ -26,4 +26,9 @@
     <string name="detail_screen">Detail screen</string>
     <string name="emptyFragmentText">Выбери элемент или создайте свой</string>
     <string name="detailFragmentErrorText">Неизвестная ошибка, попробуйте ещё раз</string>
+    <string name="recyclerMainNoElementsText">Элементов нет\nДобаьте или обновите список</string>
+    <string name="sortitemsbuttonforrecycler">sortItemsButtonForRecycler</string>
+    <string name="recycler_sort_menu_byTimeText">По времени добавления</string>
+    <string name="recycler_sort_menuByName">По названию</string>
+    <string name="recycler_sort_menuDefault">Порядок по умолчанию</string>
 </resources>

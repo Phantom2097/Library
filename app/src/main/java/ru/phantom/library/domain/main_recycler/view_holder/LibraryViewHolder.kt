@@ -30,7 +30,7 @@ class LibraryViewHolder(private val binding: LibraryItemRecyclerForMainBinding) 
         itemNameInCards.text = name
     }
 
-    private fun bindId(id: Int) = with(binding) {
+    private fun bindId(id: Long) = with(binding) {
         itemIdInCards.text = id.toString()
     }
 

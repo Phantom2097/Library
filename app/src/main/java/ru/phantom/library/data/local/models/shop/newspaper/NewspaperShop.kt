@@ -29,7 +29,7 @@ object NewspaperShop : NewspaperShopType {
 
     private object NewspaperShopConsts {
         const val START_COUNTER_INDEX = 0
-        const val NEWSPAPER_SHOP_ID = 3000
+        const val NEWSPAPER_SHOP_ID = 3000L
         const val START_ISSUE_NUMBER = 10000
         const val END_ISSUE_NUMBER = 100000
     }

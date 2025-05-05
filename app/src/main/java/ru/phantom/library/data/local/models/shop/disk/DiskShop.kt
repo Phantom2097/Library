@@ -31,6 +31,6 @@ object DiskShop : DiskShopType {
     private object DiskShopConsts {
         const val START_TYPE_INDEX = 0
         const val START_COUNTER_INDEX = 0
-        const val DISK_SHOP_ID = 2000
+        const val DISK_SHOP_ID = 2000L
     }
 }

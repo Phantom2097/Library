@@ -17,15 +17,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.data.repository.DBRepository
+import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.domain.entities.library.book.Book
 import ru.phantom.library.domain.entities.library.disk.Disk
 import ru.phantom.library.domain.entities.library.newspaper.Newspaper
-import ru.phantom.library.data.repository.ItemsRepository
-import ru.phantom.library.data.repository.ItemsRepositoryImpl
-import ru.phantom.library.data.repository.extensions.simulateRealRepository
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
 import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
+import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
+import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
+import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
+import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
+import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.SPAN_COUNT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
@@ -35,6 +39,7 @@ import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 import java.util.concurrent.CancellationException
+import kotlin.math.min
 
 /**
  *  Вью модель
@@ -42,15 +47,16 @@ import java.util.concurrent.CancellationException
  *  @param detailState хранит состояние
  *  @param scrollToEnd хранит состояние положения адаптера списка,
  *  пока используется для проматывания вниз
+ *  @param loadingState Отображает состояние загрузки
  *
  *  @see ru.phantom.library.presentation.selected_item.DetailFragment
  *  @see DetailState
  */
 class MainViewModel(
-    private val itemsRepository: ItemsRepository<BasicLibraryElement> = ItemsRepositoryImpl()
+    private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository()
 ) : ViewModel() {
 
-    private val _elements = MutableStateFlow<List<BasicLibraryElement>>(emptyList())
+    private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
 
     private val _detailState =
@@ -63,6 +69,13 @@ class MainViewModel(
     private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
 
+    private val _loadingState = MutableStateFlow(false)
+    val loadingState = _loadingState.asStateFlow()
+
+    private var currentStart = START_POSITION
+    private var currentEnd = START_POSITION
+    private var totalItems = INIT_TOTAL_COUNT
+
     fun updateType(type: Int) = viewModelScope.launch {
         _createState.emit(CreateState(itemType = type))
     }
@@ -74,7 +87,7 @@ class MainViewModel(
         }
     }
 
-    fun updateId(id: Int) {
+    fun updateId(id: Long) {
         _createState.update {
             it.copy(id = id)
         }
@@ -95,6 +108,170 @@ class MainViewModel(
     fun onItemClicked(element: BasicLibraryElement) {
         changeDetailState(element)
     }
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Получаем общее количество элементов
+            totalItems = dbRepository.getTotalCount()
+            loadInitialData()
+        }
+    }
+
+    private var currentLoadJob: Job? = null
+
+    /**
+     * Изначально метод предназначался только для загрузки начальных данных.
+     * Но я вижу в нём потенциал обновлять данные при удалении, изменении видимости и добавлении элемента
+     */
+    private fun loadInitialData(start: Int = START_POSITION, size: Int = INIT_SIZE) {
+        currentLoadJob?.cancel()
+        currentLoadJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _elements.update { emptyList<AdapterItems>() }
+                (dbRepository as DBRepository).delayEmulator()
+                currentStart = start
+                val items = dbRepository.getItems(size, currentStart)
+
+                if (items.isNotEmpty()) {
+                    _elements.value = items.map { DataItem(it) }
+                            .also { currentEnd = currentStart + it.size }
+                }
+
+                paginationLogger("Load data complete", items.size)
+
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                Log.i("PAGINATION", "Загрузка элементов отменена", e)
+            } finally {
+                Log.d("PAGINATION", "${_loadingState.value}")
+            }
+        }
+    }
+
+    private var loadNextJob: Job? = null
+    private var loadPrevJob: Job? = null
+
+    fun loadNext() {
+        loadPrevJob?.cancel()
+
+        if (loadNextJob != null || currentEnd.toLong() >= totalItems) return
+
+        loadNextJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                startNextLoad()
+                (dbRepository as DBRepository).delayEmulator() // Задержка в развитии
+
+                val loadCount = min(COUNT_FOR_LOAD, totalItems.toInt() - currentEnd)
+                val dropCount = loadCount - (INIT_SIZE - (currentEnd - currentStart))
+
+                val newItems = dbRepository.getItems(
+                    loadCount,
+                    currentEnd
+                )
+                    .map { DataItem(it) }
+
+                currentStart = changeToGridSpan(currentStart + dropCount)
+                currentEnd += loadCount
+
+
+                if (newItems.isNotEmpty()) {
+                    _elements.update { items ->
+                        (items.dropLast(DROP_COUNT) + newItems).drop(
+                            changeToGridSpan(dropCount)
+                        )
+                    }
+                }
+
+                paginationLogger("LoadNext complite", dropCount)
+
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                excludeLoadItem(dropLastCount = DROP_COUNT)
+                // Я решил что тут лучше подойдёт информационный лог
+                Log.i("PAGINATION", "Загрузка следующих элементов отменена", e)
+            } finally {
+                loadNextJob = null
+                _loadingState.value = false
+            }
+        }
+    }
+
+    /**
+     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в конце списка,
+     *      * при это очищая от других шиммеров
+     */
+    private fun startNextLoad() {
+        _loadingState.update { true }
+        _elements.update { items ->
+            items + LoadItem
+        }
+    }
+
+    fun loadPrev() {
+        loadNextJob?.cancel()
+
+        if (loadPrevJob != null || currentStart == START_POSITION) return
+
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                startPrevLoad()
+                (dbRepository as DBRepository).delayEmulator() // Задержка
+
+                val loadCount = if (currentStart < COUNT_FOR_LOAD) currentStart else COUNT_FOR_LOAD
+                val takeCount = INIT_SIZE - loadCount
+                currentStart = changeToGridSpan(currentStart - loadCount)
+
+                val newItems = dbRepository.getItems(
+                    loadCount,
+                    currentStart
+                ).map { DataItem(it) }
+
+                if (newItems.isNotEmpty()) {
+                    currentEnd = changeToGridSpan(currentEnd - loadCount)
+                    _elements.update { items ->
+                        newItems + items.drop(DROP_COUNT).take(takeCount)
+                    }
+                }
+
+                paginationLogger("LoadPrev complete", takeCount)
+
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                excludeLoadItem(dropCount = DROP_COUNT)
+                Log.i("PAGINATION", "Загрузка предыдущих элементов отменена", e)
+            } finally {
+                loadPrevJob = null
+                _loadingState.value = false
+            }
+        }
+    }
+
+    private fun excludeLoadItem(dropCount: Int = 0, dropLastCount: Int = 0) {
+        _elements.update { items ->
+            items.drop(dropCount).dropLast(dropLastCount)
+        }
+    }
+
+    /**
+     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в начале списка,
+     * при это очищая от других шиммеров
+     */
+    private fun startPrevLoad() {
+        _loadingState.update { true }
+        _elements.update { items ->
+            listOf(LoadItem) + items
+        }
+    }
+
+    private fun paginationLogger(message: String, takeCount: Int) {
+        Log.d(
+            "PAGINATION",
+            "$message: ${_elements.value.size} items, takeCount $takeCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
+        )
+    }
+
+    /**
+     * Для того чтобы сетка не смещалась при количестве элементов не кратном [SPAN_COUNT]
+     */
+    private fun changeToGridSpan(start: Int): Int =
+        ((start + DOP_NUM_FOR_GRID_SPAN) / SPAN_COUNT) * SPAN_COUNT
 
     private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
         val image = withContext(Dispatchers.IO) {
@@ -132,7 +309,7 @@ class MainViewModel(
                     if (state.uiType == SHOW_TYPE) {
                         emit(LoadingStateToDetail.Loading)
 
-                        itemsRepository.simulateRealRepository()
+                        (dbRepository as DBRepository).simulateRealRepository()
                         Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
 
                         emit(LoadingStateToDetail.Data(state))
@@ -164,27 +341,9 @@ class MainViewModel(
         _detailState.emit(errorState)
     }
 
-    /**
-     * Вынес добавление стартовых элементов в отдельную функцию
-     */
-    fun initStartItems() {
-        viewModelScope.launch {
-            val items = itemsRepository.getItems()
-            _elements.update {
-                items
-            }
-        }
-    }
-
     private fun updateElements(newItem: BasicLibraryElement) {
         viewModelScope.launch {
-            itemsRepository.addItems(newItem)
-
-            val newItems = itemsRepository.getItems()
-
-            _elements.update {
-                newItems
-            }
+            dbRepository.addItems(newItem)
 
             Log.d("ScrollState", "Эмитется новое значение")
             requestScrollToEnd()
@@ -212,19 +371,50 @@ class MainViewModel(
         }
     }
 
-    fun updateElementContent(position: Int, newItem: BasicLibraryElement) = viewModelScope.launch {
-        itemsRepository.changeItem(position, newItem)
-        _elements.update {
-            itemsRepository.getItems()
+    fun updateElementContent(position: Int, newItem: BasicLibraryElement) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRepository.changeItem(position, newItem)
+
+            /*
+            Если попробовать обновить состояние во время загрузки новых элементов, естественно
+            может вылететь приложение.
+             */
+            loadInitialData(currentStart, currentEnd - currentStart)
         }
     }
 
-    fun selectedRemove(element: BasicLibraryElement) {
+    /*
+    Пока такая проверка
+     */
+    private var lastSortType = DEFAULT_SORT
+
+    fun setSortType(sortState: String) {
+        if (sortState != lastSortType) {
+            viewModelScope.launch(Dispatchers.IO) {
+                (dbRepository as DBRepository).setSortType(sortState)
+                loadInitialData()
+            }
+            lastSortType = sortState
+        }
+    }
+
+    fun removeElementById(id: Long) = viewModelScope.launch(Dispatchers.IO) {
+        dbRepository.removeItem(id)
+
+        _elements.update { currentList ->
+            currentList.filter { it is DataItem && it.listElement.item.id != id }
+        }
+
+        currentEnd--
+        totalItems--
+
+        checkIfIsDisplayed(id)
+    }
+
+    private fun checkIfIsDisplayed(id: Long) {
         when (val state = _detailState.value) {
             is LoadingStateToDetail.Data -> {
-                if (element.item.id == state.data.id
-                    && element.item.name == state.data.name
-                ) {
+                if (id == state.data.id) {
                     setDetailState()
                 }
             }
@@ -233,10 +423,15 @@ class MainViewModel(
         }
     }
 
-    fun removeElement(position: Int) = viewModelScope.launch {
-        itemsRepository.removeItem(position)
-        _elements.update {
-            itemsRepository.getItems()
-        }
+    companion object {
+        const val DOP_NUM_FOR_GRID_SPAN = 1
+
+        private const val START_POSITION = 0
+        private const val INIT_TOTAL_COUNT = 0L
+
+        private const val DROP_COUNT = 1
+        const val LOAD_THRESHOLD = 10
+        const val INIT_SIZE = 48
+        const val COUNT_FOR_LOAD = INIT_SIZE / 2
     }
 }

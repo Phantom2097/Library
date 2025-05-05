@@ -17,5 +17,9 @@ enum class Month(private val month: String) {
 
     fun getMonth(): String = month
 
-    //fun getMonthFromNumber(num: Int): String = (entries.getOrNull(num - 1)?: UNKNOWN).month
+    companion object {
+        fun toMonth(stringType: String?) = stringType?.let {
+            entries.find { it.month.equals(stringType, ignoreCase = true)} ?: UNKNOWN
+        } ?: UNKNOWN
+    }
 }

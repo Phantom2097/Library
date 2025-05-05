@@ -8,5 +8,5 @@ import ru.phantom.library.presentation.selected_item.DetailFragment
 data class CreateState(
     val itemType: Int = DetailFragment.Companion.DEFAULT_IMAGE,
     val name: String? = null,
-    val id: Int? = null
+    val id: Long? = null
 )
