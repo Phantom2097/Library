@@ -15,6 +15,11 @@ sealed class AdapterItems {
      * Обычный элемент списка, с которым осуществляется взаимодействие
      */
     data class DataItem(val listElement: BasicLibraryElement) : AdapterItems()
+
+    /**
+     * Элементы списка представляющие собой книги полученные из гугл букс
+     */
+    data class BooksGoogleApi(val book: BasicLibraryElement) : AdapterItems()
     // Тут можно было бы ещё добавить ошибку
     // Тут можно было бы добавить ещё и текст в конце списка (типа больше элементов нет)
 }

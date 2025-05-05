@@ -19,6 +19,7 @@ import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
 import ru.phantom.library.data.repository.DBRepository
 import ru.phantom.library.data.repository.ItemsRepository
+import ru.phantom.library.data.repository.extensions.SimulateRealRepository
 import ru.phantom.library.domain.entities.library.book.Book
 import ru.phantom.library.domain.entities.library.disk.Disk
 import ru.phantom.library.domain.entities.library.newspaper.Newspaper
@@ -63,6 +64,7 @@ class MainViewModel(
         MutableStateFlow<LoadingStateToDetail>(LoadingStateToDetail.Data(DetailState()))
     val detailState = _detailState.asStateFlow()
 
+    // Пока не работает со времён внедрения Room
     private val _scrollToEnd = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 1)
     val scrollToEnd = _scrollToEnd.asSharedFlow()
 
@@ -128,7 +130,7 @@ class MainViewModel(
         currentLoadJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 _elements.update { emptyList<AdapterItems>() }
-                (dbRepository as DBRepository).delayEmulator()
+                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
                 currentStart = start
                 val items = dbRepository.getItems(size, currentStart)
 
@@ -158,7 +160,7 @@ class MainViewModel(
         loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 startNextLoad()
-                (dbRepository as DBRepository).delayEmulator() // Задержка в развитии
+                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository() // Задержка в развитии
 
                 val loadCount = min(COUNT_FOR_LOAD, totalItems.toInt() - currentEnd)
                 val dropCount = loadCount - (INIT_SIZE - (currentEnd - currentStart))
@@ -213,7 +215,7 @@ class MainViewModel(
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 startPrevLoad()
-                (dbRepository as DBRepository).delayEmulator() // Задержка
+                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository() // Задержка
 
                 val loadCount = if (currentStart < COUNT_FOR_LOAD) currentStart else COUNT_FOR_LOAD
                 val takeCount = INIT_SIZE - loadCount
@@ -243,7 +245,7 @@ class MainViewModel(
         }
     }
 
-    private fun excludeLoadItem(dropCount: Int = 0, dropLastCount: Int = 0) {
+    private fun excludeLoadItem(dropCount: Int = DROP_DEFAULT, dropLastCount: Int = DROP_DEFAULT) {
         _elements.update { items ->
             items.drop(dropCount).dropLast(dropLastCount)
         }
@@ -309,7 +311,7 @@ class MainViewModel(
                     if (state.uiType == SHOW_TYPE) {
                         emit(LoadingStateToDetail.Loading)
 
-                        (dbRepository as DBRepository).simulateRealRepository()
+                        (dbRepository as SimulateRealRepository).delayLikeRealRepository()
                         Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
 
                         emit(LoadingStateToDetail.Data(state))
@@ -341,10 +343,15 @@ class MainViewModel(
         _detailState.emit(errorState)
     }
 
+    /**
+     * Временная реализация перехода к новому элементу, работает только при изначальном порядке
+     */
     private fun updateElements(newItem: BasicLibraryElement) {
         viewModelScope.launch {
             dbRepository.addItems(newItem)
+            totalItems = dbRepository.getTotalCount()
 
+            loadInitialData(changeToGridSpan(totalItems.toInt() - INIT_SIZE))
             Log.d("ScrollState", "Эмитется новое значение")
             requestScrollToEnd()
         }
@@ -429,7 +436,9 @@ class MainViewModel(
         private const val START_POSITION = 0
         private const val INIT_TOTAL_COUNT = 0L
 
+        private const val DROP_DEFAULT = 0
         private const val DROP_COUNT = 1
+
         const val LOAD_THRESHOLD = 10
         const val INIT_SIZE = 48
         const val COUNT_FOR_LOAD = INIT_SIZE / 2

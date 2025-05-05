@@ -73,6 +73,36 @@ class MainActivity : AppCompatActivity() {
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
+
+        val libraryButton = binding.showLibraryButton.also {
+            it.isClickable = false
+            it.alpha = 0.3f
+        }
+        val googleBooksButton = binding.showGoogleBooksButton
+
+        googleBooksButton.apply {
+            setOnClickListener {
+                navController.navigate(R.id.booksListFromGoogle)
+                isClickable = false
+                alpha = 0.3f
+                libraryButton.apply {
+                    isClickable = true
+                    alpha = 1.0f
+                }
+            }
+        }
+
+        libraryButton.apply {
+            setOnClickListener {
+                alpha = 0.3f
+                navController.popBackStack()
+                isClickable = false
+                googleBooksButton.apply {
+                    isClickable = true
+                    alpha = 1.0f
+                }
+            }
+        }
     }
 
     /**

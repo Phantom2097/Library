@@ -136,11 +136,6 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     }
                 }
             }
-            launch {
-                viewModel.loadingState.collect { state ->
-                    libraryAdapter.setLoading(state)
-                }
-            }
         }
     }
 

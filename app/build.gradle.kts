@@ -68,6 +68,15 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx) // Kotlin Extensions and Coroutines support
 
+    // Retrofit
+    implementation(libs.retrofit)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Glide
+    implementation(libs.glide)
+
     // Fragment Navigation
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)

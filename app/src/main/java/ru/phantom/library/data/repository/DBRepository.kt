@@ -74,6 +74,10 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
         errorEmulator()
     }
 
+    override suspend fun delayLikeRealRepository() {
+        delayEmulator()
+    }
+
     /**
      * Эмулирует задержку в диапазоне от 100мс до 2000мс
      */

@@ -20,7 +20,6 @@ import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_wi
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
-import ru.phantom.library.domain.main_recycler.view_holder.ErrorViewHolder
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.domain.main_recycler.view_holder.LoadingViewHolder
 import ru.phantom.library.presentation.main.MainViewModel
@@ -33,12 +32,6 @@ class LibraryItemsAdapter(
     private val viewModel: MainViewModel
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 
-    private var isLoading = false
-
-    fun setLoading(state: Boolean) {
-        isLoading = state
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
             TYPE_LOAD -> LoadingViewHolder(
@@ -46,7 +39,7 @@ class LibraryItemsAdapter(
                     .inflate(R.layout.shimmer_for_paggination, parent, false)
             )
 
-            TYPE_ITEM -> {
+            else -> {
                 val binding = LibraryItemRecyclerForMainBinding.inflate(
                     LayoutInflater.from(parent.context), parent, false
                 )
@@ -63,13 +56,6 @@ class LibraryItemsAdapter(
                         true
                     }
                 }
-            }
-
-            else -> {
-                ErrorViewHolder(
-                    LayoutInflater.from(parent.context)
-                        .inflate(R.layout.shimmer_for_paggination, parent, false)
-                )
             }
         }
     }
@@ -219,6 +205,7 @@ class LibraryItemsAdapter(
     companion object {
         const val NO_ACTION = 0
 
+        // Перенести в Enum будет лучше
         const val TYPE_ITEM = 0
         const val TYPE_LOAD = 1
     }
