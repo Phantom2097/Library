@@ -73,6 +73,36 @@ class MainActivity : AppCompatActivity() {
         addButton.setOnClickListener {
             showAddItemBottomSheet()
         }
+
+        val libraryButton = binding.showLibraryButton.also {
+            it.isClickable = false
+            it.alpha = DISABLE_ALPHA
+        }
+        val googleBooksButton = binding.showGoogleBooksButton
+
+        googleBooksButton.apply {
+            setOnClickListener {
+                navController.navigate(R.id.booksListFromGoogle)
+                isClickable = false
+                alpha = DISABLE_ALPHA
+                libraryButton.apply {
+                    isClickable = true
+                    alpha = UNABLE_ALPHA
+                }
+            }
+        }
+
+        libraryButton.apply {
+            setOnClickListener {
+                alpha = DISABLE_ALPHA
+                navController.popBackStack()
+                isClickable = false
+                googleBooksButton.apply {
+                    isClickable = true
+                    alpha = UNABLE_ALPHA
+                }
+            }
+        }
     }
 
     /**
@@ -188,5 +218,10 @@ class MainActivity : AppCompatActivity() {
 
             navController.navigate(R.id.action_to_detail)
         }
+    }
+
+    private companion object {
+        private const val DISABLE_ALPHA = 0.3f
+        private const val UNABLE_ALPHA = 1.0f
     }
 }
