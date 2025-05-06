@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
         val libraryButton = binding.showLibraryButton.also {
             it.isClickable = false
-            it.alpha = 0.3f
+            it.alpha = DISABLE_ALPHA
         }
         val googleBooksButton = binding.showGoogleBooksButton
 
@@ -84,22 +84,22 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener {
                 navController.navigate(R.id.booksListFromGoogle)
                 isClickable = false
-                alpha = 0.3f
+                alpha = DISABLE_ALPHA
                 libraryButton.apply {
                     isClickable = true
-                    alpha = 1.0f
+                    alpha = UNABLE_ALPHA
                 }
             }
         }
 
         libraryButton.apply {
             setOnClickListener {
-                alpha = 0.3f
+                alpha = DISABLE_ALPHA
                 navController.popBackStack()
                 isClickable = false
                 googleBooksButton.apply {
                     isClickable = true
-                    alpha = 1.0f
+                    alpha = UNABLE_ALPHA
                 }
             }
         }
@@ -218,5 +218,10 @@ class MainActivity : AppCompatActivity() {
 
             navController.navigate(R.id.action_to_detail)
         }
+    }
+
+    private companion object {
+        private const val DISABLE_ALPHA = 0.3f
+        private const val UNABLE_ALPHA = 1.0f
     }
 }

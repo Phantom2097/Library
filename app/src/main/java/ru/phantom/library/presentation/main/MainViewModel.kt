@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -17,6 +18,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.data.remote.retrofit.RemoteGoogleBooksRepository
+import ru.phantom.library.data.remote.retrofit.RetrofitHelper
 import ru.phantom.library.data.repository.DBRepository
 import ru.phantom.library.data.repository.ItemsRepository
 import ru.phantom.library.data.repository.extensions.SimulateRealRepository
@@ -29,6 +32,7 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createNew
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
+import ru.phantom.library.domain.remote.repository.GoogleBooksRepository
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.SPAN_COUNT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
@@ -54,7 +58,8 @@ import kotlin.math.min
  *  @see DetailState
  */
 class MainViewModel(
-    private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository()
+    private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository(),
+    private val remoteRepository: GoogleBooksRepository = RemoteGoogleBooksRepository(RetrofitHelper.createRetrofit())
 ) : ViewModel() {
 
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
@@ -73,6 +78,9 @@ class MainViewModel(
 
     private val _loadingState = MutableStateFlow(false)
     val loadingState = _loadingState.asStateFlow()
+
+    private val _requestDescription = MutableStateFlow<Pair<String, String>>("" to "")
+    val requestDescription = _requestDescription.asStateFlow()
 
     private var currentStart = START_POSITION
     private var currentEnd = START_POSITION
@@ -116,6 +124,36 @@ class MainViewModel(
             // Получаем общее количество элементов
             totalItems = dbRepository.getTotalCount()
             loadInitialData()
+        }
+    }
+
+    fun updateAuthor(author: String) {
+        _requestDescription.update {
+            author to it.second
+        }
+    }
+
+    fun updateTitle(title: String) {
+        _requestDescription.update {
+            it.first to title
+        }
+    }
+
+    fun clearRequestDescription() {
+        _requestDescription.update {
+            "" to ""
+        }
+    }
+
+    fun getGoogleBooks(query: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val books = remoteRepository.getGoogleBooks(query)
+
+            delay(1000L)
+
+            _elements.update {
+                books.mapNotNull { book -> book?.let { DataItem(it) } }
+            }
         }
     }
 

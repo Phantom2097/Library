@@ -8,7 +8,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.FiltersForRequestGoogleBooksBinding
 import ru.phantom.library.presentation.main.MainViewModel
@@ -36,7 +40,39 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
 
         redefineBackButton()
 
+        subscribeViewModel()
+        initButton()
+
         subscribeToInput()
+    }
+
+    private fun initButton() {
+        val getBooksButton = binding.buttonStartSearchGoogleBooks
+
+        getBooksButton.setOnClickListener {
+            viewModel.getGoogleBooks(buildQuery())
+            viewModel.clearRequestDescription()
+            navController.popBackStack()
+        }
+    }
+
+    private fun subscribeViewModel() {
+
+        viewModel.viewModelScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.requestDescription.collect { (author, title) ->
+                    binding.buttonStartSearchGoogleBooks.apply {
+                        if (author.length < LIMIT_LENGTH && title.length < LIMIT_LENGTH) {
+                            isClickable = false
+                            alpha = DISABLE_ALPHA
+                        } else {
+                            isClickable = true
+                            alpha = UNABLE_ALPHA
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -44,13 +80,26 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
         binding.apply {
 
             authorTextFieldGoogleBooks.doAfterTextChanged { text ->
-
+                viewModel.updateAuthor(text.toString())
             }
 
             titleTextFieldGoogleBooks.doAfterTextChanged { text ->
-
+                viewModel.updateTitle(text.toString())
             }
         }
+    }
+
+    /**
+     * Функция для составления запроса к API
+     */
+    private fun buildQuery(): String {
+
+        val (author, title) = viewModel.requestDescription.value
+
+        val parts = mutableListOf<String>()
+        if (title.isNotBlank()) parts += "intitle:$title"
+        if (author.isNotBlank()) parts += "inauthor:$author"
+        return parts.joinToString("+")
     }
 
     /**
@@ -74,8 +123,10 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
         _binding = null
     }
 
-    companion object {
-        const val AUTHOR_KEY = "AuthorKey"
-        const val TITLE_KEY = "TitleKey"
+    private companion object {
+        private const val DISABLE_ALPHA = 0.3f
+        private const val UNABLE_ALPHA = 1.0f
+
+        private const val LIMIT_LENGTH = 3
     }
 }

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
 
     id("com.google.devtools.ksp")
+
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -70,6 +72,7 @@ dependencies {
 
     // Retrofit
     implementation(libs.retrofit)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
