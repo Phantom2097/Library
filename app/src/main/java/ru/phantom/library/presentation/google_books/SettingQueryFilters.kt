@@ -17,7 +17,7 @@ import ru.phantom.library.R
 import ru.phantom.library.databinding.FiltersForRequestGoogleBooksBinding
 import ru.phantom.library.presentation.main.MainViewModel
 
-class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) {
+class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) {
 
     private var _binding: FiltersForRequestGoogleBooksBinding? = null
     val binding get() = _binding!!
@@ -67,7 +67,7 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
                             alpha = DISABLE_ALPHA
                         } else {
                             isClickable = true
-                            alpha = UNABLE_ALPHA
+                            alpha = ENABLE_ALPHA
                         }
                     }
                 }
@@ -107,7 +107,7 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
      */
     private fun redefineBackButton() {
         requireActivity().onBackPressedDispatcher.addCallback(
-            this@BooksListFromGoogle,
+            this@SettingQueryFilters,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     // ещё менять состояние кнопок
@@ -125,7 +125,7 @@ class BooksListFromGoogle : Fragment(R.layout.filters_for_request_google_books) 
 
     private companion object {
         private const val DISABLE_ALPHA = 0.3f
-        private const val UNABLE_ALPHA = 1.0f
+        private const val ENABLE_ALPHA = 1.0f
 
         private const val LIMIT_LENGTH = 3
     }

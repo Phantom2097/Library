@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity() {
             it.isClickable = false
             it.alpha = DISABLE_ALPHA
         }
+
         val googleBooksButton = binding.showGoogleBooksButton
 
         googleBooksButton.apply {

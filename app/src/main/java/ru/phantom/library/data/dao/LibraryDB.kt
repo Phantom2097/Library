@@ -34,7 +34,7 @@ abstract class LibraryDB : RoomDatabase() {
     abstract fun insertDao() : InsertDao
 
     companion object {
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         private const val REPEAT_COUNT = 8
 

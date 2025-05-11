@@ -46,12 +46,22 @@
     <fragment
         android:id="@+id/errorFragment"
         android:name="ru.phantom.library.presentation.selected_item.ErrorFragment"
-        android:label="ErrorFragment" />
+        android:label="ErrorFragment"
+        tools:layout="@layout/error_detail_fragment"/>
 
     <fragment
         android:id="@+id/booksListFromGoogle"
-        android:name="ru.phantom.library.presentation.google_books.BooksListFromGoogle"
+        android:name="ru.phantom.library.presentation.google_books.SettingQueryFilters"
         android:label="BooksListFromGoogle"
-        tools:layout="@layout/filters_for_request_google_books"/>
+        tools:layout="@layout/filters_for_request_google_books">
+        <action
+            android:id="@+id/action_booksListFromGoogle_to_listOfReceivedBooks"
+            app:destination="@id/listOfReceivedBooks" />
+    </fragment>
+    <fragment
+        android:id="@+id/listOfReceivedBooks"
+        android:name="ru.phantom.library.presentation.google_books.ListOfReceivedBooks"
+        android:label="ListOfReceivedBooks"
+        tools:layout="@layout/all_library_items_list"/>
 
 </navigation>

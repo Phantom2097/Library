@@ -1,35 +1,30 @@
 package ru.phantom.library.domain.main_recycler.adapter
 
-import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast.LENGTH_SHORT
-import android.widget.Toast.makeText
-import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
+import androidx.recyclerview.widget.ItemTouchHelper.LEFT
+import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.R
-import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
-import ru.phantom.library.data.local.models.library.items.book.BookImpl
-import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
+import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
+import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.domain.main_recycler.view_holder.LoadingViewHolder
-import ru.phantom.library.presentation.main.MainViewModel
-import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 
 /**
  * Адаптер для всех элементов библиотеки
  */
 class LibraryItemsAdapter(
-    private val viewModel: MainViewModel
+    private val itemClickListener: ItemClickEvent,
+    private val itemUpdateHandler: ItemUpdateHandler,
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -44,15 +39,19 @@ class LibraryItemsAdapter(
                     LayoutInflater.from(parent.context), parent, false
                 )
                 LibraryViewHolder(binding).apply {
-                    // Переход на view с конкретным элементом
                     binding.root.setOnClickListener {
                         val position = adapterPosition
                         Log.d("CLICKED", "в адаптере")
-                        viewModel.onItemClicked((getItem(position) as DataItem).listElement)
+                        (getItem(position) as? DataItem)?.let { dataItem ->
+                            itemClickListener.onItemClick(dataItem.listElement)
+                        }
                     }
-                    // Долго нажатие для изменения видимости элемента
                     binding.root.setOnLongClickListener { view ->
-                        changeAvailabilityClick(view.context, adapterPosition)
+                        val position = adapterPosition
+                        (getItem(position) as? DataItem)?.let { dataItem ->
+                            val newItem = itemClickListener.onItemLongClick(view.context, dataItem.listElement)
+                            itemUpdateHandler.updateElement(position, newItem)
+                        }
                         true
                     }
                 }
@@ -102,77 +101,13 @@ class LibraryItemsAdapter(
     override fun getItemCount(): Int = currentList.size
 
     /**
-     * Функция выполняет обновление поля availability выбранного элемента,
-     * а также вызывает обновление состояний списка и детального фрагмента в случае
-     * совпадения id и name
-     */
-    private fun changeAvailabilityClick(context: Context, position: Int) {
-        if (position !in currentList.indices) return
-
-        val oldItem = getItem(position)
-        if (oldItem is DataItem) {
-            val element = oldItem.listElement
-
-            val newLibraryItem = element.item.copy(availability = !element.item.availability)
-            val newItem = when (oldItem.listElement) {
-                is BookImpl -> element.copy(item = newLibraryItem)
-                is DiskImpl -> element.copy(item = newLibraryItem)
-                is NewspaperImpl -> element.copy(item = newLibraryItem)
-                is NewspaperWithMonthImpl -> element.copy(item = newLibraryItem)
-                else -> throw IllegalArgumentException("Неверный тип элемента")
-            }
-
-            // Обновление списка и состояния
-            updateViewModel(position, newItem)
-
-            Log.d(
-                "Availability",
-                "prev availability = ${element.item.availability}"
-            )
-            Log.d(
-                "Availability",
-                "new availability = ${newItem.item.availability}"
-            )
-
-            makeText(
-                context,
-                newItem.briefInformation(),
-                LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    /**
-     * Осуществляет обновление состояний связанных с элементом, который был изменён
-     */
-    private fun updateViewModel(
-        position: Int,
-        newItem: BasicLibraryElement
-    ) {
-
-        viewModel.updateElementContent(position, newItem)
-
-        // Если изменилось состояние текущего элемента, то оно меняется и на DetailFragment
-        viewModel.detailState.value.takeIf { state ->
-            state is LoadingStateToDetail.Data
-                    && state.data.id == newItem.item.id
-                    && state.data.name == newItem.item.name
-        }?.let { state ->
-            viewModel.setDetailState(
-                (state as LoadingStateToDetail.Data)
-                    .data.copy(description = newItem.fullInformation())
-            )
-        }
-    }
-
-    /**
      * Callback для ItemTouchCallback, чтобы свайпать элементы
      */
     fun getMySimpleCallback() = MySimpleCallback()
 
     inner class MySimpleCallback : SimpleCallback(
-        NO_ACTION,
-        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ACTION_STATE_IDLE,
+        LEFT or RIGHT
     ) {
         override fun onMove(
             recyclerView: RecyclerView,
@@ -187,7 +122,7 @@ class LibraryItemsAdapter(
 
             if (currPosition != RecyclerView.NO_POSITION) {
                 val removedItem = getItem(currPosition) as DataItem
-                viewModel.removeElementById(removedItem.listElement.item.id)
+                itemClickListener.onItemSwiped(removedItem.listElement.item.id)
             }
         }
 
@@ -198,13 +133,11 @@ class LibraryItemsAdapter(
         ): Int = if (viewHolder.itemViewType == TYPE_ITEM) {
             super.getSwipeDirs(recyclerView, viewHolder)
         } else {
-            NO_ACTION
+            ACTION_STATE_IDLE
         }
     }
 
     companion object {
-        const val NO_ACTION = 0
-
         // Перенести в Enum будет лучше
         const val TYPE_ITEM = 0
         const val TYPE_LOAD = 1

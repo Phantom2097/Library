@@ -12,7 +12,7 @@ object GoogleBooksResponseMapper {
     }
 
     private fun VolumeInfo.toBook(): Book? {
-        val isbn = industryIdentifiers.firstOrNull { it.type == "ISBN_13" }?.identifier
+        val isbn = industryIdentifiers.firstOrNull { it.type == "ISBN_10" }?.identifier
             ?:industryIdentifiers.firstOrNull()?.identifier ?: return null
 
         return createBook(

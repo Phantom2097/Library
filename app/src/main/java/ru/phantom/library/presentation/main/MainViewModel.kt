@@ -1,7 +1,10 @@
 package ru.phantom.library.presentation.main
 
 import android.accounts.NetworkErrorException
+import android.content.Context
 import android.util.Log
+import android.widget.Toast.LENGTH_SHORT
+import android.widget.Toast.makeText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -13,11 +16,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
 import ru.phantom.library.data.local.models.library.items.LibraryItem
+import ru.phantom.library.data.local.models.library.items.book.BookImpl
+import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.data.remote.retrofit.RemoteGoogleBooksRepository
 import ru.phantom.library.data.remote.retrofit.RetrofitHelper
 import ru.phantom.library.data.repository.DBRepository
@@ -32,9 +41,10 @@ import ru.phantom.library.domain.library_service.LibraryElementFactory.createNew
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
+import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
+import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
 import ru.phantom.library.domain.remote.repository.GoogleBooksRepository
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
-import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.SPAN_COUNT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
@@ -44,7 +54,6 @@ import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 import java.util.concurrent.CancellationException
-import kotlin.math.min
 
 /**
  *  Вью модель
@@ -60,7 +69,7 @@ import kotlin.math.min
 class MainViewModel(
     private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository(),
     private val remoteRepository: GoogleBooksRepository = RemoteGoogleBooksRepository(RetrofitHelper.createRetrofit())
-) : ViewModel() {
+) : ViewModel(), ItemClickEvent, ItemUpdateHandler {
 
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
@@ -76,21 +85,20 @@ class MainViewModel(
     private val _createState = MutableStateFlow<CreateState>(CreateState())
     val createState = _createState.asStateFlow()
 
-    private val _loadingState = MutableStateFlow(false)
+    private val _loadingState = MutableStateFlow(LOADING_STATE_DEFAULT)
     val loadingState = _loadingState.asStateFlow()
 
     private val _requestDescription = MutableStateFlow<Pair<String, String>>("" to "")
     val requestDescription = _requestDescription.asStateFlow()
 
-    private var currentStart = START_POSITION
-    private var currentEnd = START_POSITION
+    private var currentPage = START_POSITION
     private var totalItems = INIT_TOTAL_COUNT
+    private val totalPages get() = (totalItems + COUNT_FOR_LOAD - 1) / COUNT_FOR_LOAD
 
     fun updateType(type: Int) = viewModelScope.launch {
         _createState.emit(CreateState(itemType = type))
     }
 
-    // Тут вроде и не сложная операция, но не уверен, нужно или нет
     fun updateName(name: String) {
         _createState.update {
             it.copy(name = name)
@@ -115,15 +123,11 @@ class MainViewModel(
         _scrollToEnd.emit(false)
     }
 
-    fun onItemClicked(element: BasicLibraryElement) {
-        changeDetailState(element)
-    }
-
     init {
         viewModelScope.launch(Dispatchers.IO) {
             // Получаем общее количество элементов
             totalItems = dbRepository.getTotalCount()
-            loadInitialData()
+            loadElements()
         }
     }
 
@@ -157,33 +161,31 @@ class MainViewModel(
         }
     }
 
-    private var currentLoadJob: Job? = null
+    private var loadingJob: Job? = null
 
-    /**
-     * Изначально метод предназначался только для загрузки начальных данных.
-     * Но я вижу в нём потенциал обновлять данные при удалении, изменении видимости и добавлении элемента
-     */
-    private fun loadInitialData(start: Int = START_POSITION, size: Int = INIT_SIZE) {
-        currentLoadJob?.cancel()
-        currentLoadJob = viewModelScope.launch(Dispatchers.IO) {
+    private fun loadElements(limit: Int = INIT_SIZE, offset: Int = START_POSITION) {
+        loadingJob?.cancel()
+        loadingJob = viewModelScope.launch {
             try {
-                _elements.update { emptyList<AdapterItems>() }
-                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
-                currentStart = start
-                val items = dbRepository.getItems(size, currentStart)
-
-                if (items.isNotEmpty()) {
-                    _elements.value = items.map { DataItem(it) }
-                            .also { currentEnd = currentStart + it.size }
-                }
-
-                paginationLogger("Load data complete", items.size)
-
+                dbRepository.getItems(limit, offset)
+                    .map { list ->
+                        list.map { DataItem(it) }
+                    }
+                    .catch { e ->
+                        _elements.value = emptyList()
+                    }
+                    .flowOn(Dispatchers.IO)
+                    .collect { adapterItems ->
+                        _elements.update {
+                            adapterItems
+                        }
+                    }
             } catch (e: kotlinx.coroutines.CancellationException) {
-                Log.i("PAGINATION", "Загрузка элементов отменена", e)
+                paginationLogger("Загрузка прерывается, заменяется offset", error = e)
             } finally {
-                Log.d("PAGINATION", "${_loadingState.value}")
+                _loadingState.value = LOADING_STATE_DEFAULT
             }
+
         }
     }
 
@@ -192,44 +194,46 @@ class MainViewModel(
 
     fun loadNext() {
         loadPrevJob?.cancel()
+        if (loadNextJob != null || currentPage >= totalPages - DISPLAYED_PAGES) return
 
-        if (loadNextJob != null || currentEnd.toLong() >= totalItems) return
+        startNextLoad()
 
         loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                startNextLoad()
-                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository() // Задержка в развитии
+                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
 
-                val loadCount = min(COUNT_FOR_LOAD, totalItems.toInt() - currentEnd)
-                val dropCount = loadCount - (INIT_SIZE - (currentEnd - currentStart))
+                currentPage++
 
-                val newItems = dbRepository.getItems(
-                    loadCount,
-                    currentEnd
-                )
-                    .map { DataItem(it) }
-
-                currentStart = changeToGridSpan(currentStart + dropCount)
-                currentEnd += loadCount
-
-
-                if (newItems.isNotEmpty()) {
-                    _elements.update { items ->
-                        (items.dropLast(DROP_COUNT) + newItems).drop(
-                            changeToGridSpan(dropCount)
-                        )
-                    }
-                }
-
-                paginationLogger("LoadNext complite", dropCount)
-
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                excludeLoadItem(dropLastCount = DROP_COUNT)
-                // Я решил что тут лучше подойдёт информационный лог
+                loadElements(offset = currentPage * COUNT_FOR_LOAD)
+            } catch (e: CancellationException) {
                 Log.i("PAGINATION", "Загрузка следующих элементов отменена", e)
+                excludeLoadItem(dropLastCount = DROP_COUNT)
+                _loadingState.value = LOADING_STATE_DEFAULT
             } finally {
                 loadNextJob = null
-                _loadingState.value = false
+            }
+        }
+    }
+
+    fun loadPrev() {
+        loadNextJob?.cancel()
+        if (loadPrevJob != null || currentPage <= START_POSITION) return
+
+        startPrevLoad()
+
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
+
+                currentPage--
+
+                loadElements(offset = currentPage * COUNT_FOR_LOAD)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                Log.i("PAGINATION", "Загрузка прошлых элементов отменена", e)
+                excludeLoadItem(dropCount = DROP_COUNT)
+            } finally {
+                _loadingState.value = LOADING_STATE_DEFAULT
+                loadPrevJob = null
             }
         }
     }
@@ -239,47 +243,20 @@ class MainViewModel(
      *      * при это очищая от других шиммеров
      */
     private fun startNextLoad() {
-        _loadingState.update { true }
+        _loadingState.update { LOADING_STATE_NEXT }
         _elements.update { items ->
             items + LoadItem
         }
     }
 
-    fun loadPrev() {
-        loadNextJob?.cancel()
-
-        if (loadPrevJob != null || currentStart == START_POSITION) return
-
-        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
-            try {
-                startPrevLoad()
-                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository() // Задержка
-
-                val loadCount = if (currentStart < COUNT_FOR_LOAD) currentStart else COUNT_FOR_LOAD
-                val takeCount = INIT_SIZE - loadCount
-                currentStart = changeToGridSpan(currentStart - loadCount)
-
-                val newItems = dbRepository.getItems(
-                    loadCount,
-                    currentStart
-                ).map { DataItem(it) }
-
-                if (newItems.isNotEmpty()) {
-                    currentEnd = changeToGridSpan(currentEnd - loadCount)
-                    _elements.update { items ->
-                        newItems + items.drop(DROP_COUNT).take(takeCount)
-                    }
-                }
-
-                paginationLogger("LoadPrev complete", takeCount)
-
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                excludeLoadItem(dropCount = DROP_COUNT)
-                Log.i("PAGINATION", "Загрузка предыдущих элементов отменена", e)
-            } finally {
-                loadPrevJob = null
-                _loadingState.value = false
-            }
+    /**
+     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в начале списка,
+     * при это очищая от других шиммеров
+     */
+    private fun startPrevLoad() {
+        _loadingState.update { LOADING_STATE_PREV }
+        _elements.update { items ->
+            listOf(LoadItem) + items
         }
     }
 
@@ -289,29 +266,17 @@ class MainViewModel(
         }
     }
 
-    /**
-     * Обновляет состояние загрузки и добавляет шиммер [LoadItem] в начале списка,
-     * при это очищая от других шиммеров
-     */
-    private fun startPrevLoad() {
-        _loadingState.update { true }
-        _elements.update { items ->
-            listOf(LoadItem) + items
-        }
-    }
-
-    private fun paginationLogger(message: String, takeCount: Int) {
+    private fun paginationLogger(
+        message: String,
+        takeCount: Int? = null,
+        error: Exception? = null
+    ) {
         Log.d(
             "PAGINATION",
-            "$message: ${_elements.value.size} items, takeCount $takeCount\ncurrentStart: $currentStart, currentEnd: $currentEnd"
+            "$message: ${_elements.value.size} items, takeCount $takeCount\ncurrentPage = $currentPage",
+            error
         )
     }
-
-    /**
-     * Для того чтобы сетка не смещалась при количестве элементов не кратном [SPAN_COUNT]
-     */
-    private fun changeToGridSpan(start: Int): Int =
-        ((start + DOP_NUM_FOR_GRID_SPAN) / SPAN_COUNT) * SPAN_COUNT
 
     private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
         val image = withContext(Dispatchers.IO) {
@@ -389,7 +354,6 @@ class MainViewModel(
             dbRepository.addItems(newItem)
             totalItems = dbRepository.getTotalCount()
 
-            loadInitialData(changeToGridSpan(totalItems.toInt() - INIT_SIZE))
             Log.d("ScrollState", "Эмитется новое значение")
             requestScrollToEnd()
         }
@@ -416,18 +380,6 @@ class MainViewModel(
         }
     }
 
-    fun updateElementContent(position: Int, newItem: BasicLibraryElement) {
-        viewModelScope.launch(Dispatchers.IO) {
-            dbRepository.changeItem(position, newItem)
-
-            /*
-            Если попробовать обновить состояние во время загрузки новых элементов, естественно
-            может вылететь приложение.
-             */
-            loadInitialData(currentStart, currentEnd - currentStart)
-        }
-    }
-
     /*
     Пока такая проверка
      */
@@ -437,23 +389,10 @@ class MainViewModel(
         if (sortState != lastSortType) {
             viewModelScope.launch(Dispatchers.IO) {
                 (dbRepository as DBRepository).setSortType(sortState)
-                loadInitialData()
+                loadElements()
             }
             lastSortType = sortState
         }
-    }
-
-    fun removeElementById(id: Long) = viewModelScope.launch(Dispatchers.IO) {
-        dbRepository.removeItem(id)
-
-        _elements.update { currentList ->
-            currentList.filter { it is DataItem && it.listElement.item.id != id }
-        }
-
-        currentEnd--
-        totalItems--
-
-        checkIfIsDisplayed(id)
     }
 
     private fun checkIfIsDisplayed(id: Long) {
@@ -468,9 +407,80 @@ class MainViewModel(
         }
     }
 
-    companion object {
-        const val DOP_NUM_FOR_GRID_SPAN = 1
+    override fun onItemClick(element: BasicLibraryElement) {
+        changeDetailState(element)
+    }
 
+    override fun onItemLongClick(
+        context: Context?,
+        element: BasicLibraryElement
+    ): BasicLibraryElement {
+        val newLibraryItem = element.item.copy(availability = !element.item.availability)
+        val newItem = when (element) {
+            is BookImpl -> element.copy(item = newLibraryItem)
+            is DiskImpl -> element.copy(item = newLibraryItem)
+            is NewspaperImpl -> element.copy(item = newLibraryItem)
+            is NewspaperWithMonthImpl -> element.copy(item = newLibraryItem)
+            else -> throw IllegalArgumentException("Неверный тип элемента")
+        }
+
+        Log.d(
+            "Availability",
+            "prev availability = ${element.item.availability}"
+        )
+        Log.d(
+            "Availability",
+            "new availability = ${newItem.item.availability}"
+        )
+
+        context?.let {
+            makeText(
+                context,
+                newItem.briefInformation(),
+                LENGTH_SHORT
+            ).show()
+        }
+
+        return newItem
+    }
+
+
+    override fun onItemSwiped(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRepository.removeItem(id)
+
+            _elements.update { currentList ->
+                currentList.filter { it is DataItem && it.listElement.item.id != id }
+            }
+
+            totalItems--
+
+            checkIfIsDisplayed(id)
+        }
+    }
+
+    override fun updateElement(
+        position: Int,
+        newItem: BasicLibraryElement
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRepository.changeItem(position, newItem)
+        }
+    }
+
+    override fun updateDetailStateIfNeeded(newItem: BasicLibraryElement) {
+        detailState.value.takeIf { state ->
+            state is LoadingStateToDetail.Data
+                    && state.data.id == newItem.item.id
+        }?.let { state ->
+            setDetailState(
+                (state as LoadingStateToDetail.Data)
+                    .data.copy(description = newItem.fullInformation())
+            )
+        }
+    }
+
+    companion object {
         private const val START_POSITION = 0
         private const val INIT_TOTAL_COUNT = 0L
 
@@ -480,5 +490,10 @@ class MainViewModel(
         const val LOAD_THRESHOLD = 10
         const val INIT_SIZE = 48
         const val COUNT_FOR_LOAD = INIT_SIZE / 2
+        private const val DISPLAYED_PAGES = 2
+
+        const val LOADING_STATE_DEFAULT = 0
+        const val LOADING_STATE_NEXT = -1
+        const val LOADING_STATE_PREV = 1
     }
 }

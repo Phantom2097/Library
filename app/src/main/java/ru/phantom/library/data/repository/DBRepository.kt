@@ -4,7 +4,9 @@ import android.accounts.NetworkErrorException
 import android.content.Context
 import androidx.core.content.edit
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import ru.phantom.library.data.local.entities.extensions.ToEntityMappers.toEntity
 import ru.phantom.library.data.local.entities.extensions.toElement
@@ -40,14 +42,16 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
     /**
      * Кажется не стоило настолько дотягивать состояние сортировки
      */
-    override suspend fun getItems(limit: Int, offset: Int): List<BasicLibraryElement> {
+    override suspend fun getItems(limit: Int, offset: Int): Flow<List<BasicLibraryElement>> {
         return when (sortState.value) {
             DEFAULT_SORT -> db.itemDao().getItems(limit, offset)
             SORT_BY_TIME -> db.itemDao().getItemsSortedByTime(limit, offset)
             SORT_BY_NAME -> db.itemDao().getItemsSortedByName(limit, offset)
             else -> throw IllegalStateException("Неверное состояние сортировки")
-        }.mapNotNull { items ->
-            items.toElement(db)
+        }.mapNotNull { listEntity ->
+            listEntity.mapNotNull { element ->
+                element.toElement(db)
+            }
         }
     }
 
