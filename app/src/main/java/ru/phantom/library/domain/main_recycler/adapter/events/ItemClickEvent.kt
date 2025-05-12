@@ -1,7 +1,7 @@
 package ru.phantom.library.domain.main_recycler.adapter.events
 
 import android.content.Context
-import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+import ru.phantom.common.entities.library.BasicLibraryElement
 
 interface ItemClickEvent {
     fun onItemClick(element: BasicLibraryElement)

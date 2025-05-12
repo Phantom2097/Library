@@ -1,7 +1,7 @@
 package presentation.show_actions
 
-import ru.phantom.library.domain.entities.library.Readable
-import ru.phantom.library.domain.entities.library.Showable
+import ru.phantom.common.entities.library.Readable
+import ru.phantom.common.entities.library.Showable
 
 fun <T> showActions(item: T): Boolean where T : Readable, T : Showable {
     while (true) {

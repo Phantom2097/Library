@@ -1,8 +1,8 @@
 package presentation.show_manager
 
-import ru.phantom.library.domain.entities.manager.Manager
-import ru.phantom.library.domain.entities.shop.Shop
-import ru.phantom.library.data.repository.LibraryRepository.addItem
+import ru.phantom.common.library_service.LibraryRepository.addItem
+import ru.phantom.common.entities.manager.Manager
+import ru.phantom.common.entities.shop.Shop
 
 fun <T> getShopItem(shop: Shop<T>, count: Int) {
     repeat(count) {

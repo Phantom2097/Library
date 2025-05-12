@@ -1,6 +1,6 @@
 package ru.phantom.library.domain.main_recycler.adapter
 
-import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
+import ru.phantom.common.entities.library.BasicLibraryElement
 
 /**
  * Класс обёртка для элементов списка главного экрана

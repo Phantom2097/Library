@@ -20,29 +20,29 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
-import ru.phantom.library.data.local.models.library.items.LibraryItem
-import ru.phantom.library.data.local.models.library.items.book.BookImpl
-import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
-import ru.phantom.library.data.remote.retrofit.RemoteGoogleBooksRepository
-import ru.phantom.library.data.remote.retrofit.RetrofitHelper
-import ru.phantom.library.data.repository.DBRepository
-import ru.phantom.library.data.repository.ItemsRepository
-import ru.phantom.library.data.repository.extensions.SimulateRealRepository
-import ru.phantom.library.domain.entities.library.book.Book
-import ru.phantom.library.domain.entities.library.disk.Disk
-import ru.phantom.library.domain.entities.library.newspaper.Newspaper
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
+import ru.phantom.common.entities.library.BasicLibraryElement
+import ru.phantom.common.entities.library.book.Book
+import ru.phantom.common.entities.library.disk.Disk
+import ru.phantom.common.entities.library.newspaper.Newspaper
+import ru.phantom.common.library_service.LibraryElementFactory.createBook
+import ru.phantom.common.library_service.LibraryElementFactory.createDisk
+import ru.phantom.common.library_service.LibraryElementFactory.createNewspaper
+import ru.phantom.common.models.library.items.LibraryItem
+import ru.phantom.common.models.library.items.book.BookImpl
+import ru.phantom.common.models.library.items.disk.DiskImpl
+import ru.phantom.common.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.common.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.data.local.repository.DBRepository
+import ru.phantom.data.remote.retrofit.RemoteGoogleBooksRepository
+import ru.phantom.data.remote.retrofit.RetrofitHelper
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
 import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
 import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
-import ru.phantom.library.domain.remote.repository.GoogleBooksRepository
+import ru.phantom.common.repository.GoogleBooksRepository
+import ru.phantom.common.repository.ItemsRepository
+import ru.phantom.common.repository.extensions.SimulateRealRepository
 import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
@@ -183,7 +183,7 @@ class MainViewModel(
         currentPage = offset / COUNT_FOR_LOAD
         loadingJob = viewModelScope.launch {
             try {
-                dbRepository.getItems(limit, offset)
+                dbRepository.getItems(limit, offset, lastSortType)
                     .map { list ->
                         list.map { DataItem(it) }
                     }

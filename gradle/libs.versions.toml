@@ -20,6 +20,7 @@ retrofit = "2.11.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 roomRuntime = "2.7.1"
 shimmer = "0.5.0"
+jetbrainsKotlinJvm = "2.0.21"
 
 [libraries]
 androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
@@ -51,4 +52,6 @@ shimmer = { module = "com.facebook.shimmer:shimmer", version.ref = "shimmer" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version = "8.9.2" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 
