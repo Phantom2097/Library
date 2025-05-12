@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -74,6 +73,9 @@ class MainViewModel(
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
 
+    private val _screenModeState = MutableStateFlow<DisplayStates>(DisplayStates.MY_LIBRARY)
+    val screenModeState = _screenModeState.asStateFlow()
+
     private val _detailState =
         MutableStateFlow<LoadingStateToDetail>(LoadingStateToDetail.Data(DetailState()))
     val detailState = _detailState.asStateFlow()
@@ -91,7 +93,10 @@ class MainViewModel(
     private val _requestDescription = MutableStateFlow<Pair<String, String>>("" to "")
     val requestDescription = _requestDescription.asStateFlow()
 
-    private var currentPage = START_POSITION
+    private val _errorRequest = MutableStateFlow<String?>(null)
+    val errorRequest = _errorRequest.asStateFlow()
+
+    private var currentPage = PAGE_START_POSITION
     private var totalItems = INIT_TOTAL_COUNT
     private val totalPages get() = (totalItems + COUNT_FOR_LOAD - 1) / COUNT_FOR_LOAD
 
@@ -131,6 +136,10 @@ class MainViewModel(
         }
     }
 
+    fun changeMainScreen(displayStates: DisplayStates) {
+        _screenModeState.update { displayStates }
+    }
+
     fun updateAuthor(author: String) {
         _requestDescription.update {
             author to it.second
@@ -151,20 +160,27 @@ class MainViewModel(
 
     fun getGoogleBooks(query: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val books = remoteRepository.getGoogleBooks(query)
+            val result = remoteRepository.getGoogleBooks(query)
 
-            delay(1000L)
-
-            _elements.update {
-                books.mapNotNull { book -> book?.let { DataItem(it) } }
-            }
+            result.fold(
+                onSuccess = { books ->
+                    _elements.update {
+                        books.mapNotNull { book -> book?.let { DataItem(it) } }
+                    }
+                },
+                onFailure = { exception ->
+                    _errorRequest.update { exception.message }
+                }
+            )
+            loadingJob?.cancel()
         }
     }
 
     private var loadingJob: Job? = null
 
-    private fun loadElements(limit: Int = INIT_SIZE, offset: Int = START_POSITION) {
+    private fun loadElements(limit: Int = INIT_SIZE, offset: Int = PAGE_START_POSITION) {
         loadingJob?.cancel()
+        currentPage = offset / COUNT_FOR_LOAD
         loadingJob = viewModelScope.launch {
             try {
                 dbRepository.getItems(limit, offset)
@@ -185,7 +201,6 @@ class MainViewModel(
             } finally {
                 _loadingState.value = LOADING_STATE_DEFAULT
             }
-
         }
     }
 
@@ -217,7 +232,7 @@ class MainViewModel(
 
     fun loadPrev() {
         loadNextJob?.cancel()
-        if (loadPrevJob != null || currentPage <= START_POSITION) return
+        if (loadPrevJob != null || currentPage <= PAGE_START_POSITION) return
 
         startPrevLoad()
 
@@ -235,6 +250,16 @@ class MainViewModel(
                 _loadingState.value = LOADING_STATE_DEFAULT
                 loadPrevJob = null
             }
+        }
+    }
+
+    fun clearList() {
+        _elements.update { emptyList() }
+    }
+
+    fun loadCurrent() {
+        viewModelScope.launch(Dispatchers.IO) {
+            loadElements(offset = currentPage * COUNT_FOR_LOAD)
         }
     }
 
@@ -265,6 +290,7 @@ class MainViewModel(
             items.drop(dropCount).dropLast(dropLastCount)
         }
     }
+
 
     private fun paginationLogger(
         message: String,
@@ -314,7 +340,7 @@ class MainViewModel(
                     if (state.uiType == SHOW_TYPE) {
                         emit(LoadingStateToDetail.Loading)
 
-                        (dbRepository as SimulateRealRepository).delayLikeRealRepository()
+                        (dbRepository as SimulateRealRepository).simulateRealRepository()
                         Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
 
                         emit(LoadingStateToDetail.Data(state))
@@ -415,6 +441,30 @@ class MainViewModel(
         context: Context?,
         element: BasicLibraryElement
     ): BasicLibraryElement {
+        return when (_screenModeState.value) {
+            DisplayStates.MY_LIBRARY -> changeAvailabilityElement(element, context)
+            DisplayStates.GOOGLE_BOOKS -> {
+                context?.let {
+                    var name = element.item.name
+                    if (name.length > TOAST_MAX_NAME_LENGTH) name = name.substring(
+                        0,
+                        TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
+                    ) + "..."
+                    makeText(
+                        context,
+                        "Книга $name Добавлена в библиотеку",
+                        LENGTH_SHORT
+                    ).show()
+                }
+                element
+            }
+        }
+    }
+
+    private fun changeAvailabilityElement(
+        element: BasicLibraryElement,
+        context: Context?
+    ): BasicLibraryElement {
         val newLibraryItem = element.item.copy(availability = !element.item.availability)
         val newItem = when (element) {
             is BookImpl -> element.copy(item = newLibraryItem)
@@ -440,7 +490,6 @@ class MainViewModel(
                 LENGTH_SHORT
             ).show()
         }
-
         return newItem
     }
 
@@ -464,7 +513,13 @@ class MainViewModel(
         newItem: BasicLibraryElement
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            dbRepository.changeItem(position, newItem)
+            when (_screenModeState.value) {
+                DisplayStates.MY_LIBRARY -> dbRepository.changeItem(
+                    position + currentPage * COUNT_FOR_LOAD,
+                    newItem
+                )
+                DisplayStates.GOOGLE_BOOKS -> dbRepository.addItems(newItem)
+            }
         }
     }
 
@@ -481,7 +536,10 @@ class MainViewModel(
     }
 
     companion object {
-        private const val START_POSITION = 0
+        private const val TOAST_MAX_NAME_LENGTH = 30
+        private const val TOAST_THREE_DOTS_LENGTH = 3
+
+        private const val PAGE_START_POSITION = 0
         private const val INIT_TOTAL_COUNT = 0L
 
         private const val DROP_DEFAULT = 0

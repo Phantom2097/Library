@@ -54,14 +54,7 @@
         android:name="ru.phantom.library.presentation.google_books.SettingQueryFilters"
         android:label="BooksListFromGoogle"
         tools:layout="@layout/filters_for_request_google_books">
-        <action
-            android:id="@+id/action_booksListFromGoogle_to_listOfReceivedBooks"
-            app:destination="@id/listOfReceivedBooks" />
     </fragment>
-    <fragment
-        android:id="@+id/listOfReceivedBooks"
-        android:name="ru.phantom.library.presentation.google_books.ListOfReceivedBooks"
-        android:label="ListOfReceivedBooks"
-        tools:layout="@layout/all_library_items_list"/>
+
 
 </navigation>

@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
-        android:text="Автор:"
+        android:text="@string/FiltersForRequestFieldAuthor"
         android:textSize="18sp"
         app:layout_constraintBaseline_toBaselineOf="@id/authorTextFieldGoogleBooks"
         app:layout_constraintEnd_toStartOf="@id/authorTextFieldGoogleBooks"
@@ -22,7 +22,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:hint="Введите имя автора"
+        android:hint="@string/FiltersForRequestFieldAuthorHilt"
+        android:importantForAutofill="no"
+        android:inputType="text"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/titleTextFieldGoogleBooks"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Заголовок:"
+        android:text="@string/FiltersForRequestFieldTitle"
         android:textSize="18sp"
         app:layout_constraintBaseline_toBaselineOf="@id/titleTextFieldGoogleBooks"
         app:layout_constraintEnd_toStartOf="@id/titleTextFieldGoogleBooks"
@@ -48,7 +50,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
-        android:hint="Введите заголовок"
+        android:autofillHints=""
+        android:hint="@string/FiltersForRequestFieldTitleHilt"
+        android:inputType="textMultiLine"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/buttonStartSearchGoogleBooks"
         app:layout_constraintEnd_toEndOf="parent"
@@ -56,16 +60,29 @@
         app:layout_constraintTop_toBottomOf="@id/authorTextFieldGoogleBooks" />
 
     <Button
+        android:id="@+id/buttonClearFiltersGoogleBooks"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:clickable="false"
+        android:text="@string/buttonClearFiltersGoogleBooksText"
+        app:layout_constraintBaseline_toBaselineOf="@id/buttonStartSearchGoogleBooks"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/buttonStartSearchGoogleBooks"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleTextFieldGoogleBooks" />
+
+    <Button
         android:id="@+id/buttonStartSearchGoogleBooks"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:clickable="false"
-        android:text="Поиск в Google Books"
+        android:text="@string/buttonStartSearchGoogleBooksText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/buttonClearFiltersGoogleBooks"
         app:layout_constraintTop_toBottomOf="@id/titleTextFieldGoogleBooks" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

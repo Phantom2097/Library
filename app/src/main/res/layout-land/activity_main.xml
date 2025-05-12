@@ -8,26 +8,39 @@
     android:background="@color/mainBackground"
     tools:context=".presentation.main.MainActivity">
 
-    <Button
-        android:id="@+id/showLibraryButton"
+    <TextView
+        android:id="@+id/currentListPage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:maxWidth="100dp"
-        android:text="@string/helloLibraryMessage"
-        android:textSize="18sp"
+        android:layout_marginHorizontal="10dp"
+        android:text="@string/currentPositionMyLibraryText"
+        android:textAlignment="center"
+        android:textSize="24sp"
         app:layout_constraintBottom_toTopOf="@id/mainListContainer"
-        app:layout_constraintEnd_toStartOf="@id/showGoogleBooksButton"
+        app:layout_constraintEnd_toEndOf="@id/mainListContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/showGoogleBooksButton"
-        android:layout_width="0dp"
+        android:id="@+id/showLibraryButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:maxWidth="100dp"
-        android:text="@string/google_books_button_text"
+        android:maxWidth="250dp"
+        android:text="@string/libraryButtonText"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@id/mainListContainer"
+        app:layout_constraintEnd_toStartOf="@id/showGoogleBooksButton"
+        app:layout_constraintStart_toStartOf="@id/mainRightContainer"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/showGoogleBooksButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:maxWidth="250dp"
+        android:text="@string/googleBooksButtonText"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/mainListContainer"
         app:layout_constraintEnd_toEndOf="parent"

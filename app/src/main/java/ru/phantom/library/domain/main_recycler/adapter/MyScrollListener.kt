@@ -3,6 +3,7 @@ package ru.phantom.library.domain.main_recycler.adapter
 import android.util.Log
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.main.MainViewModel.Companion.LOADING_STATE_NEXT
 import ru.phantom.library.presentation.main.MainViewModel.Companion.LOADING_STATE_PREV
@@ -15,7 +16,7 @@ class MyScrollListener(
     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
         super.onScrolled(recyclerView, dx, dy)
 
-        if (dy == SCROLL_POSITION_ZERO) return
+        if (dy == SCROLL_POSITION_ZERO || viewModel.screenModeState.value == GOOGLE_BOOKS) return
 
         val isScrollingUp = dy < SCROLL_POSITION_ZERO
 

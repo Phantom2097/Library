@@ -3,6 +3,7 @@ package ru.phantom.library.presentation.main
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,12 @@ import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
+import ru.phantom.library.presentation.animations.Animations.animationDisableButton
+import ru.phantom.library.presentation.animations.Animations.animationEnableButton
+import ru.phantom.library.presentation.animations.Animations.animationForAddButton
+import ru.phantom.library.presentation.animations.Animations.textChange
+import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
+import ru.phantom.library.presentation.main.DisplayStates.MY_LIBRARY
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.CREATE_TYPE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_TYPE
@@ -74,34 +81,23 @@ class MainActivity : AppCompatActivity() {
             showAddItemBottomSheet()
         }
 
-        val libraryButton = binding.showLibraryButton.also {
-            it.isClickable = false
-            it.alpha = DISABLE_ALPHA
-        }
+        val libraryButton = binding.showLibraryButton
 
         val googleBooksButton = binding.showGoogleBooksButton
 
         googleBooksButton.apply {
             setOnClickListener {
-                navController.navigate(R.id.booksListFromGoogle)
-                isClickable = false
-                alpha = DISABLE_ALPHA
-                libraryButton.apply {
-                    isClickable = true
-                    alpha = UNABLE_ALPHA
-                }
+                viewModel.changeMainScreen(GOOGLE_BOOKS)
+                navController.popBackStack(R.id.allLibraryItemsList, false)
+                navController.navigate(R.id.action_allLibraryItemsList_to_booksListFromGoogle)
             }
         }
 
         libraryButton.apply {
             setOnClickListener {
-                alpha = DISABLE_ALPHA
-                navController.popBackStack()
-                isClickable = false
-                googleBooksButton.apply {
-                    isClickable = true
-                    alpha = UNABLE_ALPHA
-                }
+                viewModel.changeMainScreen(MY_LIBRARY)
+                viewModel.loadCurrent()
+                navController.popBackStack(R.id.allLibraryItemsList, false)
             }
         }
     }
@@ -191,12 +187,56 @@ class MainActivity : AppCompatActivity() {
      * @see MainViewModel
      */
     private fun initListenerViewModel() = lifecycleScope.launch {
-        viewModel.detailState.collect { state ->
-            if (state is LoadingStateToDetail.Loading) {
-                toDetail()
+        launch {
+            viewModel.detailState.collect { state ->
+                if (state is LoadingStateToDetail.Loading) {
+                    toDetail()
+                }
+            }
+        }
+
+        launch {
+            viewModel.screenModeState.collect { mode ->
+                val libraryButton = binding.showLibraryButton
+                val googleBooksButton = binding.showGoogleBooksButton
+                when (mode) {
+                    MY_LIBRARY -> {
+                        changeMainScreenMode(
+                            googleBooksButton,
+                            libraryButton,
+                            false,
+                            getString(R.string.currentPositionMyLibraryText)
+                        )
+
+                    }
+
+                    GOOGLE_BOOKS -> {
+                        changeMainScreenMode(
+                            libraryButton,
+                            googleBooksButton,
+                            true,
+                            getString(R.string.currentPositionGoogleBooksText)
+                        )
+                        viewModel.clearList()
+                    }
+                }
             }
         }
     }
+
+    private fun changeMainScreenMode(
+        enableButton: Button,
+        disableButton: Button,
+        floatingButtonState: Boolean,
+        mode: String
+    ) {
+        enableButton.animationEnableButton()
+        disableButton.animationDisableButton()
+
+        binding.mainAddButton.animationForAddButton(floatingButtonState)
+        binding.currentListPage.textChange(mode)
+    }
+
 
     /**
      * Осуществляет переход на DetailFragment учитывая текущую конфигурацию и открыт ли
@@ -219,10 +259,5 @@ class MainActivity : AppCompatActivity() {
 
             navController.navigate(R.id.action_to_detail)
         }
-    }
-
-    private companion object {
-        private const val DISABLE_ALPHA = 0.3f
-        private const val UNABLE_ALPHA = 1.0f
     }
 }

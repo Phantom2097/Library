@@ -31,7 +31,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     val binding get() = _binding!!
 
     private val viewModel: MainViewModel by activityViewModels()
-    private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel, viewModel) }
+    private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -133,6 +133,13 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                             binding.recyclerMainScreen.smoothScrollToPosition(lastPosition)
                         }
                         viewModel.resetScrollToEnd()
+                    }
+                }
+            }
+            launch {
+                viewModel.errorRequest.collect { message ->
+                    message?.let {
+                        binding.recyclerMainNoElements.text = message
                     }
                 }
             }

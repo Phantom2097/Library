@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,6 +21,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val apiKey = localProperties.getProperty("google.books.api.key")
+        buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -40,6 +50,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -77,8 +88,8 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Glide
-    implementation(libs.glide)
+    // Glide, Да пока без него, хотел обложки подгружать для книг
+//    implementation(libs.glide)
 
     // Fragment Navigation
     implementation(libs.androidx.navigation.fragment)

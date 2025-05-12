@@ -15,6 +15,9 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.FiltersForRequestGoogleBooksBinding
+import ru.phantom.library.presentation.animations.Animations.animationDisableButton
+import ru.phantom.library.presentation.animations.Animations.animationEnableButton
+import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
 
 class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) {
@@ -41,33 +44,56 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
         redefineBackButton()
 
         subscribeViewModel()
+        initUI()
         initButton()
 
         subscribeToInput()
     }
 
+    private fun initUI() {
+        val (author, title) = viewModel.requestDescription.value
+
+        binding.apply {
+            authorTextFieldGoogleBooks.setText(author)
+            titleTextFieldGoogleBooks.setText(title)
+        }
+    }
+
     private fun initButton() {
         val getBooksButton = binding.buttonStartSearchGoogleBooks
+        val clearFieldsButton = binding.buttonClearFiltersGoogleBooks
 
         getBooksButton.setOnClickListener {
             viewModel.getGoogleBooks(buildQuery())
-            viewModel.clearRequestDescription()
             navController.popBackStack()
+        }
+
+        clearFieldsButton.setOnClickListener {
+            viewModel.clearRequestDescription()
+            binding.apply {
+                authorTextFieldGoogleBooks.setText(EMPTY_TEXT)
+                titleTextFieldGoogleBooks.setText(EMPTY_TEXT)
+            }
         }
     }
 
     private fun subscribeViewModel() {
-
         viewModel.viewModelScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.requestDescription.collect { (author, title) ->
                     binding.buttonStartSearchGoogleBooks.apply {
                         if (author.length < LIMIT_LENGTH && title.length < LIMIT_LENGTH) {
-                            isClickable = false
-                            alpha = DISABLE_ALPHA
+                            animationDisableButton()
                         } else {
-                            isClickable = true
-                            alpha = ENABLE_ALPHA
+                            animationEnableButton()
+                        }
+
+                    }
+                    binding.buttonClearFiltersGoogleBooks.apply {
+                        if (author.isBlank() && title.isBlank()) {
+                            animationDisableButton()
+                        } else {
+                            animationEnableButton()
                         }
                     }
                 }
@@ -110,8 +136,10 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
             this@SettingQueryFilters,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
+                    viewModel.changeMainScreen(DisplayStates.MY_LIBRARY)
+                    viewModel.loadCurrent()
                     // ещё менять состояние кнопок
-                    navController.popBackStack()
+                    navController.popBackStack(R.id.allLibraryItemsList, false)
                 }
             }
         )
@@ -124,9 +152,7 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
     }
 
     private companion object {
-        private const val DISABLE_ALPHA = 0.3f
-        private const val ENABLE_ALPHA = 1.0f
-
+        private const val EMPTY_TEXT = ""
         private const val LIMIT_LENGTH = 3
     }
 }

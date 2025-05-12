@@ -13,18 +13,17 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.R
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
-import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
 import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
 import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
 import ru.phantom.library.domain.main_recycler.view_holder.LoadingViewHolder
+import ru.phantom.library.presentation.main.DisplayStates
+import ru.phantom.library.presentation.main.MainViewModel
 
 /**
  * Адаптер для всех элементов библиотеки
  */
 class LibraryItemsAdapter(
-    private val itemClickListener: ItemClickEvent,
-    private val itemUpdateHandler: ItemUpdateHandler,
+    private val viewModel: MainViewModel // Ладно, пришлось вернуться к этому
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -43,14 +42,15 @@ class LibraryItemsAdapter(
                         val position = adapterPosition
                         Log.d("CLICKED", "в адаптере")
                         (getItem(position) as? DataItem)?.let { dataItem ->
-                            itemClickListener.onItemClick(dataItem.listElement)
+                            viewModel.onItemClick(dataItem.listElement)
                         }
                     }
                     binding.root.setOnLongClickListener { view ->
                         val position = adapterPosition
                         (getItem(position) as? DataItem)?.let { dataItem ->
-                            val newItem = itemClickListener.onItemLongClick(view.context, dataItem.listElement)
-                            itemUpdateHandler.updateElement(position, newItem)
+                            val newItem =
+                                viewModel.onItemLongClick(view.context, dataItem.listElement)
+                            viewModel.updateElement(position, newItem)
                         }
                         true
                     }
@@ -71,6 +71,7 @@ class LibraryItemsAdapter(
             is LibraryViewHolder -> (getItem(position) as? DataItem)?.let {
                 holder.bind(it.listElement)
             }
+
             else -> {
                 Log.d("PAGINATION", "Shimmer add")
             }
@@ -122,19 +123,21 @@ class LibraryItemsAdapter(
 
             if (currPosition != RecyclerView.NO_POSITION) {
                 val removedItem = getItem(currPosition) as DataItem
-                itemClickListener.onItemSwiped(removedItem.listElement.item.id)
+                viewModel.onItemSwiped(removedItem.listElement.item.id)
             }
         }
 
-        // Запрет удаления Шиммера
+        // Запрет удаления Шиммера и Книг из Google Books
         override fun getSwipeDirs(
             recyclerView: RecyclerView,
             viewHolder: ViewHolder
-        ): Int = if (viewHolder.itemViewType == TYPE_ITEM) {
-            super.getSwipeDirs(recyclerView, viewHolder)
-        } else {
-            ACTION_STATE_IDLE
-        }
+        ): Int =
+            if (viewHolder.itemViewType == TYPE_ITEM
+                && viewModel.screenModeState.value != DisplayStates.GOOGLE_BOOKS) {
+                super.getSwipeDirs(recyclerView, viewHolder)
+            } else {
+                ACTION_STATE_IDLE
+            }
     }
 
     companion object {
