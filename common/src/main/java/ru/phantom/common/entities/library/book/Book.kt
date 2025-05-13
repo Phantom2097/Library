@@ -1,6 +1,6 @@
 package ru.phantom.common.entities.library.book
 
-import presentation.colors.Colors
+import ru.phantom.common.colors.Colors
 import ru.phantom.common.entities.library.BasicLibraryElement
 import ru.phantom.common.entities.library.Position
 import ru.phantom.common.library_service.LibraryService

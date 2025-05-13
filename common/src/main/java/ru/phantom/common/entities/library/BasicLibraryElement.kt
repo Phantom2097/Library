@@ -1,7 +1,7 @@
 package ru.phantom.common.entities.library
 
-import presentation.colors.Colors.ANSI_GREEN
-import presentation.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_GREEN
+import ru.phantom.common.colors.Colors.ANSI_RESET
 import ru.phantom.common.library_service.LibraryService
 import ru.phantom.common.models.library.items.LibraryItem
 

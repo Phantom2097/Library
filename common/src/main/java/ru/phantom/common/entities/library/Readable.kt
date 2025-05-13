@@ -1,7 +1,7 @@
 package ru.phantom.common.entities.library
 
-import presentation.colors.Colors.ANSI_RED
-import presentation.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_RED
+import ru.phantom.common.colors.Colors.ANSI_RESET
 
 /**
  * Интерфейс добавляет возможность для взятия предмета в зал или домой, а также для возврата назад

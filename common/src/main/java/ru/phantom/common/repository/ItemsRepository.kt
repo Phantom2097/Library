@@ -1,6 +1,7 @@
 package ru.phantom.common.repository
 
 import kotlinx.coroutines.flow.Flow
+import ru.phantom.common.repository.filters.SortType
 
 interface ItemsRepository<T> {
 
@@ -20,7 +21,7 @@ interface ItemsRepository<T> {
      * Функция запрашивает все элементы из репозитория
      * @return Список элементов репозитория
      */
-    suspend fun getItems(limit: Int, offset: Int, orderByType: String) : Flow<List<T>>
+    suspend fun getItems(limit: Int, offset: Int, orderByType: SortType) : Flow<List<T>>
 
     /**
      * Изменяет состояние существующего элемента

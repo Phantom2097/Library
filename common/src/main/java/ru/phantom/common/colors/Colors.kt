@@ -1,4 +1,4 @@
-package presentation.colors
+package ru.phantom.common.colors
 
 object Colors {
     const val ANSI_RESET = "\u001B[0m"

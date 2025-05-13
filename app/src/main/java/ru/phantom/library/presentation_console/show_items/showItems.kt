@@ -1,8 +1,8 @@
 package presentation.show_items
 
 import ru.phantom.common.entities.library.Showable
-import presentation.colors.Colors.ANSI_BLUE
-import presentation.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_BLUE
+import ru.phantom.common.colors.Colors.ANSI_RESET
 import presentation.show_items.ShowItemsConsts.INC_FOR_SHOW
 
 fun List<Showable>.showItems() {

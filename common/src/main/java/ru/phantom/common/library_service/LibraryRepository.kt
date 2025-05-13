@@ -1,6 +1,6 @@
 package ru.phantom.common.library_service
 
-import presentation.colors.Colors
+import ru.phantom.common.colors.Colors
 import ru.phantom.common.digitize.DigitizationOffice
 import ru.phantom.common.entities.library.book.Book
 import ru.phantom.common.entities.library.disk.Disk

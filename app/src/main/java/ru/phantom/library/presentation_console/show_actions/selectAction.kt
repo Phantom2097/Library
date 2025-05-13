@@ -2,9 +2,9 @@ package presentation.show_actions
 
 import ru.phantom.common.entities.library.Readable
 import ru.phantom.common.entities.library.Showable
-import presentation.colors.Colors.ANSI_CYAN
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_CYAN
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import presentation.show_actions.SelectActionConsts.BRIEF_INFORMATION
 import presentation.show_actions.SelectActionConsts.FULL_INFORMATION
 import presentation.show_actions.SelectActionConsts.GO_BACK_PAGE

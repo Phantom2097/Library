@@ -32,6 +32,10 @@ import ru.phantom.common.models.library.items.book.BookImpl
 import ru.phantom.common.models.library.items.disk.DiskImpl
 import ru.phantom.common.models.library.items.newspaper.NewspaperImpl
 import ru.phantom.common.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.common.repository.GoogleBooksRepository
+import ru.phantom.common.repository.ItemsRepository
+import ru.phantom.common.repository.extensions.SimulateRealRepository
+import ru.phantom.common.repository.filters.SortType
 import ru.phantom.data.local.repository.DBRepository
 import ru.phantom.data.remote.retrofit.RemoteGoogleBooksRepository
 import ru.phantom.data.remote.retrofit.RetrofitHelper
@@ -40,10 +44,6 @@ import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
 import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
 import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
 import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
-import ru.phantom.common.repository.GoogleBooksRepository
-import ru.phantom.common.repository.ItemsRepository
-import ru.phantom.common.repository.extensions.SimulateRealRepository
-import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
@@ -183,7 +183,7 @@ class MainViewModel(
         currentPage = offset / COUNT_FOR_LOAD
         loadingJob = viewModelScope.launch {
             try {
-                dbRepository.getItems(limit, offset, lastSortType)
+                dbRepository.getItems(limit, offset, SortType.getEnumSortType(lastSortType))
                     .map { list ->
                         list.map { DataItem(it) }
                     }
@@ -409,12 +409,12 @@ class MainViewModel(
     /*
     Пока такая проверка
      */
-    private var lastSortType = DEFAULT_SORT
+    private var lastSortType = SortType.DEFAULT_SORT.name
 
     fun setSortType(sortState: String) {
         if (sortState != lastSortType) {
             viewModelScope.launch(Dispatchers.IO) {
-                (dbRepository as DBRepository).setSortType(sortState)
+                (dbRepository as DBRepository).setSortType(SortType.getEnumSortType(sortState))
                 loadElements()
             }
             lastSortType = sortState

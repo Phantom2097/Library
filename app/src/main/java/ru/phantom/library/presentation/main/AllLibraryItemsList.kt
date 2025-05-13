@@ -1,11 +1,14 @@
 package ru.phantom.library.presentation.main
 
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.edit
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -18,6 +21,8 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import ru.phantom.common.repository.filters.SortType
+import ru.phantom.common.repository.filters.SortType.DEFAULT_SORT
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
@@ -33,12 +38,15 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     private val viewModel: MainViewModel by activityViewModels()
     private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
 
+    private lateinit var sharedPref: SharedPreferences
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = AllLibraryItemsListBinding.inflate(layoutInflater, container, false)
+        sharedPref = requireContext().getSharedPreferences(SORT_STATE_KEY, MODE_PRIVATE)
         return binding.root
     }
 
@@ -53,6 +61,9 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     private fun initList() {
         val recyclerView = binding.recyclerMainScreen
+
+        val sortType = sharedPref.getString(SORT_STATE_KEY, DEFAULT_SORT.name) ?: DEFAULT_SORT.name
+        viewModel.setSortType(sortType)
 
         with(recyclerView) {
             layoutManager = GridLayoutManager(context, SPAN_COUNT).apply {
@@ -76,19 +87,23 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     }
 
     private fun initMenuButton() {
-        binding.sortItemsButton.setOnClickListener {
-            val menu = PopupMenu(requireContext(), it)
-            menu.menuInflater.inflate(R.menu.recycler_sort_menu, menu.menu)
+        binding.sortItemsButton.setOnClickListener { view ->
+            PopupMenu(requireContext(), view).apply {
+                menuInflater.inflate(R.menu.recycler_sort_menu, menu)
 
-            menu.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.actionSortDefault -> viewModel.setSortType(DEFAULT_SORT)
-                    R.id.actionSortByName -> viewModel.setSortType(SORT_BY_NAME)
-                    R.id.actionSortByTime -> viewModel.setSortType(SORT_BY_TIME)
+                setOnMenuItemClickListener { item ->
+                    val sortType = when (item.itemId) {
+                        R.id.actionSortByName -> SortType.SORT_BY_NAME
+                        R.id.actionSortByTime -> SortType.SORT_BY_TIME
+                        else -> DEFAULT_SORT
+                    }.name
+                    viewModel.setSortType(sortType)
+                    sharedPref.edit { putString(SORT_STATE_KEY, sortType) }
+                    Log.d("SORT_TYPE", sortType)
+                    true
                 }
-                true
+                show()
             }
-            menu.show()
         }
     }
 
@@ -154,8 +169,5 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         private const val SPACES_ITEM_DECORATION_COUNT = 12
 
         const val SORT_STATE_KEY = "SortStateForRecyclerMain"
-        const val DEFAULT_SORT = "DEFAULT_SORT"
-        const val SORT_BY_NAME = "SORT_BY_NAME"
-        const val SORT_BY_TIME = "SORT_BY_TIME"
     }
 }

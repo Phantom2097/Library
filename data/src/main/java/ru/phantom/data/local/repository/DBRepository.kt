@@ -10,6 +10,10 @@ import ru.phantom.common.entities.library.BasicLibraryElement
 import ru.phantom.common.repository.ItemsRepository
 import ru.phantom.common.repository.extensions.SetSortType
 import ru.phantom.common.repository.extensions.SimulateRealRepository
+import ru.phantom.common.repository.filters.SortType
+import ru.phantom.common.repository.filters.SortType.DEFAULT_SORT
+import ru.phantom.common.repository.filters.SortType.SORT_BY_NAME
+import ru.phantom.common.repository.filters.SortType.SORT_BY_TIME
 import ru.phantom.data.local.entities.extensions.ToEntityMappers.toEntity
 import ru.phantom.data.local.entities.extensions.toElement
 import kotlin.random.Random
@@ -18,7 +22,6 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
     SetSortType,
     SimulateRealRepository {
 
-//    private val sharedPref = App.appContext.getSharedPreferences(SORT_STATE_KEY, Context.MODE_PRIVATE)
     private val sortState = MutableStateFlow(DEFAULT_SORT)
 
     private val db = DataBaseProvider.getDatabase()
@@ -36,12 +39,11 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
     /**
      * Кажется не стоило настолько дотягивать состояние сортировки
      */
-    override suspend fun getItems(limit: Int, offset: Int, orderByType: String): Flow<List<BasicLibraryElement>> {
+    override suspend fun getItems(limit: Int, offset: Int, orderByType: SortType): Flow<List<BasicLibraryElement>> {
         return when (sortState.value) {
             DEFAULT_SORT -> db.itemDao().getItems(limit, offset)
             SORT_BY_TIME -> db.itemDao().getItemsSortedByTime(limit, offset)
             SORT_BY_NAME -> db.itemDao().getItemsSortedByName(limit, offset)
-            else -> throw IllegalStateException("Неверное состояние сортировки")
         }.mapNotNull { listEntity ->
             listEntity.mapNotNull { element ->
                 element.toElement(db)
@@ -60,7 +62,7 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
         return db.itemDao().getTotalCount()
     }
 
-    override fun setSortType(sortType: String) {
+    override fun setSortType(sortType: SortType) {
         sortState.update {
             sortType
         }
@@ -101,10 +103,5 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
 
         private const val RANDOM_START = 1000L
         private const val RANDOM_END = 2000L
-
-        const val SORT_STATE_KEY = "SortStateForRecyclerMain"
-        const val DEFAULT_SORT = "DEFAULT_SORT"
-        const val SORT_BY_NAME = "SORT_BY_NAME"
-        const val SORT_BY_TIME = "SORT_BY_TIME"
     }
 }

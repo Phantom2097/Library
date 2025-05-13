@@ -1,8 +1,8 @@
 package presentation.show_digitize
 
-import presentation.colors.Colors.ANSI_CYAN
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_CYAN
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import presentation.show_items.showItems
 import ru.phantom.common.library_service.LibraryRepository.addItem
 import ru.phantom.common.library_service.LibraryRepository.getBooksInLibrary

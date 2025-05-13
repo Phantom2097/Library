@@ -1,7 +1,7 @@
 package ru.phantom.common.digitize
 
-import presentation.colors.Colors.ANSI_PURPLE
-import presentation.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_PURPLE
+import ru.phantom.common.colors.Colors.ANSI_RESET
 import ru.phantom.common.entities.library.Showable
 import ru.phantom.common.entities.library.book.Book
 import ru.phantom.common.entities.library.disk.Digitable

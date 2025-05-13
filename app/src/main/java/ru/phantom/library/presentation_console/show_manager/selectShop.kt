@@ -1,7 +1,7 @@
 package presentation.show_manager
 
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import ru.phantom.common.models.shop.book.BookShop
 import ru.phantom.common.models.shop.disk.DiskShop
 import ru.phantom.common.models.shop.newspaper.NewspaperShop

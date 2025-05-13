@@ -1,6 +1,6 @@
 package ru.phantom.common.library_service
 
-import presentation.colors.Colors
+import ru.phantom.common.colors.Colors
 
 class LibraryDigitizeMutableSet<E>(private val set: MutableSet<E> = mutableSetOf()) :  MutableSet<E> by set {
     override fun add(element: E): Boolean {
