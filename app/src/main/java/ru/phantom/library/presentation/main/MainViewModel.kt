@@ -211,10 +211,9 @@ class MainViewModel(
         loadPrevJob?.cancel()
         if (loadNextJob != null || currentPage >= totalPages - DISPLAYED_PAGES) return
 
-        startNextLoad()
-
         loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             try {
+                startNextLoad()
                 (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
 
                 currentPage++
@@ -234,10 +233,9 @@ class MainViewModel(
         loadNextJob?.cancel()
         if (loadPrevJob != null || currentPage <= PAGE_START_POSITION) return
 
-        startPrevLoad()
-
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             try {
+                startPrevLoad()
                 (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
 
                 currentPage--

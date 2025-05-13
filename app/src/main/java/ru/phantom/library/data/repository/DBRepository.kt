@@ -27,6 +27,8 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
     private val sharedPref = App.appContext.getSharedPreferences(SORT_STATE_KEY, Context.MODE_PRIVATE)
     private val sortState = MutableStateFlow(sharedPref.getString(SORT_STATE_KEY, DEFAULT_SORT))
 
+    private var isFirstLoad = true
+
     private val db = App.database
 
     private var errorCounter = ERROR_COUNTER_INIT
@@ -43,6 +45,10 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
      * Кажется не стоило настолько дотягивать состояние сортировки
      */
     override suspend fun getItems(limit: Int, offset: Int): Flow<List<BasicLibraryElement>> {
+        if (isFirstLoad) {
+            delayLikeRealRepository()
+            isFirstLoad = false
+        }
         return when (sortState.value) {
             DEFAULT_SORT -> db.itemDao().getItems(limit, offset)
             SORT_BY_TIME -> db.itemDao().getItemsSortedByTime(limit, offset)
