@@ -60,7 +60,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     override fun getSpanSize(position: Int): Int {
                         return when (libraryAdapter.getItemViewType(position)) {
                             TYPE_LOAD -> SPAN_COUNT
-                            else -> 1
+                            else -> SPAN_COUNT_FOR_ITEM
                         }
                     }
                 }
@@ -137,8 +137,10 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                 }
             }
             launch {
-                viewModel.loadingState.collect { state ->
-                    libraryAdapter.setLoading(state)
+                viewModel.errorRequest.collect { message ->
+                    message?.let {
+                        binding.recyclerMainNoElements.text = message
+                    }
                 }
             }
         }
@@ -148,6 +150,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         // Для списка элементов
         private const val LOAD_DELAY = 3000L
         const val SPAN_COUNT = 2
+        private const val SPAN_COUNT_FOR_ITEM = 1
         private const val SPACES_ITEM_DECORATION_COUNT = 12
 
         const val SORT_STATE_KEY = "SortStateForRecyclerMain"

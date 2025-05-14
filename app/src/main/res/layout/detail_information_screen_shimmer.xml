@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -22,11 +22,11 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_margin="10dp"
+                android:background="@color/shimmer"
                 android:contentDescription="@string/selected_item_icon"
                 android:maxWidth="180dp"
                 android:maxHeight="90dp"
                 android:scaleType="fitCenter"
-                android:background="@color/shimmer"
                 app:layout_constraintBottom_toTopOf="@id/selectedItemNameShimmer"
                 app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -37,13 +37,13 @@
                 android:id="@+id/selectedItemNameTopShimmer"
                 android:layout_width="90dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
                 android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="4dp"
                 android:alpha="0.8"
+                android:background="@color/shimmer"
                 android:paddingHorizontal="8dp"
                 android:textAlignment="center"
                 android:textSize="16sp"
-                android:background="@color/shimmer"
                 app:layout_constraintBottom_toTopOf="@id/selectedItemNameShimmer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -54,6 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="10dp"
                 android:layout_marginTop="20dp"
+                android:background="@color/shimmer"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 android:importantForAutofill="no"
@@ -61,7 +62,6 @@
                 android:maxLines="2"
                 android:textAlignment="center"
                 android:textSize="30sp"
-                android:background="@color/shimmer"
                 app:layout_constraintBottom_toTopOf="@id/selectedItemIdShimmer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -85,7 +85,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/selectedItemNameShimmer"
                 tools:ignore="LabelFor" />
-
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,6 +14,9 @@
         <action
             android:id="@+id/action_to_detail"
             app:destination="@id/detailFragment" />
+        <action
+            android:id="@+id/action_allLibraryItemsList_to_booksListFromGoogle"
+            app:destination="@id/booksListFromGoogle" />
     </fragment>
 
     <fragment
@@ -43,6 +46,15 @@
     <fragment
         android:id="@+id/errorFragment"
         android:name="ru.phantom.library.presentation.selected_item.ErrorFragment"
-        android:label="ErrorFragment" />
+        android:label="ErrorFragment"
+        tools:layout="@layout/error_detail_fragment"/>
+
+    <fragment
+        android:id="@+id/booksListFromGoogle"
+        android:name="ru.phantom.library.presentation.google_books.SettingQueryFilters"
+        android:label="BooksListFromGoogle"
+        tools:layout="@layout/filters_for_request_google_books">
+    </fragment>
+
 
 </navigation>

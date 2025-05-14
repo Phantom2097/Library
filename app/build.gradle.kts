@@ -1,8 +1,12 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 
     id("com.google.devtools.ksp")
+
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -17,6 +21,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val apiKey = localProperties.getProperty("google.books.api.key")
+        buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -38,6 +50,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -67,6 +80,16 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx) // Kotlin Extensions and Coroutines support
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Glide, Да пока без него, хотел обложки подгружать для книг
+//    implementation(libs.glide)
 
     // Fragment Navigation
     implementation(libs.androidx.navigation.fragment)

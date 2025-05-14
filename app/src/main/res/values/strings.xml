@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Library</string>
     <string name="itemiconincards">itemIconInCards</string>
-    <string name="helloLibraryMessage">Библиотека</string>
+    <string name="currentPositionMyLibraryText">Библиотека</string>
+    <string name="currentPositionGoogleBooksText">Google Books</string>
     <string name="recyclerMainDescription">Лист с предметами хранящимися в библиотеке</string>
     <string name="selected_item_icon">Selected item icon</string>
     <string name="text_for_current_item_description">Text for current item description</string>
@@ -26,9 +27,22 @@
     <string name="detail_screen">Detail screen</string>
     <string name="emptyFragmentText">Выбери элемент или создайте свой</string>
     <string name="detailFragmentErrorText">Неизвестная ошибка, попробуйте ещё раз</string>
-    <string name="recyclerMainNoElementsText">Элементов нет\nДобаьте или обновите список</string>
+    <string name="recyclerMainNoElementsText">Элементов нет\nДобавьте или обновите список</string>
     <string name="sortitemsbuttonforrecycler">sortItemsButtonForRecycler</string>
+
+    // Menu for select sort
     <string name="recycler_sort_menu_byTimeText">По времени добавления</string>
     <string name="recycler_sort_menuByName">По названию</string>
     <string name="recycler_sort_menuDefault">Порядок по умолчанию</string>
+
+    <string name="libraryButtonText">В Библиотеку</string>
+    <string name="googleBooksButtonText">В Google Books</string>
+
+    // Filters for Request Google Books
+    <string name="FiltersForRequestFieldAuthor">Автор:</string>
+    <string name="FiltersForRequestFieldAuthorHilt">Введите имя автора</string>
+    <string name="FiltersForRequestFieldTitle">Заголовок:</string>
+    <string name="FiltersForRequestFieldTitleHilt">Введите заголовок</string>
+    <string name="buttonStartSearchGoogleBooksText">Поиск в Google Books</string>
+    <string name="buttonClearFiltersGoogleBooksText">Очистить</string>
 </resources>

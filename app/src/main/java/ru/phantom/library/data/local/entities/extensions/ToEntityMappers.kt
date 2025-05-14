@@ -33,7 +33,7 @@ object ToEntityMappers {
     }
 
     private fun BasicLibraryElement.toItemEntity(): ItemEntity = ItemEntity(
-        name = item.name, availability = item.availability, time = System.currentTimeMillis()
+        id = item.id, name = item.name, availability = item.availability, time = System.currentTimeMillis()
     )
 
     private suspend fun Book.toBookEntity(
