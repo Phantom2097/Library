@@ -31,7 +31,8 @@ import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
 import ru.phantom.library.presentation.selected_item.states.DetailState
-import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail.Data
+import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail.Loading
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun startScreenInitialise() {
         val state = viewModel.detailState.value
-        if (state is LoadingStateToDetail.Loading || (state as? LoadingStateToDetail.Data)?.data?.uiType != DEFAULT_TYPE) {
+        if (state is Loading || (state as? Data)?.data?.uiType != DEFAULT_TYPE) {
             toDetail()
         }
     }
@@ -189,7 +190,7 @@ class MainActivity : AppCompatActivity() {
     private fun initListenerViewModel() = lifecycleScope.launch {
         launch {
             viewModel.detailState.collect { state ->
-                if (state is LoadingStateToDetail.Loading) {
+                if (state is Loading) {
                     toDetail()
                 }
             }
@@ -207,7 +208,6 @@ class MainActivity : AppCompatActivity() {
                             false,
                             getString(R.string.currentPositionMyLibraryText)
                         )
-
                     }
 
                     GOOGLE_BOOKS -> {

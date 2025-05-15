@@ -1,4 +1,4 @@
-package ru.phantom.library.domain.main_recycler.view_holder
+package ru.phantom.library.presentation.all_items_list.main_recycler.view_holder
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.common.entities.library.BasicLibraryElement

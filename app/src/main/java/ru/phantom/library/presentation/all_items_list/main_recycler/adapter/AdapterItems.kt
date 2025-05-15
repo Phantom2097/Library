@@ -1,4 +1,4 @@
-package ru.phantom.library.domain.main_recycler.adapter
+package ru.phantom.library.presentation.all_items_list.main_recycler.adapter
 
 import ru.phantom.common.entities.library.BasicLibraryElement
 

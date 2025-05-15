@@ -1,4 +1,4 @@
-package ru.phantom.library.domain.main_recycler.adapter
+package ru.phantom.library.presentation.all_items_list.main_recycler.adapter
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,10 +12,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import ru.phantom.library.R
 import ru.phantom.library.databinding.LibraryItemRecyclerForMainBinding
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.domain.main_recycler.utils.ElementDiffCallback
-import ru.phantom.library.domain.main_recycler.view_holder.LibraryViewHolder
-import ru.phantom.library.domain.main_recycler.view_holder.LoadingViewHolder
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.DataItem
+import ru.phantom.library.presentation.all_items_list.main_recycler.utils.ElementDiffCallback
+import ru.phantom.library.presentation.all_items_list.main_recycler.view_holder.LibraryViewHolder
+import ru.phantom.library.presentation.all_items_list.main_recycler.view_holder.LoadingViewHolder
 import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
 
@@ -48,9 +48,7 @@ class LibraryItemsAdapter(
                     binding.root.setOnLongClickListener { view ->
                         val position = adapterPosition
                         (getItem(position) as? DataItem)?.let { dataItem ->
-                            val newItem =
-                                viewModel.onItemLongClick(view.context, dataItem.listElement)
-                            viewModel.updateElement(position, newItem)
+                            viewModel.onItemLongClick(view.context, position, dataItem.listElement)
                         }
                         true
                     }

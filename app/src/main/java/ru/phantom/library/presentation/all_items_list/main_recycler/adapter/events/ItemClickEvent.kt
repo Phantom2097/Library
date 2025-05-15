@@ -1,4 +1,4 @@
-package ru.phantom.library.domain.main_recycler.adapter.events
+package ru.phantom.library.presentation.all_items_list.main_recycler.adapter.events
 
 import android.content.Context
 import ru.phantom.common.entities.library.BasicLibraryElement
@@ -10,6 +10,6 @@ interface ItemClickEvent {
      * а также вызывает обновление состояний списка и детального фрагмента в случае
      * совпадения id и name
      */
-    fun onItemLongClick(context: Context?, element: BasicLibraryElement) : BasicLibraryElement
+    fun onItemLongClick(context: Context?, position: Int, element: BasicLibraryElement)
     fun onItemSwiped(elementId: Long)
 }

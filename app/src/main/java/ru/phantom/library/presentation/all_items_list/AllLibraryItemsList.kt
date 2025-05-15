@@ -1,6 +1,6 @@
-package ru.phantom.library.presentation.main
+package ru.phantom.library.presentation.all_items_list
 
-import android.content.Context.MODE_PRIVATE
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -22,13 +22,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.phantom.common.repository.filters.SortType
-import ru.phantom.common.repository.filters.SortType.DEFAULT_SORT
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter
-import ru.phantom.library.domain.main_recycler.adapter.LibraryItemsAdapter.Companion.TYPE_LOAD
-import ru.phantom.library.domain.main_recycler.adapter.MyScrollListener
-import ru.phantom.library.domain.main_recycler.adapter.decoration.SpacesItemDecoration
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.LibraryItemsAdapter
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.MyScrollListener
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.decoration.SpacesItemDecoration
+import ru.phantom.library.presentation.main.DisplayStates
+import ru.phantom.library.presentation.main.MainViewModel
 
 class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
@@ -46,7 +46,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         savedInstanceState: Bundle?
     ): View? {
         _binding = AllLibraryItemsListBinding.inflate(layoutInflater, container, false)
-        sharedPref = requireContext().getSharedPreferences(SORT_STATE_KEY, MODE_PRIVATE)
+        sharedPref = requireContext().getSharedPreferences(SORT_STATE_KEY, Context.MODE_PRIVATE)
         return binding.root
     }
 
@@ -62,7 +62,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     private fun initList() {
         val recyclerView = binding.recyclerMainScreen
 
-        val sortType = sharedPref.getString(SORT_STATE_KEY, DEFAULT_SORT.name) ?: DEFAULT_SORT.name
+        val sortType = sharedPref.getString(SORT_STATE_KEY, SortType.DEFAULT_SORT.name) ?: SortType.DEFAULT_SORT.name
         viewModel.setSortType(sortType)
 
         with(recyclerView) {
@@ -70,7 +70,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
                         return when (libraryAdapter.getItemViewType(position)) {
-                            TYPE_LOAD -> SPAN_COUNT
+                            LibraryItemsAdapter.Companion.TYPE_LOAD -> SPAN_COUNT
                             else -> SPAN_COUNT_FOR_ITEM
                         }
                     }
@@ -95,7 +95,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     val sortType = when (item.itemId) {
                         R.id.actionSortByName -> SortType.SORT_BY_NAME
                         R.id.actionSortByTime -> SortType.SORT_BY_TIME
-                        else -> DEFAULT_SORT
+                        else -> SortType.DEFAULT_SORT
                     }.name
                     viewModel.setSortType(sortType)
                     sharedPref.edit { putString(SORT_STATE_KEY, sortType) }
@@ -133,7 +133,8 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
                     } else {
                         binding.apply {
                             recyclerShimmer.isGone = true
-                            sortItemsButton.isVisible = true
+                            if (viewModel.screenModeState.value == DisplayStates.MY_LIBRARY) sortItemsButton.isVisible =
+                                true
                             recyclerMainNoElements.isGone = true
                         }
                     }

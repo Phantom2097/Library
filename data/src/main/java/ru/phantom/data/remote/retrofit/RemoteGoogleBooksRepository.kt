@@ -22,15 +22,20 @@ class RemoteGoogleBooksRepository(
             Result.failure(NetworkException("Ошибка сети: проверьте подключение к интернету", e))
         } catch (e: HttpException) {
             val message = when (e.code()) {
-                400 -> "Сервер не может обработать запрос"
-                403 -> "Доступ к ресурсу запрещён"
-                404 -> "Такого ресурса нет"
+                BAD_REQUEST -> "Сервер не может обработать запрос"
+                FORBIDDEN -> "Доступ к ресурсу запрещён"
+                NOT_FOUND -> "Такого ресурса нет"
                 else -> "Ошибка сервера ${e.code()}"
             }
             Result.failure(NetworkException(message, e))
         } catch (e: Exception) {
             Result.failure(NetworkException("Неизвестная ошибка ${e.message}", e))
         }
+    }
+    private companion object {
+        private const val BAD_REQUEST = 400
+        private const val FORBIDDEN = 403
+        private const val NOT_FOUND = 404
     }
 }
 

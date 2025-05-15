@@ -1,4 +1,4 @@
-package ru.phantom.library.domain.main_recycler.adapter.decoration
+package ru.phantom.library.presentation.all_items_list.main_recycler.adapter.decoration
 
 import android.graphics.Rect
 import android.view.View

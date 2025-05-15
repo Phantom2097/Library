@@ -1,4 +1,4 @@
-package ru.phantom.library.presentation.main
+package ru.phantom.library.application
 
 import android.app.Application
 import android.content.Context
