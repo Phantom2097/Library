@@ -1,17 +1,17 @@
 package presentation.show_digitize
 
-import ru.phantom.library.domain.entities.library.Showable
-import ru.phantom.library.data.repository.LibraryRepository.addItem
-import ru.phantom.library.data.repository.LibraryRepository.getBooksInLibrary
-import ru.phantom.library.data.repository.LibraryRepository.getDigitizeItems
-import ru.phantom.library.data.repository.LibraryRepository.getNewspapersInLibrary
-import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice
-import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitizeBook
-import ru.phantom.library.domain.item_mappers.digitize.DigitizationOffice.DigitizeNewspaper
-import presentation.colors.Colors.ANSI_CYAN
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_CYAN
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import presentation.show_items.showItems
+import ru.phantom.common.library_service.LibraryRepository.addItem
+import ru.phantom.common.library_service.LibraryRepository.getBooksInLibrary
+import ru.phantom.common.library_service.LibraryRepository.getDigitizeItems
+import ru.phantom.common.library_service.LibraryRepository.getNewspapersInLibrary
+import ru.phantom.common.entities.library.Showable
+import ru.phantom.common.digitize.DigitizationOffice
+import ru.phantom.common.digitize.DigitizationOffice.DigitizeBook
+import ru.phantom.common.digitize.DigitizationOffice.DigitizeNewspaper
 
 fun goToDigitize(itemType: Int): Boolean {
     return when (itemType) {

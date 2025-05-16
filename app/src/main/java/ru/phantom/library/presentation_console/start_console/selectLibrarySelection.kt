@@ -1,7 +1,7 @@
 package presentation.start_console
 
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import presentation.show_digitize.goToDigitize
 import presentation.show_manager.selectShop
 import presentation.show_menu_for_selection.showMenuForSelection

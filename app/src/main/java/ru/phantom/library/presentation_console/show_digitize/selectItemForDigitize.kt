@@ -1,9 +1,9 @@
 package presentation.show_digitize
 
-import ru.phantom.library.domain.entities.library.Showable
-import ru.phantom.library.data.repository.LibraryRepository.getItem
 import presentation.show_items.getItemNumber
 import presentation.show_items.showItems
+import ru.phantom.common.entities.library.Showable
+import ru.phantom.common.library_service.LibraryRepository.getItem
 
 inline fun <reified LibraryType: Showable>selectItemForDigitize(getItems: () -> List<LibraryType>): LibraryType? {
     val items = getItems()

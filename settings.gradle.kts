@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Library"
 include(":app")
- 
+include(":data")
+include(":common")

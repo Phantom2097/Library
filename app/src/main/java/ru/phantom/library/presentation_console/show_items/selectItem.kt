@@ -1,9 +1,9 @@
 package presentation.show_items
 
-import ru.phantom.library.data.repository.LibraryRepository.getItem
-import ru.phantom.library.domain.entities.library.Readable
-import ru.phantom.library.domain.entities.library.Showable
 import presentation.show_actions.showActions
+import ru.phantom.common.library_service.LibraryRepository.getItem
+import ru.phantom.common.entities.library.Readable
+import ru.phantom.common.entities.library.Showable
 
 inline fun <reified LibraryType> selectItem(
     getItems: () -> List<LibraryType>

@@ -20,8 +20,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
+import ru.phantom.common.models.library.items.LibraryItem
 import ru.phantom.library.R
-import ru.phantom.library.data.local.models.library.items.LibraryItem
 import ru.phantom.library.databinding.DetailInformationScreenBinding
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.selected_item.states.DetailState
