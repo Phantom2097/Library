@@ -36,8 +36,7 @@ import ru.phantom.library.domain.use_cases.ChangeElementAvailabilityUseCase
 import ru.phantom.library.domain.use_cases.EmulateDelayUseCase
 import ru.phantom.library.domain.use_cases.GetGoogleBooksUseCase
 import ru.phantom.library.domain.use_cases.GetPaginatedLibraryItemsUseCase
-import ru.phantom.library.domain.use_cases.GetTotalElementsCountMyLibrary
-import ru.phantom.library.domain.use_cases.RemoveElementFromMyLibrary
+import ru.phantom.library.domain.use_cases.GetTotalCountAndRemoveElementUseCase
 import ru.phantom.library.domain.use_cases.SetSortTypeUseCase
 import ru.phantom.library.domain.use_cases.ShowDetailInformationUseCase
 import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
@@ -57,6 +56,8 @@ import java.util.concurrent.CancellationException
  *  @param scrollToEnd хранит состояние положения адаптера списка,
  *  пока используется для проматывания вниз
  *  @param loadingState Отображает состояние загрузки
+ *  @param requestDescription Состояние фильтров для запроса
+ *  @param errorRequest Ошибки при выполнении запроса
  *
  *  @see ru.phantom.library.presentation.selected_item.DetailFragment
  *  @see DetailState
@@ -77,15 +78,12 @@ class MainViewModel(
     private val changeDetailStateUseCase: ChangeDetailStateUseCase = ChangeDetailStateUseCase(
         dbRepository
     ),
-    private val getTotalElementsCountMyLibrary: GetTotalElementsCountMyLibrary = GetTotalElementsCountMyLibrary(
-        dbRepository
-    ),
     private val setSortTypeUseCase: SetSortTypeUseCase = SetSortTypeUseCase(dbRepository),
 
     private val getGoogleBooksUseCase: GetGoogleBooksUseCase = GetGoogleBooksUseCase(
         remoteRepository
     ),
-    private val removeElementFromMyLibrary: RemoveElementFromMyLibrary = RemoveElementFromMyLibrary(dbRepository),
+    private val getTotalCountAndRemoveElementUseCase: GetTotalCountAndRemoveElementUseCase = GetTotalCountAndRemoveElementUseCase(dbRepository),
     private val emulateDelayUseCase: EmulateDelayUseCase = EmulateDelayUseCase(dbRepository),
 
     private val showDetailInformationUseCase: ShowDetailInformationUseCase = ShowDetailInformationUseCase(),
@@ -155,7 +153,7 @@ class MainViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             // Получаем общее количество элементов
-            totalItems = getTotalElementsCountMyLibrary()
+            totalItems = getTotalCountAndRemoveElementUseCase()
             loadElements()
         }
     }
@@ -182,6 +180,10 @@ class MainViewModel(
         }
     }
 
+    /**
+     * Вызов метода получения книг из Google Books по API
+     * @param query составленный запрос
+     */
     fun getGoogleBooks(query: String) {
         viewModelScope.launch {
             val result = getGoogleBooksUseCase(query)
@@ -208,9 +210,9 @@ class MainViewModel(
         loadingJob = viewModelScope.launch {
             try {
                 getPaginatedLibraryItemsUseCase(
-                    limit,
-                    offset,
-                    SortType.getEnumSortType(lastSortType)
+                    limit = limit,
+                    offset = offset,
+                    sortType = SortType.getEnumSortType(lastSortType)
                 )
                     .collect(_elements)
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -224,6 +226,9 @@ class MainViewModel(
     private var loadNextJob: Job? = null
     private var loadPrevJob: Job? = null
 
+    /**
+     * Загрузка следующих элементов (добавляет шиммер и изменяет offset для потока элементов)
+     */
     fun loadNext() {
         loadPrevJob?.cancel()
         if (loadNextJob != null || currentPage >= totalPages - DISPLAYED_PAGES) return
@@ -234,19 +239,20 @@ class MainViewModel(
             try {
                 emulateDelayUseCase()
 
-                currentPage++
-
-                loadElements(offset = currentPage * COUNT_FOR_LOAD)
+                val offset = ++currentPage * COUNT_FOR_LOAD
+                loadElements(offset = offset)
             } catch (e: CancellationException) {
                 Log.i("PAGINATION", "Загрузка следующих элементов отменена", e)
                 excludeLoadItem(dropLastCount = DROP_COUNT)
-                _loadingState.value = LOADING_STATE_DEFAULT
             } finally {
                 loadNextJob = null
             }
         }
     }
 
+    /**
+     * Загрузка предыдущих элементов (добавляет шиммер и изменяет offset для потока элементов)
+     */
     fun loadPrev() {
         loadNextJob?.cancel()
         if (loadPrevJob != null || currentPage <= PAGE_START_POSITION) return
@@ -257,27 +263,29 @@ class MainViewModel(
             try {
                 emulateDelayUseCase()
 
-                currentPage--
-
-                loadElements(offset = currentPage * COUNT_FOR_LOAD)
+                val offset = --currentPage * COUNT_FOR_LOAD
+                loadElements(offset = offset)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 Log.i("PAGINATION", "Загрузка прошлых элементов отменена", e)
                 excludeLoadItem(dropCount = DROP_COUNT)
             } finally {
-                _loadingState.value = LOADING_STATE_DEFAULT
                 loadPrevJob = null
             }
         }
     }
 
+    /**
+     * Очистка списка элементов
+     */
     fun clearList() {
         _elements.update { emptyList() }
     }
 
+    /**
+     * Загрузка текущих элементов
+     */
     fun loadCurrent() {
-        viewModelScope.launch(Dispatchers.IO) {
-            loadElements(offset = currentPage * COUNT_FOR_LOAD)
-        }
+        loadElements(offset = currentPage * COUNT_FOR_LOAD)
     }
 
     /**
@@ -422,8 +430,8 @@ class MainViewModel(
         if (name.length > TOAST_MAX_NAME_LENGTH) name = buildString {
             append(
                 name.substring(
-                    0,
-                    TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
+                    startIndex = 0,
+                    endIndex = TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
                 )
             )
             append("...")
@@ -443,12 +451,9 @@ class MainViewModel(
 
     override fun onItemSwiped(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            removeElementFromMyLibrary(id)
-
-            totalItems = getTotalElementsCountMyLibrary()
+            totalItems = getTotalCountAndRemoveElementUseCase.withRemove(id)
 
             val isNeedCancel = cancelShowElementUseCase(elementId = id, _detailState.value)
-
             if (isNeedCancel) {
                 setDetailState()
             }
@@ -479,11 +484,11 @@ class MainViewModel(
 
         const val LOAD_THRESHOLD = 10
         const val INIT_SIZE = 48
-        const val COUNT_FOR_LOAD = INIT_SIZE / 2
+        const val COUNT_FOR_LOAD = INIT_SIZE / 2 // Должно быть кратно двум для корректной работы
         private const val DISPLAYED_PAGES = 2
 
         const val LOADING_STATE_DEFAULT = 0
-        const val LOADING_STATE_NEXT = -1
-        const val LOADING_STATE_PREV = 1
+        const val LOADING_STATE_NEXT = 1
+        const val LOADING_STATE_PREV = -1
     }
 }

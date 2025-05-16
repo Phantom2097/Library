@@ -1,6 +1,6 @@
 package ru.phantom.library.presentation.selected_item
 
-import android.content.res.Configuration
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,7 +33,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
     val binding get() = _binding!!
 
     private val viewModel by activityViewModels<MainViewModel>()
-    private val isLandscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -169,8 +169,10 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
                         newName.isNullOrBlank() -> context.getString(R.string.noNameCreateType)
                         newId == DEFAULT_ID -> context.getString(R.string.noIdCreateType)
                         else -> {
-                            viewModel.addNewElement(LibraryItem(newName, newId), image)
-                            viewModel.clearCreate()
+                            viewModel.apply {
+                                addNewElement(LibraryItem(newName, newId), image)
+                                clearCreate()
+                            }
 
                             backButton()
 
