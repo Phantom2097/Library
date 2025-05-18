@@ -1,6 +1,5 @@
 package ru.phantom.library.presentation.main
 
-import android.accounts.NetworkErrorException
 import android.content.Context
 import android.util.Log
 import android.widget.Toast.LENGTH_SHORT
@@ -13,42 +12,39 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import ru.phantom.library.data.local.models.library.items.BasicLibraryElement
-import ru.phantom.library.data.local.models.library.items.LibraryItem
-import ru.phantom.library.data.local.models.library.items.book.BookImpl
-import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
-import ru.phantom.library.data.remote.retrofit.RemoteGoogleBooksRepository
-import ru.phantom.library.data.remote.retrofit.RetrofitHelper
-import ru.phantom.library.data.repository.DBRepository
-import ru.phantom.library.data.repository.ItemsRepository
-import ru.phantom.library.data.repository.extensions.SimulateRealRepository
-import ru.phantom.library.domain.entities.library.book.Book
-import ru.phantom.library.domain.entities.library.disk.Disk
-import ru.phantom.library.domain.entities.library.newspaper.Newspaper
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.domain.main_recycler.adapter.AdapterItems.LoadItem
-import ru.phantom.library.domain.main_recycler.adapter.events.ItemClickEvent
-import ru.phantom.library.domain.main_recycler.adapter.events.ItemUpdateHandler
-import ru.phantom.library.domain.remote.repository.GoogleBooksRepository
-import ru.phantom.library.presentation.main.AllLibraryItemsList.Companion.DEFAULT_SORT
+import ru.phantom.common.entities.library.BasicLibraryElement
+import ru.phantom.common.library_service.LibraryElementFactory.createBook
+import ru.phantom.common.library_service.LibraryElementFactory.createDisk
+import ru.phantom.common.library_service.LibraryElementFactory.createNewspaper
+import ru.phantom.common.models.library.items.LibraryItem
+import ru.phantom.common.repository.GoogleBooksRepository
+import ru.phantom.common.repository.ItemsRepository
+import ru.phantom.common.repository.filters.SortType
+import ru.phantom.data.local.repository.DBRepository
+import ru.phantom.data.remote.retrofit.RemoteGoogleBooksRepository
+import ru.phantom.data.remote.retrofit.RetrofitHelper
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.DataItem
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.LoadItem
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.events.ItemClickEvent
+import ru.phantom.library.domain.use_cases.AddItemInLibraryUseCase
+import ru.phantom.library.domain.use_cases.CancelShowElementUseCase
+import ru.phantom.library.domain.use_cases.ChangeDetailStateUseCase
+import ru.phantom.library.domain.use_cases.ChangeElementAvailabilityUseCase
+import ru.phantom.library.domain.use_cases.EmulateDelayUseCase
+import ru.phantom.library.domain.use_cases.GetGoogleBooksUseCase
+import ru.phantom.library.domain.use_cases.GetPaginatedLibraryItemsUseCase
+import ru.phantom.library.domain.use_cases.GetTotalElementsCountMyLibrary
+import ru.phantom.library.domain.use_cases.RemoveElementFromMyLibrary
+import ru.phantom.library.domain.use_cases.SetSortTypeUseCase
+import ru.phantom.library.domain.use_cases.ShowDetailInformationUseCase
+import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
+import ru.phantom.library.presentation.main.DisplayStates.MY_LIBRARY
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DEFAULT_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DISK_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
-import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
 import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
@@ -67,13 +63,41 @@ import java.util.concurrent.CancellationException
  */
 class MainViewModel(
     private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository(),
-    private val remoteRepository: GoogleBooksRepository = RemoteGoogleBooksRepository(RetrofitHelper.createRetrofit())
-) : ViewModel(), ItemClickEvent, ItemUpdateHandler {
+    private val remoteRepository: GoogleBooksRepository = RemoteGoogleBooksRepository(RetrofitHelper.createRetrofit()),
 
+    private val getPaginatedLibraryItemsUseCase: GetPaginatedLibraryItemsUseCase = GetPaginatedLibraryItemsUseCase(
+        dbRepository
+    ),
+    private val changeElementAvailabilityUseCase: ChangeElementAvailabilityUseCase = ChangeElementAvailabilityUseCase(
+        dbRepository
+    ),
+    private val addItemInLibraryUseCase: AddItemInLibraryUseCase = AddItemInLibraryUseCase(
+        dbRepository
+    ),
+    private val changeDetailStateUseCase: ChangeDetailStateUseCase = ChangeDetailStateUseCase(
+        dbRepository
+    ),
+    private val getTotalElementsCountMyLibrary: GetTotalElementsCountMyLibrary = GetTotalElementsCountMyLibrary(
+        dbRepository
+    ),
+    private val setSortTypeUseCase: SetSortTypeUseCase = SetSortTypeUseCase(dbRepository),
+
+    private val getGoogleBooksUseCase: GetGoogleBooksUseCase = GetGoogleBooksUseCase(
+        remoteRepository
+    ),
+    private val removeElementFromMyLibrary: RemoveElementFromMyLibrary = RemoveElementFromMyLibrary(dbRepository),
+    private val emulateDelayUseCase: EmulateDelayUseCase = EmulateDelayUseCase(dbRepository),
+
+    private val showDetailInformationUseCase: ShowDetailInformationUseCase = ShowDetailInformationUseCase(),
+    private val cancelShowElementUseCase: CancelShowElementUseCase = CancelShowElementUseCase()
+) :
+    ViewModel(),
+    ItemClickEvent
+{
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
 
-    private val _screenModeState = MutableStateFlow<DisplayStates>(DisplayStates.MY_LIBRARY)
+    private val _screenModeState = MutableStateFlow<DisplayStates>(MY_LIBRARY)
     val screenModeState = _screenModeState.asStateFlow()
 
     private val _detailState =
@@ -131,7 +155,7 @@ class MainViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             // Получаем общее количество элементов
-            totalItems = dbRepository.getTotalCount()
+            totalItems = getTotalElementsCountMyLibrary()
             loadElements()
         }
     }
@@ -159,9 +183,10 @@ class MainViewModel(
     }
 
     fun getGoogleBooks(query: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = remoteRepository.getGoogleBooks(query)
+        viewModelScope.launch {
+            val result = getGoogleBooksUseCase(query)
 
+            loadingJob?.cancel()
             result.fold(
                 onSuccess = { books ->
                     _elements.update {
@@ -172,7 +197,6 @@ class MainViewModel(
                     _errorRequest.update { exception.message }
                 }
             )
-            loadingJob?.cancel()
         }
     }
 
@@ -183,19 +207,12 @@ class MainViewModel(
         currentPage = offset / COUNT_FOR_LOAD
         loadingJob = viewModelScope.launch {
             try {
-                dbRepository.getItems(limit, offset)
-                    .map { list ->
-                        list.map { DataItem(it) }
-                    }
-                    .catch { e ->
-                        _elements.value = emptyList()
-                    }
-                    .flowOn(Dispatchers.IO)
-                    .collect { adapterItems ->
-                        _elements.update {
-                            adapterItems
-                        }
-                    }
+                getPaginatedLibraryItemsUseCase(
+                    limit,
+                    offset,
+                    SortType.getEnumSortType(lastSortType)
+                )
+                    .collect(_elements)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 paginationLogger("Загрузка прерывается, заменяется offset", error = e)
             } finally {
@@ -211,10 +228,11 @@ class MainViewModel(
         loadPrevJob?.cancel()
         if (loadNextJob != null || currentPage >= totalPages - DISPLAYED_PAGES) return
 
+        startNextLoad()
+
         loadNextJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                startNextLoad()
-                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
+                emulateDelayUseCase()
 
                 currentPage++
 
@@ -233,10 +251,11 @@ class MainViewModel(
         loadNextJob?.cancel()
         if (loadPrevJob != null || currentPage <= PAGE_START_POSITION) return
 
+        startPrevLoad()
+
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                startPrevLoad()
-                (dbRepository as? SimulateRealRepository)?.delayLikeRealRepository()
+                emulateDelayUseCase()
 
                 currentPage--
 
@@ -283,42 +302,30 @@ class MainViewModel(
         }
     }
 
+    /**
+     * Удаляет элемент шиммера при отмене загрузки
+     */
     private fun excludeLoadItem(dropCount: Int = DROP_DEFAULT, dropLastCount: Int = DROP_DEFAULT) {
         _elements.update { items ->
             items.drop(dropCount).dropLast(dropLastCount)
         }
     }
 
-
+    /**
+     * Отвечает за логирование связанное с пагинацией
+     */
     private fun paginationLogger(
         message: String,
         takeCount: Int? = null,
         error: Exception? = null
     ) {
+        val text = """$message: ${_elements.value.size} items, takeCount $takeCount
+            currentPage = $currentPage, startPage = $currentPage""".trimMargin()
+
         Log.d(
             "PAGINATION",
-            "$message: ${_elements.value.size} items, takeCount $takeCount\ncurrentPage = $currentPage",
+            text,
             error
-        )
-    }
-
-    private fun changeDetailState(element: BasicLibraryElement) = viewModelScope.launch {
-        val image = withContext(Dispatchers.IO) {
-            when (element) {
-                is Book -> BOOK_IMAGE
-                is Newspaper -> NEWSPAPER_IMAGE
-                is Disk -> DISK_IMAGE
-                else -> DEFAULT_IMAGE
-            }
-        }
-        setDetailState(
-            DetailState(
-                uiType = SHOW_TYPE,
-                name = element.item.name,
-                id = element.item.id,
-                image = image,
-                description = element.fullInformation()
-            )
         )
     }
 
@@ -334,52 +341,11 @@ class MainViewModel(
         detailStateJob?.cancel()
         detailStateJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                flow {
-                    if (state.uiType == SHOW_TYPE) {
-                        emit(LoadingStateToDetail.Loading)
-
-                        (dbRepository as SimulateRealRepository).simulateRealRepository()
-                        Log.d("uitype", "viewModel передаёт state: ${state.uiType}")
-
-                        emit(LoadingStateToDetail.Data(state))
-                    }
-                    emit(LoadingStateToDetail.Data(state))
-                }
-                    .catch { e ->
-                        handleRepositoryErrors(e)
-                    }
+                changeDetailStateUseCase(state)
                     .collect(_detailState)
             } catch (e: CancellationException) {
                 Log.w("DetailState", "Операция перехода отменена out flow", e)
             }
-        }
-    }
-
-    private suspend fun handleRepositoryErrors(e: Throwable) {
-        val errorState = when (e) {
-            is NetworkErrorException -> {
-                Log.w("DetailState", "Ошибка сети", e)
-                LoadingStateToDetail.Error("Ошибка сети, проверьте подключение")
-            }
-
-            else -> {
-                Log.w("DetailState", "Непредвиденная ошибка", e)
-                LoadingStateToDetail.Error(e.message ?: "Unknown error")
-            }
-        }
-        _detailState.emit(errorState)
-    }
-
-    /**
-     * Временная реализация перехода к новому элементу, работает только при изначальном порядке
-     */
-    private fun updateElements(newItem: BasicLibraryElement) {
-        viewModelScope.launch {
-            dbRepository.addItems(newItem)
-            totalItems = dbRepository.getTotalCount()
-
-            Log.d("ScrollState", "Эмитется новое значение")
-            requestScrollToEnd()
         }
     }
 
@@ -392,136 +358,104 @@ class MainViewModel(
      * @see LibraryItem
      */
     fun addNewElement(libraryItem: LibraryItem, elementType: Int) {
-        val element = when (elementType) {
-            BOOK_IMAGE -> createBook(libraryItem)
-            NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
-            DISK_IMAGE -> createDisk(libraryItem)
-            else -> null
-        }
+        viewModelScope.launch {
+            val element = when (elementType) {
+                BOOK_IMAGE -> createBook(libraryItem)
+                NEWSPAPER_IMAGE -> createNewspaper(libraryItem)
+                DISK_IMAGE -> createDisk(libraryItem)
+                else -> null
+            }
 
-        element?.let {
-            updateElements(it)
+            element?.let {
+                addItemInLibraryUseCase(element)
+                requestScrollToEnd()
+            }
         }
     }
 
     /*
     Пока такая проверка
      */
-    private var lastSortType = DEFAULT_SORT
+    private var lastSortType = SortType.DEFAULT_SORT.name
 
     fun setSortType(sortState: String) {
         if (sortState != lastSortType) {
-            viewModelScope.launch(Dispatchers.IO) {
-                (dbRepository as DBRepository).setSortType(sortState)
-                loadElements()
-            }
+            val type = SortType.getEnumSortType(sortState)
+            setSortTypeUseCase(type)
+            loadElements()
             lastSortType = sortState
         }
     }
 
-    private fun checkIfIsDisplayed(id: Long) {
-        when (val state = _detailState.value) {
-            is LoadingStateToDetail.Data -> {
-                if (id == state.data.id) {
-                    setDetailState()
-                }
-            }
-
-            else -> return
-        }
-    }
-
     override fun onItemClick(element: BasicLibraryElement) {
-        changeDetailState(element)
+        val state = showDetailInformationUseCase(element)
+        setDetailState(state)
     }
 
     override fun onItemLongClick(
         context: Context?,
+        position: Int,
         element: BasicLibraryElement
-    ): BasicLibraryElement {
-        return when (_screenModeState.value) {
-            DisplayStates.MY_LIBRARY -> changeAvailabilityElement(element, context)
-            DisplayStates.GOOGLE_BOOKS -> {
-                context?.let {
-                    var name = element.item.name
-                    if (name.length > TOAST_MAX_NAME_LENGTH) name = name.substring(
-                        0,
-                        TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
-                    ) + "..."
-                    makeText(
-                        context,
-                        "Книга $name Добавлена в библиотеку",
-                        LENGTH_SHORT
-                    ).show()
+    ) {
+        viewModelScope.launch {
+            when (_screenModeState.value) {
+                MY_LIBRARY -> {
+                    val realPosition = position + currentPage * COUNT_FOR_LOAD
+                    val newItem = changeElementAvailabilityUseCase(realPosition, element)
+                    updateDetailStateIfNeeded(newItem)
+                    context?.let { longClickToast(newItem.briefInformation(), it) }
                 }
-                element
+
+                GOOGLE_BOOKS -> {
+                    addItemInLibraryUseCase(element)
+                    context?.let {
+                        val message = formatedToastMessage(element)
+                        longClickToast(message, context)
+                    }
+                }
             }
         }
     }
 
-    private fun changeAvailabilityElement(
-        element: BasicLibraryElement,
-        context: Context?
-    ): BasicLibraryElement {
-        val newLibraryItem = element.item.copy(availability = !element.item.availability)
-        val newItem = when (element) {
-            is BookImpl -> element.copy(item = newLibraryItem)
-            is DiskImpl -> element.copy(item = newLibraryItem)
-            is NewspaperImpl -> element.copy(item = newLibraryItem)
-            is NewspaperWithMonthImpl -> element.copy(item = newLibraryItem)
-            else -> throw IllegalArgumentException("Неверный тип элемента")
+    private fun formatedToastMessage(element: BasicLibraryElement): String {
+        var name = element.item.name
+        if (name.length > TOAST_MAX_NAME_LENGTH) name = buildString {
+            append(
+                name.substring(
+                    0,
+                    TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
+                )
+            )
+            append("...")
         }
-
-        Log.d(
-            "Availability",
-            "prev availability = ${element.item.availability}"
-        )
-        Log.d(
-            "Availability",
-            "new availability = ${newItem.item.availability}"
-        )
-
-        context?.let {
-            makeText(
-                context,
-                newItem.briefInformation(),
-                LENGTH_SHORT
-            ).show()
-        }
-        return newItem
+        val message = "Книга $name \nДобавлена в библиотеку"
+        return message
     }
 
+    private fun longClickToast(message: String, context: Context) {
+        viewModelScope.launch(Dispatchers.Main) { }
+        makeText(
+            context,
+            message,
+            LENGTH_SHORT
+        ).show()
+    }
 
     override fun onItemSwiped(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            dbRepository.removeItem(id)
+            removeElementFromMyLibrary(id)
 
-            _elements.update { currentList ->
-                currentList.filter { it is DataItem && it.listElement.item.id != id }
-            }
+            totalItems = getTotalElementsCountMyLibrary()
 
-            totalItems--
+            val isNeedCancel = cancelShowElementUseCase(elementId = id, _detailState.value)
 
-            checkIfIsDisplayed(id)
-        }
-    }
-
-    override fun updateElement(
-        position: Int,
-        newItem: BasicLibraryElement
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            when (_screenModeState.value) {
-                DisplayStates.MY_LIBRARY -> dbRepository.changeItem(
-                    position + currentPage * COUNT_FOR_LOAD,
-                    newItem
-                )
-                DisplayStates.GOOGLE_BOOKS -> dbRepository.addItems(newItem)
+            if (isNeedCancel) {
+                setDetailState()
             }
         }
     }
 
-    override fun updateDetailStateIfNeeded(newItem: BasicLibraryElement) {
+    private fun updateDetailStateIfNeeded(newItem: BasicLibraryElement) {
         detailState.value.takeIf { state ->
             state is LoadingStateToDetail.Data
                     && state.data.id == newItem.item.id

@@ -1,8 +1,8 @@
 package presentation.show_menu_for_selection
 
-import presentation.colors.Colors.ANSI_GREEN
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_GREEN
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
 import presentation.show_menu_for_selection.InvalidMenuType.INVALID_INDEX
 
 

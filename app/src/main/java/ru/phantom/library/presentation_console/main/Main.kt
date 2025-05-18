@@ -1,21 +1,21 @@
 package ru.phantom.library.presentation_console.main
 
-import ru.phantom.library.data.Position
-import ru.phantom.library.data.local.models.library.items.LibraryItem
-import ru.phantom.library.data.local.models.library.items.disk.DiskImpl
-import ru.phantom.library.domain.entities.library.disk.Type.CD
-import ru.phantom.library.domain.entities.library.disk.Type.DVD
-import ru.phantom.library.data.local.models.library.items.newspaper.NewspaperImpl
-import ru.phantom.library.domain.entities.library.newspaper.month.Month.JANUARY
-import ru.phantom.library.data.local.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
-import ru.phantom.library.data.repository.LibraryRepository.addItemBook
-import ru.phantom.library.data.repository.LibraryRepository.addItemDisk
-import ru.phantom.library.data.repository.LibraryRepository.addItemNewspaper
-import ru.phantom.library.data.repository.LibraryRepository.getItemsCounter
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createBook
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createDisk
-import ru.phantom.library.domain.library_service.LibraryElementFactory.createNewspaper
-import ru.phantom.library.domain.library_service.LibraryService
+import ru.phantom.common.entities.library.Position
+import ru.phantom.common.entities.library.disk.Type.CD
+import ru.phantom.common.entities.library.disk.Type.DVD
+import ru.phantom.common.entities.library.newspaper.month.Month.JANUARY
+import ru.phantom.common.library_service.LibraryElementFactory.createBook
+import ru.phantom.common.library_service.LibraryElementFactory.createDisk
+import ru.phantom.common.library_service.LibraryElementFactory.createNewspaper
+import ru.phantom.common.library_service.LibraryRepository.addItemBook
+import ru.phantom.common.library_service.LibraryRepository.addItemDisk
+import ru.phantom.common.library_service.LibraryRepository.addItemNewspaper
+import ru.phantom.common.library_service.LibraryRepository.getItemsCounter
+import ru.phantom.common.library_service.LibraryService
+import ru.phantom.common.models.library.items.LibraryItem
+import ru.phantom.common.models.library.items.disk.DiskImpl
+import ru.phantom.common.models.library.items.newspaper.NewspaperImpl
+import ru.phantom.common.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.library.presentation_console.start_console.showConsoleStartLibraryUI
 
 fun main() {

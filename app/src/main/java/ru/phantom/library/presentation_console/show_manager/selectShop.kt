@@ -1,10 +1,10 @@
 package presentation.show_manager
 
-import ru.phantom.library.data.local.models.shop.book.BookShop
-import ru.phantom.library.data.local.models.shop.disk.DiskShop
-import ru.phantom.library.data.local.models.shop.newspaper.NewspaperShop
-import presentation.colors.Colors.ANSI_RESET
-import presentation.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.colors.Colors.ANSI_RESET
+import ru.phantom.common.colors.Colors.ANSI_YELLOW
+import ru.phantom.common.models.shop.book.BookShop
+import ru.phantom.common.models.shop.disk.DiskShop
+import ru.phantom.common.models.shop.newspaper.NewspaperShop
 
 
 fun selectShop(shopNumber: Int): Boolean {
