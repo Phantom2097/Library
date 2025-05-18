@@ -29,14 +29,14 @@ class MyScrollListener(
         // Подгрузка следующих элементов
         if (!isScrollingUp
             && viewModel.loadingState.value != LOADING_STATE_NEXT
-            && lastVisible >= totalItems - LOAD_THRESHOLD) {
+            && lastVisible > totalItems - LOAD_THRESHOLD) {
             Log.d("PAGINATION", "Trigger load next $dy")
             viewModel.loadNext()
         }
         // Подгрузка предыдущих элементов
-        else if (isScrollingUp
+        if (isScrollingUp
             && viewModel.loadingState.value != LOADING_STATE_PREV
-            && firstVisible <= LOAD_THRESHOLD) {
+            && firstVisible < LOAD_THRESHOLD) {
             Log.d("PAGINATION", "Trigger load prev $dy")
             viewModel.loadPrev()
         }

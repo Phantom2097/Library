@@ -1,7 +1,6 @@
 package ru.phantom.library.presentation.all_items_list
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -27,6 +26,7 @@ import ru.phantom.library.databinding.AllLibraryItemsListBinding
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.MyScrollListener
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.decoration.SpacesItemDecoration
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.factory.MyEdgeFactory
 import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
 
@@ -38,7 +38,12 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     private val viewModel: MainViewModel by activityViewModels()
     private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
 
-    private lateinit var sharedPref: SharedPreferences
+    private val sharedPref by lazy {
+        requireContext().getSharedPreferences(
+            SORT_STATE_KEY,
+            Context.MODE_PRIVATE
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,7 +51,6 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
         savedInstanceState: Bundle?
     ): View? {
         _binding = AllLibraryItemsListBinding.inflate(layoutInflater, container, false)
-        sharedPref = requireContext().getSharedPreferences(SORT_STATE_KEY, Context.MODE_PRIVATE)
         return binding.root
     }
 
@@ -60,9 +64,12 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
     }
 
     private fun initList() {
-        val recyclerView = binding.recyclerMainScreen
+        val recyclerView = binding.recyclerMainScreen.apply {
+            edgeEffectFactory = MyEdgeFactory(viewModel = viewModel)
+        }
 
-        val sortType = sharedPref.getString(SORT_STATE_KEY, SortType.DEFAULT_SORT.name) ?: SortType.DEFAULT_SORT.name
+        val sortType = sharedPref.getString(SORT_STATE_KEY, SortType.DEFAULT_SORT.name)
+            ?: SortType.DEFAULT_SORT.name
         viewModel.setSortType(sortType)
 
         with(recyclerView) {
