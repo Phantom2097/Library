@@ -6,7 +6,7 @@ import okhttp3.MediaType
 import retrofit2.Converter
 import retrofit2.Retrofit
 
-object RetrofitHelper {
+internal object RetrofitHelper {
 
     private fun createConverterFactory(): Converter.Factory {
         val contentType = MediaType.get("application/json")

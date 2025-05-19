@@ -1,6 +1,7 @@
 package ru.phantom.data.local.entities.extensions
 
 import android.util.Log
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.phantom.common.entities.library.BasicLibraryElement
@@ -8,6 +9,7 @@ import ru.phantom.common.entities.library.book.Book
 import ru.phantom.common.entities.library.disk.Disk
 import ru.phantom.common.entities.library.newspaper.Newspaper
 import ru.phantom.common.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
+import ru.phantom.data.local.dao.LibraryDB
 import ru.phantom.data.local.entities.BookEntity
 import ru.phantom.data.local.entities.DiskEntity
 import ru.phantom.data.local.entities.ItemEntity
@@ -15,19 +17,20 @@ import ru.phantom.data.local.entities.ItemEntity.Companion.BOOK
 import ru.phantom.data.local.entities.ItemEntity.Companion.DISK
 import ru.phantom.data.local.entities.ItemEntity.Companion.NEWSPAPER
 import ru.phantom.data.local.entities.NewspaperEntity
-import ru.phantom.data.local.repository.DataBaseProvider
 
-object ToEntityMappers {
+class ToEntityMappers @Inject constructor(
+    private val db: LibraryDB
+) {
 
-    private val db = DataBaseProvider.getDatabase()
-
-    suspend fun BasicLibraryElement.toEntity() {
+    suspend fun toEntity(element: BasicLibraryElement) {
         withContext(Dispatchers.IO) {
-            when (this@toEntity) {
-                is Book -> toBookEntity(toItemEntity())
-                is Disk -> toDiskEntity(toItemEntity())
-                is Newspaper -> toNewspaperEntity(toItemEntity())
-                else -> Log.d("DB", "Ничего не вставлено(((")
+            element.apply {
+                when (this) {
+                    is Book -> toBookEntity(toItemEntity())
+                    is Disk -> toDiskEntity(toItemEntity())
+                    is Newspaper -> toNewspaperEntity(toItemEntity())
+                    else -> Log.d("DB", "Ничего не вставлено(((")
+                }
             }
         }
     }

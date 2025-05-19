@@ -4,8 +4,9 @@ import ru.phantom.common.entities.library.BasicLibraryElement
 import ru.phantom.common.repository.ItemsRepository
 import ru.phantom.common.repository.extensions.SetSortType
 import ru.phantom.common.repository.filters.SortType
+import javax.inject.Inject
 
-class SetSortTypeUseCase(
+class SetSortTypeUseCase @Inject constructor(
     private val repository: ItemsRepository<BasicLibraryElement>
 ) {
     operator fun invoke(sortType: SortType) {

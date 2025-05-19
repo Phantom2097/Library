@@ -1,5 +1,6 @@
 package ru.phantom.library.domain.use_cases
 
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -11,7 +12,7 @@ import ru.phantom.common.repository.filters.SortType
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.DataItem
 
-class GetPaginatedLibraryItemsUseCase(
+class GetPaginatedLibraryItemsUseCase @Inject constructor(
     private val repository: ItemsRepository<BasicLibraryElement>
 ) {
     suspend operator fun invoke(limit: Int, offset: Int, sortType: SortType): Flow<List<AdapterItems>> {

@@ -11,12 +11,14 @@ import ru.phantom.common.repository.extensions.SimulateRealRepository
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
+import javax.inject.Inject
 
-class ChangeDetailStateUseCase(
+class ChangeDetailStateUseCase @Inject constructor(
     private val repository: ItemsRepository<BasicLibraryElement>
 ) {
     operator fun invoke(state: DetailState = DetailState()) : Flow<LoadingStateToDetail> {
         return flow {
+            Log.d("uitype", "Должен идти поток данных, загрузочный экран и тд")
             if (state.uiType == SHOW_TYPE) {
                 emit(LoadingStateToDetail.Loading)
                 (repository as? SimulateRealRepository)?.simulateRealRepository()

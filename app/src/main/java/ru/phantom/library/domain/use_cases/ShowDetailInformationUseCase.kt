@@ -10,8 +10,9 @@ import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.DI
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NEWSPAPER_IMAGE
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.SHOW_TYPE
 import ru.phantom.library.presentation.selected_item.states.DetailState
+import javax.inject.Inject
 
-class ShowDetailInformationUseCase {
+class ShowDetailInformationUseCase @Inject constructor() {
     operator fun invoke(element: BasicLibraryElement) : DetailState {
         val image = when (element) {
                 is Book -> BOOK_IMAGE

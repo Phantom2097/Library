@@ -1,6 +1,7 @@
 [versions]
-agp = "8.9.2"
+agp = "8.9.3"
 cardview = "1.0.0"
+dagger = "2.56.2"
 fragment = "1.8.6"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
@@ -34,6 +35,8 @@ androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

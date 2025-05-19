@@ -9,14 +9,15 @@ import ru.phantom.common.models.library.items.disk.DiskImpl
 import ru.phantom.common.models.library.items.newspaper.NewspaperImpl
 import ru.phantom.common.models.library.items.newspaper.newspaper_with_month.NewspaperWithMonthImpl
 import ru.phantom.common.repository.ItemsRepository
+import javax.inject.Inject
 
 /**
  * UseCase: Изменение доступности элемента
  */
-class ChangeElementAvailabilityUseCase(
+class ChangeElementAvailabilityUseCase @Inject constructor(
     private val repository: ItemsRepository<BasicLibraryElement>
 ) {
-    suspend operator fun invoke(position: Int, element: BasicLibraryElement) : BasicLibraryElement {
+    suspend operator fun invoke(position: Int, element: BasicLibraryElement): BasicLibraryElement {
 
         val newLibraryItem = element.item.copy(availability = !element.item.availability)
         val newItem = when (element) {
@@ -29,12 +30,12 @@ class ChangeElementAvailabilityUseCase(
 
         Log.d(
             "Availability",
-            "prev availability = ${element.item.availability}"
+            """
+                prev availability = ${element.item.availability}
+                new availability = ${newItem.item.availability}
+            """.trimIndent()
         )
-        Log.d(
-            "Availability",
-            "new availability = ${newItem.item.availability}"
-        )
+
         withContext(Dispatchers.IO) {
             repository.changeItem(position, newItem)
         }

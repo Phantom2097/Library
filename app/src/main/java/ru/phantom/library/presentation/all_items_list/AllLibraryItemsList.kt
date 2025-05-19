@@ -13,16 +13,19 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import jakarta.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.phantom.common.repository.filters.SortType
 import ru.phantom.library.R
 import ru.phantom.library.databinding.AllLibraryItemsListBinding
+import ru.phantom.library.di.AppComponentProvider
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.LibraryItemsAdapter
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.MyScrollListener
 import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.decoration.SpacesItemDecoration
@@ -30,12 +33,15 @@ import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.fact
 import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
 
-class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
+class AllLibraryItemsList : Fragment(R.layout.all_library_items_list) {
 
     private var _binding: AllLibraryItemsListBinding? = null
     val binding get() = _binding!!
 
-    private val viewModel: MainViewModel by activityViewModels()
+    @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by activityViewModels<MainViewModel> { viewModelFactory }
+
     private val libraryAdapter by lazy { LibraryItemsAdapter(viewModel) }
 
     private val sharedPref by lazy {
@@ -43,6 +49,12 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
             SORT_STATE_KEY,
             Context.MODE_PRIVATE
         )
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        val component = (requireContext().applicationContext as AppComponentProvider).getAppComponent()
+        component.inject(this)
     }
 
     override fun onCreateView(
@@ -65,7 +77,7 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
 
     private fun initList() {
         val recyclerView = binding.recyclerMainScreen.apply {
-            edgeEffectFactory = MyEdgeFactory(viewModel = viewModel)
+            edgeEffectFactory = MyEdgeFactory(viewModel)
         }
 
         val sortType = sharedPref.getString(SORT_STATE_KEY, SortType.DEFAULT_SORT.name)
@@ -86,11 +98,11 @@ class AllLibraryItemsList() : Fragment(R.layout.all_library_items_list) {
             adapter = libraryAdapter
             addItemDecoration(SpacesItemDecoration(SPACES_ITEM_DECORATION_COUNT))
             addOnScrollListener(MyScrollListener(viewModel, libraryAdapter))
-        }
 
-        // Добавляю itemTouchHelper
-        val itemTouchHelper = ItemTouchHelper(libraryAdapter.getMySimpleCallback())
-        itemTouchHelper.attachToRecyclerView(recyclerView)
+            // Добавляю itemTouchHelper
+            val itemTouchHelper = ItemTouchHelper(libraryAdapter.getMySimpleCallback())
+            itemTouchHelper.attachToRecyclerView(this)
+        }
     }
 
     private fun initMenuButton() {
