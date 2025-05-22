@@ -9,8 +9,8 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import ru.phantom.library.R
@@ -64,8 +64,9 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
         val clearFieldsButton = binding.buttonClearFiltersGoogleBooks
 
         getBooksButton.setOnClickListener {
+            viewModel.clearList()
             viewModel.getGoogleBooks(buildQuery())
-            navController.popBackStack()
+            navController.navigate(R.id.allLibraryItemsList)
         }
 
         clearFieldsButton.setOnClickListener {
@@ -78,7 +79,7 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
     }
 
     private fun subscribeViewModel() {
-        viewModel.viewModelScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.requestDescription.collect { (author, title) ->
                     binding.buttonStartSearchGoogleBooks.apply {

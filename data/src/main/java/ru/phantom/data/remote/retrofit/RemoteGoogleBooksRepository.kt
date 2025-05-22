@@ -1,12 +1,13 @@
 package ru.phantom.data.remote.retrofit
 
+import jakarta.inject.Inject
 import retrofit2.HttpException
 import ru.phantom.common.entities.library.book.Book
 import ru.phantom.common.repository.GoogleBooksRepository
 import ru.phantom.data.remote.model.GoogleBooksResponseMapper.toBooks
 import java.io.IOException
 
-class RemoteGoogleBooksRepository(
+internal class RemoteGoogleBooksRepository @Inject constructor(
     private val api: GoogleBooksApi
 ) : GoogleBooksRepository {
     override suspend fun getGoogleBooks(query: String): Result<List<Book?>> {
@@ -39,4 +40,4 @@ class RemoteGoogleBooksRepository(
     }
 }
 
-class NetworkException(message: String, cause: Throwable?) : Exception(message, cause)
+private class NetworkException(message: String, cause: Throwable?) : Exception(message, cause)

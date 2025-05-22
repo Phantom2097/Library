@@ -16,7 +16,7 @@ sealed class AdapterItems {
      */
     data class DataItem(val listElement: BasicLibraryElement) : AdapterItems()
 
-    // Если вы видете эту надпись, оно будет нужно
+    // Если вы видите эту надпись, оно будет нужно
     /**
      * Элементы списка представляющие собой книги полученные из гугл букс
      */

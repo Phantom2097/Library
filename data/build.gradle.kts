@@ -69,4 +69,8 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // Dagger
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
 }

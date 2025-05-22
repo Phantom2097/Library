@@ -1,5 +1,6 @@
 package ru.phantom.library.presentation.selected_item
 
+import android.content.Context
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +17,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
@@ -23,17 +25,27 @@ import kotlinx.coroutines.launch
 import ru.phantom.common.models.library.items.LibraryItem
 import ru.phantom.library.R
 import ru.phantom.library.databinding.DetailInformationScreenBinding
+import ru.phantom.library.di.AppComponentProvider
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
+import javax.inject.Inject
 
 class DetailFragment : Fragment(R.layout.detail_information_screen) {
 
     private var _binding: DetailInformationScreenBinding? = null
     val binding get() = _binding!!
 
-    private val viewModel by activityViewModels<MainViewModel>()
+    @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by activityViewModels<MainViewModel> { viewModelFactory }
     private val isLandscape get() = resources.configuration.orientation == ORIENTATION_LANDSCAPE
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        val component = (requireContext().applicationContext as AppComponentProvider).getAppComponent()
+        component.inject(this)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,6 +75,7 @@ class DetailFragment : Fragment(R.layout.detail_information_screen) {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
 
                 viewModel.detailState.collect { state ->
+                    Log.d("uitype", "Внутри фрагмента $isAdded")
                     if (!isAdded) return@collect
 
                     when (state) {
