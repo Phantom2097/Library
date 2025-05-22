@@ -64,8 +64,9 @@ class SettingQueryFilters : Fragment(R.layout.filters_for_request_google_books) 
         val clearFieldsButton = binding.buttonClearFiltersGoogleBooks
 
         getBooksButton.setOnClickListener {
+            viewModel.clearList()
             viewModel.getGoogleBooks(buildQuery())
-            navController.popBackStack()
+            navController.navigate(R.id.allLibraryItemsList)
         }
 
         clearFieldsButton.setOnClickListener {

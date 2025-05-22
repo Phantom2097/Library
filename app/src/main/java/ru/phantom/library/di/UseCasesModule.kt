@@ -15,6 +15,16 @@ import ru.phantom.library.domain.use_cases.GetPaginatedLibraryItemsUseCase
 import ru.phantom.library.domain.use_cases.GetTotalCountAndRemoveElementUseCase
 import ru.phantom.library.domain.use_cases.SetSortTypeUseCase
 import ru.phantom.library.domain.use_cases.ShowDetailInformationUseCase
+import ru.phantom.library.domain.use_cases_impls.AddItemInLibraryUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.CancelShowElementUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.ChangeDetailStateUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.ChangeElementAvailabilityUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.EmulateDelayUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.GetGoogleBooksUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.GetPaginatedLibraryItemsUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.GetTotalCountAndRemoveElementUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.SetSortTypeUseCaseImpl
+import ru.phantom.library.domain.use_cases_impls.ShowDetailInformationUseCaseImpl
 
 @Module
 class UseCasesModule {
@@ -23,67 +33,67 @@ class UseCasesModule {
     fun provideAddItemInLibraryUseCase(
         repository: ItemsRepository<BasicLibraryElement>
     ) : AddItemInLibraryUseCase {
-        return AddItemInLibraryUseCase(repository)
+        return AddItemInLibraryUseCaseImpl(repository)
     }
 
     @Provides
     fun provideChangeDetailStateUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : ChangeDetailStateUseCase {
-        return ChangeDetailStateUseCase(repository)
+        return ChangeDetailStateUseCaseImpl(repository)
     }
 
     @Provides
     fun provideChangeElementAvailabilityUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : ChangeElementAvailabilityUseCase {
-        return ChangeElementAvailabilityUseCase(repository)
+        return ChangeElementAvailabilityUseCaseImpl(repository)
     }
 
     @Provides
     fun provideEmulateDelayUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : EmulateDelayUseCase {
-        return EmulateDelayUseCase(repository)
+        return EmulateDelayUseCaseImpl(repository)
     }
 
     @Provides
     fun provideGetPaginatedLibraryItemsUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : GetPaginatedLibraryItemsUseCase {
-        return GetPaginatedLibraryItemsUseCase(repository)
+        return GetPaginatedLibraryItemsUseCaseImpl(repository)
     }
 
     @Provides
     fun provideGetTotalCountAndRemoveElementUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : GetTotalCountAndRemoveElementUseCase {
-        return GetTotalCountAndRemoveElementUseCase(repository)
+        return GetTotalCountAndRemoveElementUseCaseImpl(repository)
     }
 
     @Provides
     fun provideSetSortTypeUseCase (
         repository: ItemsRepository<BasicLibraryElement>
     ) : SetSortTypeUseCase {
-        return SetSortTypeUseCase(repository)
+        return SetSortTypeUseCaseImpl(repository)
     }
 
     @Provides
     fun provideGetGoogleBooksUseCase (
         repository: GoogleBooksRepository
     ) : GetGoogleBooksUseCase {
-        return GetGoogleBooksUseCase(repository)
+        return GetGoogleBooksUseCaseImpl(repository)
     }
 
     @Provides
     fun provideCancelShowElementUseCase (
     ) : CancelShowElementUseCase {
-        return CancelShowElementUseCase()
+        return CancelShowElementUseCaseImpl()
     }
 
     @Provides
     fun provideShowDetailInformationUseCase (
     ) : ShowDetailInformationUseCase {
-        return ShowDetailInformationUseCase()
+        return ShowDetailInformationUseCaseImpl()
     }
 }

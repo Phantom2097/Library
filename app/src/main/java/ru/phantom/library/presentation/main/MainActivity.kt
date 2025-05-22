@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     private val viewModel by viewModels<MainViewModel>(
-        factoryProducer = { viewModelFactory  }
+        factoryProducer = { viewModelFactory }
     )
 
     private lateinit var navController: NavController
@@ -232,7 +232,6 @@ class MainActivity : AppCompatActivity() {
                             true,
                             getString(R.string.currentPositionGoogleBooksText)
                         )
-                        viewModel.clearList()
                     }
                 }
             }
