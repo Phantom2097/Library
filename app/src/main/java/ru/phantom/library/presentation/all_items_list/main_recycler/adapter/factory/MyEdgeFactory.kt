@@ -4,6 +4,7 @@ import android.widget.EdgeEffect
 import androidx.recyclerview.widget.RecyclerView
 import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
+import ru.phantom.library.presentation.main.MainViewModel.Companion.LOADING_STATE_DEFAULT
 
 class MyEdgeFactory(
     private val viewModel: MainViewModel
@@ -12,8 +13,9 @@ class MyEdgeFactory(
         return object : EdgeEffect(view.context) {
             override fun onPull(deltaDistance: Float) {
                 super.onPull(deltaDistance)
-                if (viewModel.screenModeState.value != DisplayStates.MY_LIBRARY) return
-                if (direction == DIRECTION_TOP) {
+                if (viewModel.screenModeState.value != DisplayStates.MY_LIBRARY
+                    || viewModel.loadingState.value != LOADING_STATE_DEFAULT) return
+                else if (direction == DIRECTION_TOP) {
                     viewModel.loadPrev()
                 } else if (direction == DIRECTION_BOTTOM) {
                     viewModel.loadNext()
@@ -22,8 +24,9 @@ class MyEdgeFactory(
 
             override fun onPull(deltaDistance: Float, displacement: Float) {
                 super.onPull(deltaDistance, displacement)
-                if (viewModel.screenModeState.value != DisplayStates.MY_LIBRARY) return
-                if (direction == DIRECTION_TOP) {
+                if (viewModel.screenModeState.value != DisplayStates.MY_LIBRARY
+                    || viewModel.loadingState.value != LOADING_STATE_DEFAULT) return
+                else if (direction == DIRECTION_TOP) {
                     viewModel.loadPrev()
                 } else if (direction == DIRECTION_BOTTOM) {
                     viewModel.loadNext()

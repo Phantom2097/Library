@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -58,7 +59,7 @@ import javax.inject.Inject
  *  @see ru.phantom.library.presentation.selected_item.DetailFragment
  *  @see DetailState
  */
-class MainViewModel @Inject constructor (
+class MainViewModel @Inject constructor(
     private val getPaginatedLibraryItemsUseCase: GetPaginatedLibraryItemsUseCase,
     private val changeElementAvailabilityUseCase: ChangeElementAvailabilityUseCase,
     private val addItemInLibraryUseCase: AddItemInLibraryUseCase,
@@ -74,8 +75,7 @@ class MainViewModel @Inject constructor (
     private val cancelShowElementUseCase: CancelShowElementUseCase
 ) :
     ViewModel(),
-    ItemClickEvent
-{
+    ItemClickEvent {
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
 
@@ -202,8 +202,15 @@ class MainViewModel @Inject constructor (
             } catch (e: kotlinx.coroutines.CancellationException) {
                 paginationLogger("Загрузка прерывается, заменяется offset", error = e)
             } finally {
-                _loadingState.value = LOADING_STATE_DEFAULT
+                reloadLoadingState()
             }
+        }
+    }
+
+    private fun reloadLoadingState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(LOADING_RELOAD_TIME)
+            _loadingState.update { LOADING_STATE_DEFAULT }
         }
     }
 
@@ -469,11 +476,13 @@ class MainViewModel @Inject constructor (
         private const val DROP_COUNT = 1
 
         private const val INIT_SIZE = 48
-        private const val COUNT_FOR_LOAD = INIT_SIZE / 2 // Должно быть кратно двум для корректной работы
+        private const val COUNT_FOR_LOAD =
+            INIT_SIZE / 2 // Должно быть кратно двум для корректной работы
         private const val DISPLAYED_PAGES = 2
 
         const val LOADING_STATE_DEFAULT = 0
         const val LOADING_STATE_NEXT = 1
         const val LOADING_STATE_PREV = -1
+        private const val LOADING_RELOAD_TIME = 300L
     }
 }
