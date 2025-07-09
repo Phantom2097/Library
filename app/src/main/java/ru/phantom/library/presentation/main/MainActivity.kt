@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 import ru.phantom.library.R
 import ru.phantom.library.databinding.ActivityMainBinding
 import ru.phantom.library.databinding.BottomSheetForAddLibraryItemBinding
+import ru.phantom.library.di.AppComponentProvider
 import ru.phantom.library.presentation.animations.Animations.animationDisableButton
 import ru.phantom.library.presentation.animations.Animations.animationEnableButton
 import ru.phantom.library.presentation.animations.Animations.animationForAddButton
@@ -33,12 +35,18 @@ import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.NE
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail.Data
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail.Loading
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
-    private val viewModel by viewModels<MainViewModel>()
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by viewModels<MainViewModel>(
+        factoryProducer = { viewModelFactory }
+    )
 
     private lateinit var navController: NavController
     private lateinit var landController: NavController
@@ -48,6 +56,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val component = (applicationContext as AppComponentProvider).getAppComponent()
+        component.inject(this)
+
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -96,8 +108,10 @@ class MainActivity : AppCompatActivity() {
 
         libraryButton.apply {
             setOnClickListener {
-                viewModel.changeMainScreen(MY_LIBRARY)
-                viewModel.loadCurrent()
+                viewModel.apply {
+                    changeMainScreen(MY_LIBRARY)
+                    loadCurrent()
+                }
                 navController.popBackStack(R.id.allLibraryItemsList, false)
             }
         }
@@ -191,6 +205,7 @@ class MainActivity : AppCompatActivity() {
         launch {
             viewModel.detailState.collect { state ->
                 if (state is Loading) {
+                    Log.d("uitype", "Внутри активити")
                     toDetail()
                 }
             }
@@ -217,7 +232,6 @@ class MainActivity : AppCompatActivity() {
                             true,
                             getString(R.string.currentPositionGoogleBooksText)
                         )
-                        viewModel.clearList()
                     }
                 }
             }

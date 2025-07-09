@@ -7,7 +7,6 @@ import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
 import ru.phantom.library.presentation.main.MainViewModel
 import ru.phantom.library.presentation.main.MainViewModel.Companion.LOADING_STATE_NEXT
 import ru.phantom.library.presentation.main.MainViewModel.Companion.LOADING_STATE_PREV
-import ru.phantom.library.presentation.main.MainViewModel.Companion.LOAD_THRESHOLD
 import kotlin.math.abs
 
 class MyScrollListener(
@@ -29,14 +28,16 @@ class MyScrollListener(
         // Подгрузка следующих элементов
         if (!isScrollingUp
             && viewModel.loadingState.value != LOADING_STATE_NEXT
-            && lastVisible > totalItems - LOAD_THRESHOLD) {
+            && lastVisible > totalItems - LOAD_THRESHOLD
+        ) {
             Log.d("PAGINATION", "Trigger load next $dy")
             viewModel.loadNext()
         }
         // Подгрузка предыдущих элементов
         if (isScrollingUp
             && viewModel.loadingState.value != LOADING_STATE_PREV
-            && firstVisible < LOAD_THRESHOLD) {
+            && firstVisible < LOAD_THRESHOLD
+        ) {
             Log.d("PAGINATION", "Trigger load prev $dy")
             viewModel.loadPrev()
         }
@@ -48,5 +49,6 @@ class MyScrollListener(
     private companion object {
         private const val SCROLL_POSITION_ZERO = 0
         private const val SCROLL_NO_REGISTER = 5
+        private const val LOAD_THRESHOLD = 10
     }
 }

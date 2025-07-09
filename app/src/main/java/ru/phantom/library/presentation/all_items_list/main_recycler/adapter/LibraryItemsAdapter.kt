@@ -18,11 +18,12 @@ import ru.phantom.library.presentation.all_items_list.main_recycler.view_holder.
 import ru.phantom.library.presentation.all_items_list.main_recycler.view_holder.LoadingViewHolder
 import ru.phantom.library.presentation.main.DisplayStates
 import ru.phantom.library.presentation.main.MainViewModel
+import javax.inject.Inject
 
 /**
  * Адаптер для всех элементов библиотеки
  */
-class LibraryItemsAdapter(
+class LibraryItemsAdapter @Inject constructor(
     private val viewModel: MainViewModel // Ладно, пришлось вернуться к этому
 ) : ListAdapter<AdapterItems, ViewHolder>(ElementDiffCallback()) {
 

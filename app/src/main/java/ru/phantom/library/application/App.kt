@@ -1,20 +1,29 @@
 package ru.phantom.library.application
 
 import android.app.Application
-import android.content.Context
-import ru.phantom.data.local.repository.DataBaseProvider
+import ru.phantom.data.di.DaggerDataComponent
+import ru.phantom.library.di.AppComponent
+import ru.phantom.library.di.AppComponentProvider
+import ru.phantom.library.di.DaggerAppComponent
 
-class App : Application() {
+class App : Application(), AppComponentProvider {
+
+    private lateinit var appComponent: AppComponent
 
     override fun onCreate() {
         super.onCreate()
 
-        DataBaseProvider.initialize(this)
-        appContext = applicationContext
+        val dataComponent = DaggerDataComponent
+            .factory()
+            .create(this)
+
+        appComponent = DaggerAppComponent
+            .builder()
+            .dataComponent(dataComponent)
+            .build()
     }
 
-    companion object {
-        lateinit var appContext: Context
-            private set
+    override fun getAppComponent(): AppComponent {
+        return appComponent
     }
 }

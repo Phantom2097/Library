@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -19,16 +20,7 @@ import ru.phantom.common.library_service.LibraryElementFactory.createBook
 import ru.phantom.common.library_service.LibraryElementFactory.createDisk
 import ru.phantom.common.library_service.LibraryElementFactory.createNewspaper
 import ru.phantom.common.models.library.items.LibraryItem
-import ru.phantom.common.repository.GoogleBooksRepository
-import ru.phantom.common.repository.ItemsRepository
 import ru.phantom.common.repository.filters.SortType
-import ru.phantom.data.local.repository.DBRepository
-import ru.phantom.data.remote.retrofit.RemoteGoogleBooksRepository
-import ru.phantom.data.remote.retrofit.RetrofitHelper
-import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems
-import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.DataItem
-import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.LoadItem
-import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.events.ItemClickEvent
 import ru.phantom.library.domain.use_cases.AddItemInLibraryUseCase
 import ru.phantom.library.domain.use_cases.CancelShowElementUseCase
 import ru.phantom.library.domain.use_cases.ChangeDetailStateUseCase
@@ -39,6 +31,10 @@ import ru.phantom.library.domain.use_cases.GetPaginatedLibraryItemsUseCase
 import ru.phantom.library.domain.use_cases.GetTotalCountAndRemoveElementUseCase
 import ru.phantom.library.domain.use_cases.SetSortTypeUseCase
 import ru.phantom.library.domain.use_cases.ShowDetailInformationUseCase
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.DataItem
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.AdapterItems.LoadItem
+import ru.phantom.library.presentation.all_items_list.main_recycler.adapter.events.ItemClickEvent
 import ru.phantom.library.presentation.main.DisplayStates.GOOGLE_BOOKS
 import ru.phantom.library.presentation.main.DisplayStates.MY_LIBRARY
 import ru.phantom.library.presentation.selected_item.DetailFragment.Companion.BOOK_IMAGE
@@ -48,6 +44,7 @@ import ru.phantom.library.presentation.selected_item.states.CreateState
 import ru.phantom.library.presentation.selected_item.states.DetailState
 import ru.phantom.library.presentation.selected_item.states.LoadingStateToDetail
 import java.util.concurrent.CancellationException
+import javax.inject.Inject
 
 /**
  *  Вью модель
@@ -62,36 +59,23 @@ import java.util.concurrent.CancellationException
  *  @see ru.phantom.library.presentation.selected_item.DetailFragment
  *  @see DetailState
  */
-class MainViewModel(
-    private val dbRepository: ItemsRepository<BasicLibraryElement> = DBRepository(),
-    private val remoteRepository: GoogleBooksRepository = RemoteGoogleBooksRepository(RetrofitHelper.createRetrofit()),
+class MainViewModel @Inject constructor(
+    private val getPaginatedLibraryItemsUseCase: GetPaginatedLibraryItemsUseCase,
+    private val changeElementAvailabilityUseCase: ChangeElementAvailabilityUseCase,
+    private val addItemInLibraryUseCase: AddItemInLibraryUseCase,
+    private val changeDetailStateUseCase: ChangeDetailStateUseCase,
+    private val setSortTypeUseCase: SetSortTypeUseCase,
+    private val getTotalCountAndRemoveElementUseCase: GetTotalCountAndRemoveElementUseCase,
 
-    private val getPaginatedLibraryItemsUseCase: GetPaginatedLibraryItemsUseCase = GetPaginatedLibraryItemsUseCase(
-        dbRepository
-    ),
-    private val changeElementAvailabilityUseCase: ChangeElementAvailabilityUseCase = ChangeElementAvailabilityUseCase(
-        dbRepository
-    ),
-    private val addItemInLibraryUseCase: AddItemInLibraryUseCase = AddItemInLibraryUseCase(
-        dbRepository
-    ),
-    private val changeDetailStateUseCase: ChangeDetailStateUseCase = ChangeDetailStateUseCase(
-        dbRepository
-    ),
-    private val setSortTypeUseCase: SetSortTypeUseCase = SetSortTypeUseCase(dbRepository),
+    private val emulateDelayUseCase: EmulateDelayUseCase,
 
-    private val getGoogleBooksUseCase: GetGoogleBooksUseCase = GetGoogleBooksUseCase(
-        remoteRepository
-    ),
-    private val getTotalCountAndRemoveElementUseCase: GetTotalCountAndRemoveElementUseCase = GetTotalCountAndRemoveElementUseCase(dbRepository),
-    private val emulateDelayUseCase: EmulateDelayUseCase = EmulateDelayUseCase(dbRepository),
+    private val getGoogleBooksUseCase: GetGoogleBooksUseCase,
 
-    private val showDetailInformationUseCase: ShowDetailInformationUseCase = ShowDetailInformationUseCase(),
-    private val cancelShowElementUseCase: CancelShowElementUseCase = CancelShowElementUseCase()
+    private val showDetailInformationUseCase: ShowDetailInformationUseCase,
+    private val cancelShowElementUseCase: CancelShowElementUseCase
 ) :
     ViewModel(),
-    ItemClickEvent
-{
+    ItemClickEvent {
     private val _elements = MutableStateFlow<List<AdapterItems>>(emptyList())
     val elements = _elements.asStateFlow()
 
@@ -218,8 +202,15 @@ class MainViewModel(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 paginationLogger("Загрузка прерывается, заменяется offset", error = e)
             } finally {
-                _loadingState.value = LOADING_STATE_DEFAULT
+                reloadLoadingState()
             }
+        }
+    }
+
+    private fun reloadLoadingState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(LOADING_RELOAD_TIME)
+            _loadingState.update { LOADING_STATE_DEFAULT }
         }
     }
 
@@ -351,6 +342,7 @@ class MainViewModel(
             try {
                 changeDetailStateUseCase(state)
                     .collect(_detailState)
+                Log.d("uitype", "Состояние detailState $_detailState")
             } catch (e: CancellationException) {
                 Log.w("DetailState", "Операция перехода отменена out flow", e)
             }
@@ -397,6 +389,7 @@ class MainViewModel(
 
     override fun onItemClick(element: BasicLibraryElement) {
         val state = showDetailInformationUseCase(element)
+        Log.d("uitype", "Элемент нажат $state")
         setDetailState(state)
     }
 
@@ -482,13 +475,14 @@ class MainViewModel(
         private const val DROP_DEFAULT = 0
         private const val DROP_COUNT = 1
 
-        const val LOAD_THRESHOLD = 10
-        const val INIT_SIZE = 48
-        const val COUNT_FOR_LOAD = INIT_SIZE / 2 // Должно быть кратно двум для корректной работы
+        private const val INIT_SIZE = 48
+        private const val COUNT_FOR_LOAD =
+            INIT_SIZE / 2 // Должно быть кратно двум для корректной работы
         private const val DISPLAYED_PAGES = 2
 
         const val LOADING_STATE_DEFAULT = 0
         const val LOADING_STATE_NEXT = 1
         const val LOADING_STATE_PREV = -1
+        private const val LOADING_RELOAD_TIME = 300L
     }
 }

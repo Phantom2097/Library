@@ -3,6 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="unavailable_item">#0000004D</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="lightGray">#C3C3C3</color>
 
     <color name="shimmer">#C2C2C2</color>
 

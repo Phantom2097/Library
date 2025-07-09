@@ -14,23 +14,28 @@ import ru.phantom.common.repository.filters.SortType
 import ru.phantom.common.repository.filters.SortType.DEFAULT_SORT
 import ru.phantom.common.repository.filters.SortType.SORT_BY_NAME
 import ru.phantom.common.repository.filters.SortType.SORT_BY_TIME
-import ru.phantom.data.local.entities.extensions.ToEntityMappers.toEntity
+import ru.phantom.data.local.dao.LibraryDB
+import ru.phantom.data.local.entities.ItemEntity
+import ru.phantom.data.local.entities.extensions.ToEntityMappers
 import ru.phantom.data.local.entities.extensions.toElement
+import javax.inject.Inject
 import kotlin.random.Random
 
-class DBRepository() : ItemsRepository<BasicLibraryElement>,
+internal class DBRepository @Inject constructor(
+    private val db : LibraryDB,
+    private val toEntityMappers: ToEntityMappers
+) : ItemsRepository<BasicLibraryElement>,
     SetSortType,
     SimulateRealRepository {
 
     private val sortState = MutableStateFlow(DEFAULT_SORT)
 
-    private val db = DataBaseProvider.getDatabase()
     private var isFirstLoad = true
 
     private var errorCounter = ERROR_COUNTER_INIT
 
     override suspend fun addItems(item: BasicLibraryElement) {
-        item.toEntity()
+        toEntityMappers.toEntity(item)
     }
 
     override suspend fun removeItem(id: Long) {
@@ -42,14 +47,24 @@ class DBRepository() : ItemsRepository<BasicLibraryElement>,
      */
     override suspend fun getItems(limit: Int, offset: Int, orderByType: SortType): Flow<List<BasicLibraryElement>> {
         if (isFirstLoad) delayLikeRealRepository().also { isFirstLoad = false }
-        return when (sortState.value) {
-            DEFAULT_SORT -> db.itemDao().getItems(limit, offset)
-            SORT_BY_TIME -> db.itemDao().getItemsSortedByTime(limit, offset)
-            SORT_BY_NAME -> db.itemDao().getItemsSortedByName(limit, offset)
-        }.mapNotNull { listEntity ->
+
+        val typedGetElements = currentGetElements(limit, offset)
+
+        return typedGetElements.mapNotNull { listEntity ->
             listEntity.mapNotNull { element ->
                 element.toElement(db)
             }
+        }
+    }
+
+    private fun currentGetElements(
+        limit: Int,
+        offset: Int
+    ): Flow<List<ItemEntity>> = db.itemDao().run {
+        when (sortState.value) {
+            DEFAULT_SORT -> getItems(limit, offset)
+            SORT_BY_TIME -> getItemsSortedByTime(limit, offset)
+            SORT_BY_NAME -> getItemsSortedByName(limit, offset)
         }
     }
 
