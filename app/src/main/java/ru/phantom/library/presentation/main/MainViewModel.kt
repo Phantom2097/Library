@@ -422,10 +422,7 @@ class MainViewModel @Inject constructor(
         var name = element.item.name
         if (name.length > TOAST_MAX_NAME_LENGTH) name = buildString {
             append(
-                name.substring(
-                    startIndex = 0,
-                    endIndex = TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH
-                )
+                name.take(TOAST_MAX_NAME_LENGTH - TOAST_THREE_DOTS_LENGTH)
             )
             append("...")
         }
@@ -442,11 +439,11 @@ class MainViewModel @Inject constructor(
         ).show()
     }
 
-    override fun onItemSwiped(id: Long) {
+    override fun onItemSwiped(elementId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            totalItems = getTotalCountAndRemoveElementUseCase.withRemove(id)
+            totalItems = getTotalCountAndRemoveElementUseCase.withRemove(elementId)
 
-            val isNeedCancel = cancelShowElementUseCase(elementId = id, _detailState.value)
+            val isNeedCancel = cancelShowElementUseCase(elementId = elementId, _detailState.value)
             if (isNeedCancel) {
                 setDetailState()
             }
