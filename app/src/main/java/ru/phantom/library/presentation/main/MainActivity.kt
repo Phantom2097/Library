@@ -238,7 +238,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun changeMainScreenMode(
+    internal fun changeMainScreenMode(
         enableButton: Button,
         disableButton: Button,
         floatingButtonState: Boolean,

@@ -4,7 +4,7 @@ import jakarta.inject.Inject
 import retrofit2.HttpException
 import ru.phantom.common.entities.library.book.Book
 import ru.phantom.common.repository.GoogleBooksRepository
-import ru.phantom.data.remote.model.GoogleBooksResponseMapper.toBooks
+import ru.phantom.data.mappers.GoogleBooksResponseMapper.toBooks
 import java.io.IOException
 
 internal class RemoteGoogleBooksRepository @Inject constructor(

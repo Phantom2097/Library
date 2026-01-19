@@ -17,21 +17,30 @@ object LibraryRepository {
     private var itemsCounter = LibraryRepositoryConsts.START_LIBRARY_ITEM_INDEX
 
     // Book
-    fun addItemBook(book: Book) { _booksList.add(book) }
+    fun addItemBook(book: Book) {
+        _booksList.add(book)
+    }
+
     fun getBooksInLibrary(): List<Book> = _booksList.ifEmpty {
         println(Colors.ANSI_RED + "На данный момент в библиотеке нет ни одной книги 🤷‍♂️\n" + Colors.ANSI_RESET)
         emptyList()
     }
 
     // Newspaper
-    fun addItemNewspaper(newspaper: Newspaper) { _newspapersList.add(newspaper) }
+    fun addItemNewspaper(newspaper: Newspaper) {
+        _newspapersList.add(newspaper)
+    }
+
     fun getNewspapersInLibrary(): List<Newspaper> = _newspapersList.ifEmpty {
         println(Colors.ANSI_RED + "На данный момент в библиотеке нет ни одной газеты 🤷‍♂️\n" + Colors.ANSI_RESET)
         emptyList()
     }
 
     // Disk
-    fun addItemDisk(disk: Disk) { _disksList.add(disk) }
+    fun addItemDisk(disk: Disk) {
+        _disksList.add(disk)
+    }
+
     fun getDisksInLibrary(): List<Disk> = _disksList.ifEmpty {
         println(Colors.ANSI_RED + "На данный момент в библиотеке нет ни одного диска 🤷‍♂️\n" + Colors.ANSI_RESET)
         emptyList()
@@ -56,7 +65,7 @@ object LibraryRepository {
                 append("\t${Colors.ANSI_CYAN}Попробуйте ещё раз\n${Colors.ANSI_RESET}")
             }.toString()
 
-            println( message )
+            println(message)
             null
         }
     }

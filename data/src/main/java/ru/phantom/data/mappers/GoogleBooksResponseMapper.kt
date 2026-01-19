@@ -1,7 +1,9 @@
-package ru.phantom.data.remote.model
+package ru.phantom.data.mappers
 
 import ru.phantom.common.entities.library.book.Book
-import ru.phantom.common.library_service.LibraryElementFactory.createBook
+import ru.phantom.common.library_service.LibraryElementFactory
+import ru.phantom.data.remote.model.GoogleBooksResponse
+import ru.phantom.data.remote.model.VolumeInfo
 
 object GoogleBooksResponseMapper {
 
@@ -15,7 +17,7 @@ object GoogleBooksResponseMapper {
         val isbn = industryIdentifiers.firstOrNull { it.type == "ISBN_10" }?.identifier
             ?:industryIdentifiers.firstOrNull()?.identifier ?: return null
 
-        return createBook(
+        return LibraryElementFactory.createBook(
             name = title ?: return null,
             id = isbn.toLongOrNull() ?: return null,
             author = authors.joinToString(", "),
