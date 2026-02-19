@@ -2,14 +2,14 @@ package ru.phantom.data.remote.retrofit
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Converter
 import retrofit2.Retrofit
 
 internal object RetrofitHelper {
 
     private fun createConverterFactory(): Converter.Factory {
-        val contentType = MediaType.get("application/json")
+        val contentType = "application/json".toMediaType()
         val json = Json {
             ignoreUnknownKeys = true
         }
@@ -17,7 +17,7 @@ internal object RetrofitHelper {
         return json.asConverterFactory(contentType)
     }
 
-    fun createRetrofit() : GoogleBooksApi {
+    fun createRetrofit(): GoogleBooksApi {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://www.googleapis.com/books/v1/")
             .addConverterFactory(createConverterFactory())

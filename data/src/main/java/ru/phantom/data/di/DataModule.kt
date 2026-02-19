@@ -10,7 +10,7 @@ import ru.phantom.common.repository.ItemsRepository
 import ru.phantom.data.local.dao.LibraryDB
 import ru.phantom.data.local.entities.extensions.ToEntityMappers
 import ru.phantom.data.local.repository.DBRepository
-import ru.phantom.data.remote.retrofit.RemoteGoogleBooksRepository
+import ru.phantom.data.remote.repository.RemoteGoogleBooksRepository
 import ru.phantom.data.remote.retrofit.RetrofitHelper
 
 @Module
